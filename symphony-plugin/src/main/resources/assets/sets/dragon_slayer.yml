@@ -1,0 +1,25 @@
+id: dragon_slayer
+display_name: "&6屠龙者套装"
+
+bonuses:
+  2:
+    display: "&7(2) &f+10% 物理攻击力"
+    attributes:
+      physical_damage:
+        operation: PERCENT
+        value: 0.10
+  3:
+    display: "&7(3) &f+15% 暴击伤害"
+    attributes:
+      critical_damage:
+        operation: FLAT
+        value: 0.15
+  4:
+    display: "&7(4) &6屠龙之怒"
+    attributes:
+      physical_damage:
+        operation: PERCENT
+        value: 0.25
+      fire_damage:
+        operation: FLAT
+        value: 30

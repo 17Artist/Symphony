@@ -1,0 +1,24 @@
+// 派生属性示例：综合战斗力评分
+// @derive 方法由 AttributeCalculator 按依赖拓扑自动调用，args[0] 是持有者
+@attribute('combat_power')
+@displayName('战斗力')
+@description('综合战斗力评分')
+@category('resource')
+@default(0.0)
+@format('integer')
+@priority(200)
+@readonly
+class CombatPower {
+    @derive
+    calc = -> {
+        val.h = args[0]
+        val.atk = symphony.attribute.getRaw(h, 'physical_damage')
+        val.def = symphony.attribute.getRaw(h, 'physical_defense')
+        val.hp = symphony.attribute.getRaw(h, 'max_health')
+        val.crit = symphony.attribute.getRaw(h, 'critical_chance')
+        val.critDmg = symphony.attribute.getRaw(h, 'critical_damage')
+        val.magicAtk = symphony.attribute.getRaw(h, 'magic_damage')
+        val.score = atk * 2 + magicAtk * 2 + def * 1.5 + hp * 0.5 + crit * 200 + critDmg * 80
+        return math.floor(score)
+    }
+}

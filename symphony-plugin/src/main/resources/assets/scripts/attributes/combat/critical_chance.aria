@@ -1,0 +1,7 @@
+@attribute('critical_chance')
+@displayName('暴击率')
+@category('combat')
+@default(0.05) @min(0.0) @max(1.0)
+@format('percent')
+@priority(15)
+class CriticalChance {}

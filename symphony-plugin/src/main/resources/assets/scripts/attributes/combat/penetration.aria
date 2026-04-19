@@ -1,0 +1,8 @@
+@attribute('penetration')
+@displayName('穿透')
+@description('无视目标防御比例')
+@category('combat')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(31)
+class Penetration {}

@@ -1,0 +1,7 @@
+@attribute('block_chance')
+@displayName('格挡率')
+@category('combat')
+@default(0.0) @min(0.0) @max(0.9)
+@format('percent')
+@priority(34)
+class BlockChance {}

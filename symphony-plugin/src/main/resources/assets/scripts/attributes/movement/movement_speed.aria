@@ -1,0 +1,8 @@
+@attribute('movement_speed')
+@displayName('移动速度')
+@category('movement')
+@default(0.2) @min(0.0) @max(1.0)
+@format('number')
+@priority(40)
+@vanillaBinding('generic.movement_speed')
+class MovementSpeed {}

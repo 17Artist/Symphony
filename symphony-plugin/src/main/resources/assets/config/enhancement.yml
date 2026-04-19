@@ -1,0 +1,21 @@
+enhancement:
+  max_level: 15
+  levels:
+    1:  { multiplier: 1.05, success_rate: 0.95, destroy_rate: 0.00 }
+    2:  { multiplier: 1.10, success_rate: 0.90, destroy_rate: 0.00 }
+    3:  { multiplier: 1.15, success_rate: 0.85, destroy_rate: 0.00 }
+    4:  { multiplier: 1.20, success_rate: 0.80, destroy_rate: 0.00 }
+    5:  { multiplier: 1.30, success_rate: 0.70, destroy_rate: 0.00 }
+    6:  { multiplier: 1.40, success_rate: 0.60, destroy_rate: 0.02 }
+    7:  { multiplier: 1.50, success_rate: 0.50, destroy_rate: 0.05 }
+    8:  { multiplier: 1.65, success_rate: 0.40, destroy_rate: 0.08 }
+    9:  { multiplier: 1.80, success_rate: 0.30, destroy_rate: 0.10 }
+    10: { multiplier: 2.00, success_rate: 0.20, destroy_rate: 0.15 }
+    11: { multiplier: 2.20, success_rate: 0.15, destroy_rate: 0.20 }
+    12: { multiplier: 2.50, success_rate: 0.10, destroy_rate: 0.25 }
+    13: { multiplier: 2.80, success_rate: 0.08, destroy_rate: 0.30 }
+    14: { multiplier: 3.20, success_rate: 0.05, destroy_rate: 0.35 }
+    15: { multiplier: 3.50, success_rate: 0.03, destroy_rate: 0.40 }
+  on_failure:
+    downgrade: true
+    downgrade_levels: 1

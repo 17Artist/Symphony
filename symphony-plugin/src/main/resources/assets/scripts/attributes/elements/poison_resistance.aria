@@ -1,0 +1,8 @@
+@attribute('poison_resistance')
+@displayName('毒素抗性')
+@description('毒素伤害减免')
+@category('element')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(101)
+class PoisonResistance {}

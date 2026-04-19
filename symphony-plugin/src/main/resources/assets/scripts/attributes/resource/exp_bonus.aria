@@ -1,0 +1,7 @@
+@attribute('exp_bonus')
+@displayName('经验加成')
+@category('resource')
+@default(0.0) @min(0.0)
+@format('percent')
+@priority(151)
+class ExpBonus {}

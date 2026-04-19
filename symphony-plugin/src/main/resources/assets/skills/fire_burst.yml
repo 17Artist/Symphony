@@ -1,0 +1,31 @@
+id: fire_burst
+display_name: "火焰爆发"
+description:
+  - "&c对目标造成 {damage} 点火焰伤害"
+  - "&c并点燃 {burn_duration} 秒"
+max_level: 5
+cooldown: 5000
+mana_cost: 20
+
+levels:
+  1: { damage: 30, burn_duration: 2 }
+  2: { damage: 50, burn_duration: 3 }
+  3: { damage: 75, burn_duration: 4 }
+  4: { damage: 100, burn_duration: 5 }
+  5: { damage: 150, burn_duration: 6 }
+
+actions:
+  - type: DAMAGE
+    amount: "{damage}"
+    target: TRIGGER_TARGET
+  - type: POTION
+    effect: WITHER
+    duration: "{burn_duration}"
+    amplifier: 0
+  - type: PARTICLE
+    particle: FLAME
+    count: 30
+  - type: SOUND
+    sound: "entity.blaze.shoot"
+    volume: 1.0
+    pitch: 1.2

@@ -1,0 +1,32 @@
+id: weapon_pool
+display_name: "武器词条池"
+
+entries:
+  - affix: fire_strike
+    weight: 100
+    level_range: [1, 3]
+  - affix: ice_slow
+    weight: 80
+    level_range: [1, 3]
+  - affix: critical_boost
+    weight: 120
+    level_range: [1, 3]
+  - affix: lifesteal_hit
+    weight: 60
+    level_range: [1, 2]
+  - affix: berserker_fury
+    weight: 40
+    level_range: [1, 2]
+
+generation:
+  min_affixes: 1
+  max_affixes: 4
+  rarity_weights:
+    COMMON:    { min: 1, max: 2 }
+    UNCOMMON:  { min: 1, max: 3 }
+    RARE:      { min: 2, max: 3 }
+    EPIC:      { min: 2, max: 4 }
+    LEGENDARY: { min: 3, max: 4 }
+    MYTHIC:    { min: 3, max: 5 }
+  allow_duplicates: false
+  luck_influence: 0.1

@@ -1,0 +1,69 @@
+id: guardian
+display_name: "&b守护者符文"
+description:
+  - "&7提升防御力和生命值"
+max_level: 3
+category: defense
+
+activation:
+  type: FRAGMENT
+  fragments_required:
+    1: 10
+    2: 30
+    3: 60
+
+passive_attributes:
+  1:
+    physical_defense:
+      operation: FLAT
+      value: 10
+    max_health:
+      operation: FLAT
+      value: 20
+  2:
+    physical_defense:
+      operation: FLAT
+      value: 25
+    max_health:
+      operation: FLAT
+      value: 50
+    damage_reduction:
+      operation: FLAT
+      value: 0.03
+  3:
+    physical_defense:
+      operation: FLAT
+      value: 50
+    max_health:
+      operation: FLAT
+      value: 100
+    damage_reduction:
+      operation: FLAT
+      value: 0.08
+    block_chance:
+      operation: FLAT
+      value: 0.05
+
+triggers:
+  - type: ON_LOW_HEALTH
+    conditions:
+      - type: HEALTH_BELOW
+        value: 20
+      - type: COOLDOWN
+        value: 60000
+    actions:
+      - type: ATTRIBUTE_BUFF
+        attribute: damage_reduction
+        operation: FLAT
+        value: "0.15 * {level}"
+        duration: 8000
+      - type: HEAL
+        amount: "20 * {level}"
+        target: SELF
+      - type: PARTICLE
+        particle: TOTEM
+        count: 30
+        target: SELF
+      - type: MESSAGE
+        message: "&b&l守护之盾已激活!"
+        type: actionbar

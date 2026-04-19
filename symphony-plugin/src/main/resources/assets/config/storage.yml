@@ -1,0 +1,17 @@
+storage:
+  type: yaml
+  mysql:
+    host: localhost
+    port: 3306
+    database: symphony
+    username: root
+    password: ""
+    pool:
+      maximum_pool_size: 10
+      minimum_idle: 2
+      connection_timeout: 30000
+      idle_timeout: 600000
+  persistence:
+    buff_min_remaining: 30000
+    temp_affix_min_remaining: 60000
+    auto_save_interval: 300

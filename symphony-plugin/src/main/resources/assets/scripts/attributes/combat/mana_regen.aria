@@ -1,0 +1,8 @@
+@attribute('mana_regen')
+@displayName('法力恢复')
+@description('每秒恢复的法力值')
+@category('combat')
+@default(1.0) @min(0.0)
+@format('number')
+@priority(23)
+class ManaRegen {}

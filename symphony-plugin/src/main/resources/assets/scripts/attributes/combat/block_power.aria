@@ -1,0 +1,8 @@
+@attribute('block_power')
+@displayName('格挡强度')
+@description('格挡时减免的伤害比例')
+@category('combat')
+@default(0.5) @min(0.0) @max(1.0)
+@format('percent')
+@priority(35)
+class BlockPower {}

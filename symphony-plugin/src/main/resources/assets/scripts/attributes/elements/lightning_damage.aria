@@ -1,0 +1,8 @@
+@attribute('lightning_damage')
+@displayName('雷电伤害')
+@description('附加雷电伤害')
+@category('element')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(100)
+class LightningDamage {}

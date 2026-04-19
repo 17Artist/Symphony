@@ -1,0 +1,8 @@
+@attribute('poison_damage')
+@displayName('毒素伤害')
+@description('附加毒素伤害')
+@category('element')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(100)
+class PoisonDamage {}

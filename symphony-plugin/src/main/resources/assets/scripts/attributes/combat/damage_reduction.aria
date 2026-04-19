@@ -1,0 +1,7 @@
+@attribute('damage_reduction')
+@displayName('伤害减免')
+@category('combat')
+@default(0.0) @min(0.0) @max(0.9)
+@format('percent')
+@priority(30)
+class DamageReduction {}

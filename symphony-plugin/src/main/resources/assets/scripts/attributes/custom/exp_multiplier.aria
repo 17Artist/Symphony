@@ -1,0 +1,8 @@
+@attribute('exp_multiplier')
+@displayName('经验倍率')
+@description('经验获取的额外倍率')
+@category('custom')
+@default(1.0) @min(0.0)
+@format('number')
+@priority(161)
+class ExpMultiplier {}

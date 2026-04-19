@@ -1,0 +1,7 @@
+@attribute('dodge')
+@displayName('闪避率')
+@category('combat')
+@default(0.0) @min(0.0) @max(0.9)
+@format('percent')
+@priority(33)
+class Dodge {}

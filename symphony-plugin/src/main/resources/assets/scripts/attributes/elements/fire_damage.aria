@@ -1,0 +1,8 @@
+@attribute('fire_damage')
+@displayName('火焰伤害')
+@description('附加火焰伤害')
+@category('element')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(100)
+class FireDamage {}

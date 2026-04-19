@@ -1,0 +1,7 @@
+@attribute('jump_height')
+@displayName('跳跃高度')
+@category('movement')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(41)
+class JumpHeight {}

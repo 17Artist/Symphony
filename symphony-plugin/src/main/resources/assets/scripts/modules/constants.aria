@@ -1,0 +1,22 @@
+// Symphony 常量定义模块
+
+// 元素列表
+export val.ELEMENTS = ['fire', 'ice', 'lightning', 'poison', 'holy', 'dark']
+
+// 元素中文名
+export val.ELEMENT_NAMES = {
+    'fire': '火焰', 'ice': '冰霜', 'lightning': '雷电',
+    'poison': '毒素', 'holy': '神圣', 'dark': '暗影'
+}
+
+// 稀有度颜色
+export val.RARITY_COLORS = {
+    'COMMON': '&f', 'UNCOMMON': '&a', 'RARE': '&9',
+    'EPIC': '&5', 'LEGENDARY': '&6', 'MYTHIC': '&c'
+}
+
+// 属性分类
+export val.ATTR_CATEGORIES = ['combat', 'movement', 'element', 'resource', 'custom']
+
+// 最大等级
+export val.MAX_LEVEL = 100

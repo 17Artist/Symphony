@@ -1,0 +1,8 @@
+@attribute('max_health')
+@displayName('最大生命值')
+@category('combat')
+@default(20.0) @min(1.0)
+@format('number')
+@priority(20)
+@vanillaBinding('generic.max_health')
+class MaxHealth {}

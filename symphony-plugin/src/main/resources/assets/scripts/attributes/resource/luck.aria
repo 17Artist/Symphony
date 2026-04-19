@@ -1,0 +1,7 @@
+@attribute('luck')
+@displayName('幸运值')
+@category('resource')
+@default(0.0)
+@format('number')
+@priority(153)
+class Luck {}

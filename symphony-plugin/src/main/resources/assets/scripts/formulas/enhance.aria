@@ -1,0 +1,10 @@
+// Symphony 强化公式脚本
+
+// 强化成功率计算
+// baseRate: 基础成功率, luck: 幸运值, bonusRate: 额外加成
+val.enhance_success = -> {
+    val.baseRate = args[0]
+    val.luck = args[1]
+    val.bonusRate = args[2]
+    return math.min(1.0, baseRate + luck * 0.001 + bonusRate)
+}

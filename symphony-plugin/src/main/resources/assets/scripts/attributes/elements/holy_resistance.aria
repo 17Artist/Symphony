@@ -1,0 +1,8 @@
+@attribute('holy_resistance')
+@displayName('神圣抗性')
+@description('神圣伤害减免')
+@category('element')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(101)
+class HolyResistance {}

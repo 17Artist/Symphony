@@ -1,0 +1,33 @@
+id: berserker_fury
+display_name: "狂战士之怒"
+description:
+  - "&4生命值低于30%时，攻击力 +{atk_bonus}"
+max_level: 3
+rarity: EPIC
+category: weapon
+tags:
+  - offensive
+  - berserker
+
+levels:
+  1: { atk_bonus: 15 }
+  2: { atk_bonus: 25 }
+  3: { atk_bonus: 40 }
+
+triggers:
+  - type: ON_ATTACK
+    conditions:
+      - type: HEALTH_BELOW
+        value: 30
+    actions:
+      - type: ATTRIBUTE_BUFF
+        attribute: physical_damage
+        operation: FLAT
+        value: "{atk_bonus}"
+        duration: 5000
+      - type: PARTICLE
+        particle: VILLAGER_ANGRY
+        count: 8
+      - type: MESSAGE
+        message: "&4&l狂战士之怒!"
+        type: actionbar

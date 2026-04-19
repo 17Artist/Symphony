@@ -1,0 +1,7 @@
+@attribute('max_mana')
+@displayName('最大法力值')
+@category('combat')
+@default(100.0) @min(0.0)
+@format('number')
+@priority(22)
+class MaxMana {}

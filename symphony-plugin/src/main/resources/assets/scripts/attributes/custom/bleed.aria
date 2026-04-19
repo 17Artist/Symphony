@@ -1,0 +1,18 @@
+// 示例：流血属性
+// 展示 @dependsOn / @when / @defaultExpr 的综合用法。
+// 只在战斗中生效；基础值随等级和物理攻击力成长。
+
+@attribute('bleed')
+@displayName('流血')
+@description('攻击时附加的流血伤害（仅战斗中生效）')
+@category('custom')
+@default(0.0)
+@min(0.0)
+@max(9999.0)
+@format('number')
+@priority(170)
+@dependsOn('level', 'physical_damage')
+@when('in_combat')
+@defaultExpr("symphony.attribute.getRaw(entity, 'level') * 0.5 + symphony.attribute.getRaw(entity, 'physical_damage') * 0.1")
+@tag('offensive')
+class Bleed {}

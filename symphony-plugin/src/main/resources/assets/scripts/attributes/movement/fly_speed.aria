@@ -1,0 +1,7 @@
+@attribute('fly_speed')
+@displayName('飞行速度')
+@category('movement')
+@default(0.1) @min(0.0)
+@format('number')
+@priority(42)
+class FlySpeed {}

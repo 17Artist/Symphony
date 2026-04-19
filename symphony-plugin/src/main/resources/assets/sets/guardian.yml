@@ -1,0 +1,25 @@
+id: guardian
+display_name: "&9守护者套装"
+
+bonuses:
+  2:
+    display: "&7(2) &f+100 最大生命值"
+    attributes:
+      max_health:
+        operation: FLAT
+        value: 100
+  3:
+    display: "&7(3) &f+15% 伤害减免"
+    attributes:
+      damage_reduction:
+        operation: FLAT
+        value: 0.15
+  4:
+    display: "&7(4) &9不屈意志"
+    attributes:
+      max_health:
+        operation: PERCENT
+        value: 0.20
+      knockback_resistance:
+        operation: FLAT
+        value: 0.5

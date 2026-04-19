@@ -1,0 +1,29 @@
+id: thorns_reflect
+display_name: "荆棘反伤"
+description:
+  - "&6受到攻击时反弹 {reflect}% 伤害"
+max_level: 3
+rarity: RARE
+category: armor
+tags:
+  - defensive
+  - thorns
+
+levels:
+  1: { reflect: 5, damage: 3 }
+  2: { reflect: 10, damage: 6 }
+  3: { reflect: 15, damage: 10 }
+
+triggers:
+  - type: ON_DEFEND
+    actions:
+      - type: DAMAGE
+        amount: "{damage}"
+      - type: PARTICLE
+        particle: CRIT
+        count: 10
+
+passive_attributes:
+  thorns:
+    operation: FLAT
+    value: "{reflect}"

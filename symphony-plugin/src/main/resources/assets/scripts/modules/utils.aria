@@ -1,0 +1,32 @@
+// Symphony 公共工具模块
+// 可被其他脚本通过 import 引用
+
+// 百分比格式化
+export val.formatPercent = -> {
+    val.value = args[0]
+    return math.floor(value * 100) + '%'
+}
+
+// 安全除法（避免除零）
+export val.safeDivide = -> {
+    val.a = args[0]
+    val.b = args[1]
+    if (b == 0) { return 0 }
+    return a / b
+}
+
+// 线性插值
+export val.lerp = -> {
+    val.a = args[0]
+    val.b = args[1]
+    val.t = args[2]
+    return a + (b - a) * t
+}
+
+// 范围限制
+export val.clamp = -> {
+    val.value = args[0]
+    val.min = args[1]
+    val.max = args[2]
+    return math.max(min, math.min(max, value))
+}

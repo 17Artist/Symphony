@@ -1,0 +1,8 @@
+@attribute('health_regen')
+@displayName('生命恢复')
+@description('每秒恢复的生命值')
+@category('combat')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(21)
+class HealthRegen {}

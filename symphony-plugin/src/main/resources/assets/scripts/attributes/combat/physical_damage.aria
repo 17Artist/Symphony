@@ -1,0 +1,9 @@
+@attribute('physical_damage')
+@displayName('物理攻击力')
+@description('物理伤害基础值')
+@category('combat')
+@default(1.0) @min(0.0) @max(999999.0)
+@format('number')
+@priority(10)
+@vanillaBinding('generic.attack_damage')
+class PhysicalDamage {}

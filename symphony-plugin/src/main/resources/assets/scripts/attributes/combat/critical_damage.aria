@@ -1,0 +1,8 @@
+@attribute('critical_damage')
+@displayName('暴击伤害')
+@description('暴击时的伤害倍率')
+@category('combat')
+@default(1.5) @min(1.0)
+@format('number')
+@priority(16)
+class CriticalDamage {}

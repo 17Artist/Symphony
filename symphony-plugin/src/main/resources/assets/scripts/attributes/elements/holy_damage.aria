@@ -1,0 +1,8 @@
+@attribute('holy_damage')
+@displayName('神圣伤害')
+@description('附加神圣伤害')
+@category('element')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(100)
+class HolyDamage {}

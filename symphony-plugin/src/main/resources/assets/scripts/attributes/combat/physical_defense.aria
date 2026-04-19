@@ -1,0 +1,9 @@
+@attribute('physical_defense')
+@displayName('物理防御力')
+@description('减少受到的物理伤害')
+@category('combat')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(11)
+@vanillaBinding('generic.armor')
+class PhysicalDefense {}

@@ -1,0 +1,16 @@
+id: fire_mastery
+display_name: "&c&l火焰精通"
+description:
+  - "&7集齐 3 个火系词条时激活"
+  - "&c所有火焰伤害 +30%"
+
+condition:
+  type: AFFIX_TAG_COUNT
+  tag: "fire"
+  count: 3
+
+effects:
+  attributes:
+    fire_damage:
+      operation: PERCENT
+      value: 0.30

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="sBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="0.5" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#D946EF"/>
+    </linearGradient>
+    <linearGradient id="sBar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背板：渐变圆角方形 -->
+  <rect x="0" y="0" width="128" height="128" rx="28" fill="url(#sBg)"/>
+
+  <!-- 内高光：顶端柔和反光，让 LOGO 有立体感 -->
+  <rect x="0" y="0" width="128" height="64" rx="28" fill="white" fill-opacity="0.08"/>
+
+  <!-- 主体：宽笔几何 S，由两段水平线 + 两端圆弧拼成，读作 Symphony -->
+  <path d="
+    M 88 34
+    H 52
+    A 14 14 0 0 0 52 62
+    H 76
+    A 14 14 0 0 1 76 90
+    H 40
+  "
+    stroke="white"
+    stroke-width="14"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"/>
+
+  <!-- 右下角：三条递增的均衡器条，暗示"属性值堆叠" -->
+  <rect x="96" y="92" width="6" height="10" rx="2" fill="url(#sBar)"/>
+  <rect x="104" y="84" width="6" height="18" rx="2" fill="url(#sBar)"/>
+  <rect x="112" y="76" width="6" height="26" rx="2" fill="url(#sBar)" opacity="0.85"/>
+</svg>

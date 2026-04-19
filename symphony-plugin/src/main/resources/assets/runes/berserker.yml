@@ -1,0 +1,41 @@
+id: berserker
+display_name: "&c狂战士符文"
+description:
+  - "&7提升物理伤害和暴击伤害"
+max_level: 3
+category: offense
+
+activation:
+  type: FRAGMENT
+  fragments_required:
+    1: 10
+    2: 30
+    3: 60
+
+passive_attributes:
+  1:
+    physical_damage:
+      operation: PERCENT
+      value: 0.08
+    critical_damage:
+      operation: FLAT
+      value: 0.15
+  2:
+    physical_damage:
+      operation: PERCENT
+      value: 0.18
+    critical_damage:
+      operation: FLAT
+      value: 0.35
+  3:
+    physical_damage:
+      operation: PERCENT
+      value: 0.30
+    critical_damage:
+      operation: FLAT
+      value: 0.60
+    lifesteal:
+      operation: FLAT
+      value: 0.05
+
+triggers: []

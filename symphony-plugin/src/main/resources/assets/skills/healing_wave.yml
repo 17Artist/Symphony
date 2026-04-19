@@ -1,0 +1,23 @@
+id: healing_wave
+display_name: "治愈波"
+description:
+  - "&a恢复 {heal} 点生命值"
+max_level: 3
+cooldown: 10000
+mana_cost: 30
+
+levels:
+  1: { heal: 20 }
+  2: { heal: 40 }
+  3: { heal: 60 }
+
+actions:
+  - type: HEAL
+    amount: "{heal}"
+  - type: PARTICLE
+    particle: HEART
+    count: 10
+  - type: SOUND
+    sound: "entity.player.levelup"
+    volume: 0.8
+    pitch: 1.5

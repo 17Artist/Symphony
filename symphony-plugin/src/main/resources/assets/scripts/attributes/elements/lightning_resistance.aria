@@ -1,0 +1,8 @@
+@attribute('lightning_resistance')
+@displayName('雷电抗性')
+@description('雷电伤害减免')
+@category('element')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(101)
+class LightningResistance {}

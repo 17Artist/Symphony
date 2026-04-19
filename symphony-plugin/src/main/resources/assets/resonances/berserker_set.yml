@@ -1,0 +1,18 @@
+id: berserker_set
+display_name: "&4&l狂战士之魂"
+description:
+  - "&7同时拥有「嗜血」「狂怒」「不屈」三个词条"
+  - "&4物理攻击力 +25%"
+
+condition:
+  type: AFFIX_ID_SET
+  affix_ids:
+    - lifesteal_hit
+    - berserker_fury
+    - critical_boost
+
+effects:
+  attributes:
+    physical_damage:
+      operation: PERCENT
+      value: 0.25

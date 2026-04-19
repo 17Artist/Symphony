@@ -1,0 +1,19 @@
+// Symphony 经验公式脚本
+
+// 升级所需经验
+// level: 当前等级
+val.level_exp = -> {
+    val.level = args[0]
+    return math.floor(100 * math.pow(level, 1.5) + level * 50)
+}
+
+// 怪物击杀经验（等级差惩罚）
+// mobLevel: 怪物等级, playerLevel: 玩家等级, baseExp: 基础经验
+val.mob_kill_exp = -> {
+    val.mobLevel = args[0]
+    val.playerLevel = args[1]
+    val.baseExp = args[2]
+    val.diff = playerLevel - mobLevel
+    if (diff > 10) { return 0 }
+    return baseExp * math.max(0.1, 1 - diff * 0.05)
+}

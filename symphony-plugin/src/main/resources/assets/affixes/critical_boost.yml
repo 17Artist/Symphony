@@ -1,0 +1,25 @@
+id: critical_boost
+display_name: "暴击强化"
+description:
+  - "&e暴击率 +{crit_chance}%，暴击伤害 +{crit_damage}%"
+max_level: 5
+rarity: UNCOMMON
+category: weapon
+tags:
+  - offensive
+  - critical
+
+levels:
+  1: { crit_chance: 3, crit_damage: 10 }
+  2: { crit_chance: 5, crit_damage: 15 }
+  3: { crit_chance: 8, crit_damage: 20 }
+  4: { crit_chance: 10, crit_damage: 30 }
+  5: { crit_chance: 15, crit_damage: 40 }
+
+passive_attributes:
+  critical_chance:
+    operation: FLAT
+    value: "{crit_chance}"
+  critical_damage:
+    operation: FLAT
+    value: "{crit_damage}"

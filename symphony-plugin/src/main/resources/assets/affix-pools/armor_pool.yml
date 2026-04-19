@@ -1,0 +1,13 @@
+id: armor_pool
+display_name: "护甲词条池"
+
+entries:
+  - affix: thorns_reflect
+    weight: 100
+    level_range: [1, 3]
+
+generation:
+  min_affixes: 1
+  max_affixes: 3
+  allow_duplicates: false
+  luck_influence: 0.1

@@ -1,0 +1,8 @@
+@attribute('elemental_mastery')
+@displayName('元素精通')
+@description('提升元素反应的伤害和效果')
+@category('combat')
+@default(0.0)
+@format('integer')
+@priority(25)
+class ElementalMastery {}

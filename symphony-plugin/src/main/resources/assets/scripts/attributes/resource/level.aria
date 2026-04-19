@@ -1,0 +1,8 @@
+@attribute('level')
+@displayName('等级')
+@category('resource')
+@default(1.0) @min(1.0)
+@format('integer')
+@priority(150)
+@readonly
+class Level {}

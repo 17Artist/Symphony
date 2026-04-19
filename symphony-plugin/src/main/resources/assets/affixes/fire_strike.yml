@@ -1,0 +1,42 @@
+id: fire_strike
+display_name: "烈焰打击"
+description:
+  - "&c攻击时有 {chance}% 概率造成 {damage} 点火焰伤害"
+max_level: 5
+rarity: RARE
+category: weapon
+exclusive_group: "fire"
+tags:
+  - fire
+  - offensive
+
+levels:
+  1: { chance: 10, damage: 20 }
+  2: { chance: 15, damage: 35 }
+  3: { chance: 20, damage: 50 }
+  4: { chance: 25, damage: 70 }
+  5: { chance: 30, damage: 100 }
+
+triggers:
+  - type: ON_ATTACK
+    conditions:
+      - type: CHANCE
+        value: "{chance}"
+      - type: COOLDOWN
+        value: 3000
+    actions:
+      - type: DAMAGE
+        amount: "{damage}"
+        target: TRIGGER_TARGET
+      - type: PARTICLE
+        particle: FLAME
+        count: 20
+      - type: SOUND
+        sound: "entity.blaze.shoot"
+        volume: 1.0
+        pitch: 1.2
+
+passive_attributes:
+  fire_damage:
+    operation: FLAT
+    value: "{damage}"

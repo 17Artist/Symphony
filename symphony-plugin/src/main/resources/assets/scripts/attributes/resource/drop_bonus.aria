@@ -1,0 +1,7 @@
+@attribute('drop_bonus')
+@displayName('掉落加成')
+@category('resource')
+@default(0.0) @min(0.0)
+@format('percent')
+@priority(152)
+class DropBonus {}

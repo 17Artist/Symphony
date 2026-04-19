@@ -1,0 +1,8 @@
+@attribute('fire_resistance')
+@displayName('火焰抗性')
+@description('火焰伤害减免')
+@category('element')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(101)
+class FireResistance {}

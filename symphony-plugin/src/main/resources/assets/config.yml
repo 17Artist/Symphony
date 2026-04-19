@@ -1,0 +1,16 @@
+# Symphony 全局配置
+debug: false
+auto-save-interval: 300
+storage-type: yaml
+max-level: 100
+combat-timeout: 10000
+combo-timeout: 3000
+
+# 高级系统开关
+advanced:
+  interaction-enabled: true
+  element-enabled: true
+  resonance-enabled: true
+  talent-enabled: true
+  status-enabled: true
+  environment-enabled: true

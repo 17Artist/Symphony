@@ -1,0 +1,19 @@
+affix_lore:
+  header: "&8&m─────────&r &6词条 &8&m─────────"
+  format: "&7[{rarity_color}{rarity_name}&7] {display_name} &8Lv.{level}"
+  description_prefix: "  &7"
+  footer: "&8&m──────────────────────"
+  rarity_colors:
+    COMMON: "&f"
+    UNCOMMON: "&a"
+    RARE: "&9"
+    EPIC: "&5"
+    LEGENDARY: "&6"
+    MYTHIC: "&c"
+  rarity_names:
+    COMMON: "普通"
+    UNCOMMON: "优秀"
+    RARE: "稀有"
+    EPIC: "史诗"
+    LEGENDARY: "传说"
+    MYTHIC: "神话"

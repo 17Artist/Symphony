@@ -1,0 +1,32 @@
+// Symphony 技能脚本示例 — 连锁闪电
+// 此脚本展示如何用 Aria 编写复杂技能逻辑
+
+val.caster = server.caster
+val.target = server.target
+val.level = server.skill_level
+val.damage = 20 + level * 15
+val.chainCount = 2 + level
+val.chainRange = 5.0
+
+// 对主目标造成伤害
+symphony.entity.damage(target, damage, 'lightning')
+symphony.effect.particleAt(target, 'ELECTRIC_SPARK', 15)
+
+// 连锁弹射
+var.lastTarget = target
+var.hitTargets = [target]
+
+for (i in Range(0, chainCount)) {
+    val.nearby = symphony.entity.getNearby(lastTarget, chainRange)
+    val.nextTarget = nearby.find(-> {
+        return !hitTargets.contains(args[0])
+    })
+    if (nextTarget == none) { break }
+
+    val.chainDamage = damage * math.pow(0.7, i + 1)
+    symphony.entity.damage(nextTarget, chainDamage, 'lightning')
+    symphony.effect.particleAt(nextTarget, 'ELECTRIC_SPARK', 10)
+
+    hitTargets.add(nextTarget)
+    lastTarget = nextTarget
+}

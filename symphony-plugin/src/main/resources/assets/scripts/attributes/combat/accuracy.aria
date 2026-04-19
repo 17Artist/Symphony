@@ -1,0 +1,7 @@
+@attribute('accuracy')
+@displayName('命中率')
+@category('combat')
+@default(1.0) @min(0.0)
+@format('number')
+@priority(32)
+class Accuracy {}

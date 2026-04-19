@@ -1,0 +1,20 @@
+// Symphony 战斗状态管理脚本
+
+// 战斗超时时间（毫秒）
+val.COMBAT_TIMEOUT = 10000
+
+// 连击超时时间（毫秒）
+val.COMBO_TIMEOUT = 3000
+
+// 连击伤害加成（每层连击增加的伤害百分比）
+val.COMBO_DAMAGE_BONUS = 0.02
+
+// 战斗力评分公式
+val.combat_power_calc = -> {
+    val.atk = args[0]
+    val.def = args[1]
+    val.hp = args[2]
+    val.critChance = args[3]
+    val.critDmg = args[4]
+    return math.floor(atk * 2 + def * 1.5 + hp * 0.5 + critChance * 100 + critDmg * 50)
+}

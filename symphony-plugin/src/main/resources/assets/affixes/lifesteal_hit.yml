@@ -1,0 +1,28 @@
+id: lifesteal_hit
+display_name: "生命偷取"
+description:
+  - "&a攻击时恢复造成伤害的 {percent}%"
+max_level: 3
+rarity: RARE
+category: weapon
+tags:
+  - sustain
+
+levels:
+  1: { percent: 5, heal: 2 }
+  2: { percent: 8, heal: 4 }
+  3: { percent: 12, heal: 6 }
+
+triggers:
+  - type: ON_ATTACK
+    actions:
+      - type: HEAL
+        amount: "{heal}"
+      - type: PARTICLE
+        particle: HEART
+        count: 3
+
+passive_attributes:
+  lifesteal:
+    operation: FLAT
+    value: "{percent}"

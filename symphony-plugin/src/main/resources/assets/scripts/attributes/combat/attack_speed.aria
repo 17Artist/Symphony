@@ -1,0 +1,8 @@
+@attribute('attack_speed')
+@displayName('攻击速度')
+@category('combat')
+@default(1.0) @min(0.1) @max(10.0)
+@format('number')
+@priority(14)
+@vanillaBinding('generic.attack_speed')
+class AttackSpeed {}

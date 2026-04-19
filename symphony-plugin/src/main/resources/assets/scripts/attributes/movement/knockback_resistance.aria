@@ -1,0 +1,8 @@
+@attribute('knockback_resistance')
+@displayName('击退抗性')
+@category('movement')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(43)
+@vanillaBinding('generic.knockback_resistance')
+class KnockbackResistance {}

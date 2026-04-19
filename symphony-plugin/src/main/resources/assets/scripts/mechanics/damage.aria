@@ -1,0 +1,41 @@
+// Symphony 伤害计算机制脚本
+// 定义伤害计算的核心公式
+
+// 物理伤害计算
+// atk: 攻击力, def: 防御力, pen: 穿透率
+val.physical_damage_calc = -> {
+    val.atk = args[0]
+    val.def = args[1]
+    val.pen = args[2]
+    val.effectiveDef = def * (1 - pen)
+    return math.max(1, atk - effectiveDef)
+}
+
+// 防御减伤率（递减收益曲线）
+// defense: 防御力, attackerLevel: 攻击者等级
+val.defense_reduction = -> {
+    val.defense = args[0]
+    val.attackerLevel = args[1]
+    return defense / (defense + 100 + attackerLevel * 5)
+}
+
+// 暴击伤害计算
+val.critical_damage_calc = -> {
+    val.baseDamage = args[0]
+    val.critMultiplier = args[1]
+    return baseDamage * critMultiplier
+}
+
+// 元素伤害计算
+val.element_damage_calc = -> {
+    val.elementDmg = args[0]
+    val.elementRes = args[1]
+    return elementDmg * math.max(0, 1 - elementRes)
+}
+
+// 闪避判定（闪避率 vs 命中率）
+val.dodge_calc = -> {
+    val.dodgeRate = args[0]
+    val.accuracy = args[1]
+    return math.max(0, dodgeRate - (accuracy - 1))
+}

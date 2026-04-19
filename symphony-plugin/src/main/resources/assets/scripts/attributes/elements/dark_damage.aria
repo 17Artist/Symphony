@@ -1,0 +1,8 @@
+@attribute('dark_damage')
+@displayName('暗影伤害')
+@description('附加暗影伤害')
+@category('element')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(100)
+class DarkDamage {}

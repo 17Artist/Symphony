@@ -1,0 +1,8 @@
+@attribute('thorns')
+@displayName('反伤')
+@description('受到攻击时反弹伤害比例')
+@category('combat')
+@default(0.0) @min(0.0)
+@format('percent')
+@priority(36)
+class Thorns {}

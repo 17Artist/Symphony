@@ -1,0 +1,9 @@
+@attribute('combo_rate')
+@displayName('连击率')
+@description('攻击时触发连击的概率')
+@category('custom')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(160)
+@tag('offensive')
+class ComboRate {}

@@ -1,0 +1,7 @@
+@attribute('magic_damage')
+@displayName('魔法攻击力')
+@category('combat')
+@default(0.0) @min(0.0)
+@format('number')
+@priority(12)
+class MagicDamage {}

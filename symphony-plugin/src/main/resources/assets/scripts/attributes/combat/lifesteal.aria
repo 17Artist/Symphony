@@ -1,0 +1,8 @@
+@attribute('lifesteal')
+@displayName('生命偷取')
+@description('攻击时恢复造成伤害的百分比')
+@category('combat')
+@default(0.0) @min(0.0) @max(1.0)
+@format('percent')
+@priority(24)
+class Lifesteal {}
