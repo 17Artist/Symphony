@@ -21,4 +21,4 @@
 ---
 ## 许可证
 
- [Apache License Version 2.0](LICENSE)。
+ [Apache License Version 2.0](LICENSE)
