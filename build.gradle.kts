@@ -10,6 +10,7 @@ allprojects {
         maven("https://repo.arcartx.com/repository/maven-public/")
         maven("https://maven.aliyun.com/repository/central")
         maven("https://maven.aliyun.com/repository/gradle-plugin")
+        maven("https://mvn.lumine.io/repository/maven-public/")
         mavenCentral()
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     }

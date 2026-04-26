@@ -28,9 +28,32 @@ import priv.seventeen.artist.symphony.core.skill.builtin.SymphonySkillProvider
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.nms.SymphonyItemData
 import priv.seventeen.artist.symphony.plugin.SymphonyPlugin
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.util.UUID
 
 object SymphonyCommands {
+
+    private val gson = Gson()
+
+    private data class ModifierListData(val modifiers: List<ModData> = emptyList())
+    private data class ModData(val attr: String, val op: String, val value: Double, val source: String = "base")
+
+    private fun readItemModifiers(item: ItemStack): MutableList<ModData> {
+        val json = SymphonyItemData.getString(item, "attributes") ?: return mutableListOf()
+        return try {
+            val type = object : TypeToken<ModifierListData>() {}.type
+            gson.fromJson<ModifierListData>(json, type).modifiers.toMutableList()
+        } catch (_: Exception) { mutableListOf() }
+    }
+
+    private fun writeItemModifiers(item: ItemStack, mods: List<ModData>) {
+        if (mods.isEmpty()) {
+            SymphonyItemData.remove(item, "attributes")
+        } else {
+            SymphonyItemData.setString(item, "attributes", gson.toJson(ModifierListData(mods)))
+        }
+    }
 
     private fun pickSlot(player: Player, slot: String): ItemStack? {
         val eq = player.equipment ?: return null
@@ -290,6 +313,51 @@ object SymphonyCommands {
                         else -> ctx.reply("§c用法: /sym set <list|mark|unmark> <玩家> <槽位> [套装ID]")
                     }
                 }
+                .command("item", "物品属性操作", args = arrayOf("action", "?attr_id", "?value", "?op"), permission = "symphony.admin") { ctx ->
+                    val action = ctx.arg(0)
+                    val target = ctx.player ?: return@command ctx.reply("§c仅玩家可用")
+                    val item = target.inventory.itemInMainHand
+                    if (item.type.isAir) return@command ctx.reply("§c主手没有物品")
+                    when (action) {
+                        "list" -> {
+                            val mods = readItemModifiers(item)
+                            if (mods.isEmpty()) return@command ctx.reply("§7主手物品无属性")
+                            ctx.reply("§b主手物品属性:")
+                            mods.forEach { m ->
+                                val display = AttributeRegistry.get(m.attr)?.displayName ?: m.attr
+                                val opMark = if (m.op.uppercase() == "PERCENT") "§7×§f${"%.1f%%".format(m.value * 100)}" else "§7+§f${"%.2f".format(m.value)}"
+                                ctx.reply("  §e$display §f(${m.attr}) $opMark")
+                            }
+                        }
+                        "add" -> {
+                            val attrId = ctx.arg(1).takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item add <属性ID> <数值> [FLAT|PERCENT]")
+                            val value = ctx.arg(2).toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
+                            val op = ctx.arg(3).uppercase().takeIf { it == "PERCENT" } ?: "FLAT"
+                            val mods = readItemModifiers(item)
+                            mods.add(ModData(attrId, op, value))
+                            writeItemModifiers(item, mods)
+                            AttributeCalculator.markDirty(target)
+                            val opLabel = if (op == "PERCENT") "×${"%.1f%%".format(value * 100)}" else "+${"%.2f".format(value)}"
+                            ctx.reply("§a已添加属性 $attrId $opLabel")
+                        }
+                        "remove" -> {
+                            val attrId = ctx.arg(1).takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item remove <属性ID>")
+                            val mods = readItemModifiers(item)
+                            val before = mods.size
+                            mods.removeAll { it.attr == attrId }
+                            if (mods.size == before) return@command ctx.reply("§c未找到属性 $attrId")
+                            writeItemModifiers(item, mods)
+                            AttributeCalculator.markDirty(target)
+                            ctx.reply("§a已移除属性 $attrId (${before - mods.size} 条)")
+                        }
+                        "clear" -> {
+                            writeItemModifiers(item, emptyList())
+                            AttributeCalculator.markDirty(target)
+                            ctx.reply("§a已清空主手物品所有属性")
+                        }
+                        else -> ctx.reply("§c用法: /sym item <list|add|remove|clear> [属性ID] [数值] [FLAT|PERCENT]")
+                    }
+                }
                 .command("debug", "调试信息", args = arrayOf("?player"), permission = "symphony.admin") { ctx ->
                     val target = ctx.argPlayer(0) ?: (ctx.player ?: return@command ctx.reply("§c请指定玩家"))
                     val data = PlayerDataManager.getData(target.uniqueId)
@@ -328,6 +396,8 @@ object SymphonyCommands {
                 }
                 .tabComplete("action") { listOf("get", "set", "list", "addexp") }
                 .tabComplete("attribute") { AttributeRegistry.ids().toList() }
+                .tabComplete("attr_id") { AttributeRegistry.ids().toList() }
+                .tabComplete("op") { listOf("FLAT", "PERCENT") }
         )
     }
 }

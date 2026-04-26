@@ -1,12 +1,15 @@
 package priv.seventeen.artist.symphony.core.skill.builtin
 
+import io.lumine.mythic.bukkit.BukkitAdapter
+import io.lumine.mythic.bukkit.MythicBukkit
 import org.bukkit.Bukkit
+import org.bukkit.entity.LivingEntity
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.skill.*
 
 /**
  * MythicMobs 技能桥接提供者。
- * 通过反射调用 MythicMobs API，避免硬依赖。
+ * 通过 MythicMobs API 直接调用，需要 compileOnly 依赖。
  */
 class MythicMobsBridge : ISkillProvider {
     override val id = "mythicmobs"
@@ -23,27 +26,11 @@ class MythicMobsBridge : ISkillProvider {
     override fun cast(skillId: String, level: Int, context: SkillContext): Boolean {
         if (!available) return false
         return try {
-            val mmClass = Class.forName("io.lumine.mythic.bukkit.MythicBukkit")
-            val inst = mmClass.getMethod("inst").invoke(null)
-            val skillManager = inst.javaClass.getMethod("getSkillManager").invoke(inst)
-            val optionalSkill = skillManager.javaClass.getMethod("getSkill", String::class.java).invoke(skillManager, skillId)
-
-            val isPresent = optionalSkill.javaClass.getMethod("isPresent").invoke(optionalSkill) as Boolean
-            if (!isPresent) return false
-
-            val skill = optionalSkill.javaClass.getMethod("get").invoke(optionalSkill)
-
-            // 创建 caster
-            val getCaster = skillManager.javaClass.getMethod("getCaster", Any::class.java)
-            val caster = getCaster.invoke(skillManager, context.caster)
-
-            // 执行技能
-            val executeMethod = skill.javaClass.methods.find { it.name == "execute" && it.parameterCount == 1 }
-            if (executeMethod != null) {
-                executeMethod.invoke(skill, caster)
-                return true
-            }
-            false
+            val mm = MythicBukkit.inst()
+            val skill = mm.skillManager.getSkill(skillId).orElse(null) ?: return false
+            val casterEntity = context.caster as? LivingEntity ?: return false
+            mm.apiHelper.castSkill(casterEntity, skillId)
+            true
         } catch (e: Exception) {
             BlinkLog.warn("MythicMobs 技能执行失败 $skillId: ${e.message}")
             false
@@ -53,12 +40,8 @@ class MythicMobsBridge : ISkillProvider {
     override fun hasSkill(skillId: String): Boolean {
         if (!available) return false
         return try {
-            val mmClass = Class.forName("io.lumine.mythic.bukkit.MythicBukkit")
-            val inst = mmClass.getMethod("inst").invoke(null)
-            val skillManager = inst.javaClass.getMethod("getSkillManager").invoke(inst)
-            val optional = skillManager.javaClass.getMethod("getSkill", String::class.java).invoke(skillManager, skillId)
-            optional.javaClass.getMethod("isPresent").invoke(optional) as Boolean
-        } catch (e: Exception) { false }
+            MythicBukkit.inst().skillManager.getSkill(skillId).isPresent
+        } catch (_: Exception) { false }
     }
 
     override fun getSkillInfo(skillId: String, level: Int): SkillInfo? {
@@ -69,12 +52,7 @@ class MythicMobsBridge : ISkillProvider {
     override fun getSkillIds(): List<String> {
         if (!available) return emptyList()
         return try {
-            val mmClass = Class.forName("io.lumine.mythic.bukkit.MythicBukkit")
-            val inst = mmClass.getMethod("inst").invoke(null)
-            val skillManager = inst.javaClass.getMethod("getSkillManager").invoke(inst)
-            val skills = skillManager.javaClass.getMethod("getSkillNames").invoke(skillManager)
-            @Suppress("UNCHECKED_CAST")
-            (skills as? Collection<String>)?.toList() ?: emptyList()
-        } catch (e: Exception) { emptyList() }
+            MythicBukkit.inst().skillManager.skillNames.toList()
+        } catch (_: Exception) { emptyList() }
     }
 }

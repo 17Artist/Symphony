@@ -34,7 +34,6 @@ import priv.seventeen.artist.symphony.core.trigger.TriggerManagerImpl
 import priv.seventeen.artist.symphony.core.trigger.builtin.PeriodicTriggerTask
 import priv.seventeen.artist.symphony.nms.NMSAdapterFactory
 import priv.seventeen.artist.symphony.plugin.command.SymphonyCommands
-import priv.seventeen.artist.symphony.plugin.gui.ArcartXGuiProvider
 import priv.seventeen.artist.symphony.plugin.gui.AttributeGuiProvider
 import priv.seventeen.artist.symphony.plugin.gui.BukkitInventoryGuiProvider
 import java.io.File
@@ -135,14 +134,8 @@ object SymphonyPlugin {
 
         SymphonyCommands.register()
 
-        guiProvider = if (ArcartXGuiProvider.isAvailable()) {
-            BlinkLog.info("使用 ArcartX 客户端 UI 作为属性面板")
-            ArcartXGuiProvider()
-        } else {
-            BlinkLog.info("使用 Bukkit Inventory 作为属性面板")
-            BukkitInventoryGuiProvider().also {
-                bukkitPlugin.server.pluginManager.registerEvents(it, bukkitPlugin)
-            }
+        guiProvider = BukkitInventoryGuiProvider().also {
+            bukkitPlugin.server.pluginManager.registerEvents(it, bukkitPlugin)
         }
 
         BlinkLog.success("§bSymphony §f已启用 — 已加载 §b${AttributeRegistry.ids().size} §f个属性")

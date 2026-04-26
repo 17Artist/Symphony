@@ -15,7 +15,6 @@ interface IAffixManager {
 
     fun generateAffixes(poolId: String, rarity: AffixRarity, luck: Double): List<AffixInstance>
     fun applyAffixes(item: ItemStack, affixes: List<AffixInstance>)
-    fun renderLore(item: ItemStack)
 
     /** 注册自定义 action 类型（供词条 YAML / Aria 使用）。 */
     fun registerActionHandler(type: String, handler: IActionHandler)

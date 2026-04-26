@@ -6,7 +6,6 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import priv.seventeen.artist.symphony.api.affix.*
-import priv.seventeen.artist.symphony.core.affix.lore.LoreRenderer
 import priv.seventeen.artist.symphony.core.skill.builtin.MythicMobSpawnListener
 import priv.seventeen.artist.symphony.nms.SymphonyItemData
 import java.util.UUID
@@ -102,10 +101,6 @@ class AffixManagerImpl : IAffixManager {
 
     override fun applyAffixes(item: ItemStack, affixes: List<AffixInstance>) {
         writeAffixes(item, affixes)
-    }
-
-    override fun renderLore(item: ItemStack) {
-        LoreRenderer.applyLore(item)
     }
 
     override fun registerActionHandler(type: String, handler: IActionHandler) {

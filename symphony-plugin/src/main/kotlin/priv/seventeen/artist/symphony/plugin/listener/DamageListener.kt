@@ -6,6 +6,7 @@ import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
 import org.bukkit.event.EventPriority
 import org.bukkit.event.entity.EntityDamageByEntityEvent
+import org.bukkit.event.entity.EntityDamageEvent
 import priv.seventeen.artist.blink.event.AutoListener
 import priv.seventeen.artist.symphony.api.event.SymphonyDamageEvent
 import priv.seventeen.artist.symphony.api.event.SymphonyMitigationEvent
@@ -19,7 +20,8 @@ import java.util.concurrent.ThreadLocalRandom
 object DamageListener {
 
     @AutoListener(priority = EventPriority.NORMAL)
-    fun onDamage(event: EntityDamageByEntityEvent) {
+    fun onDamage(event: EntityDamageEvent) {
+        if (event !is EntityDamageByEntityEvent) return
         val victim = event.entity as? LivingEntity ?: return
         var attacker = event.damager as? LivingEntity
         if (attacker == null && event.damager is Projectile) {
