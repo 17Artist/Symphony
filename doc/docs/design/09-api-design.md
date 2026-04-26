@@ -282,20 +282,52 @@ class RuneActivateEvent(
 
 ## 9. 命令系统
 
-所有命令都可简写 `/sym`，需要 `symphony.admin` 权限。
+所有命令都可简写 `/sym`，需要 `symphony.admin` 权限。命令分为 `player`（玩家数据）和 `item`（主手物品）两大组。
+
+### 玩家操作
 
 ```
-/sym reload                                              — 清空注册表并重载所有 YAML / .aria
-/sym attribute <get|list|set> <player> [attr] [value]    — 读写玩家属性
-/sym affix <list|add|clear|generate> <player> ...        — 主手物品词条
-/sym gem <list|insert|remove|unlock> <player> <slot> ... — 宝石槽操作
-/sym set <list|mark|unmark> <player> [slot] [setId]      — 套装标记
-/sym rune <activate|fragment> <player> <runeId> [value]  — 符文激活 / 给碎片
-/sym enhance <get|set> <player> [level]                  — 主手物品强化等级
-/sym level <get|set> <player> [level]                    — 等级
-/sym explain <attrId> [player]                           — 属性计算流水线明细
-/sym debug [player]                                      — 运行时状态概览
-/sym menu                                                — 打开属性面板
+/sym player attr get <玩家> <属性ID>                — 查询属性值
+/sym player attr set <玩家> <属性ID> <值> [FLAT|PERCENT] — 永久设置属性
+/sym player attr list <玩家>                        — 列出所有属性
+/sym player buff add <玩家> <属性ID> <值> [FLAT|PERCENT] [秒] — 添加临时 Buff
+/sym player buff list <玩家>                        — 列出活跃 Buff
+/sym player buff clear <玩家>                       — 清除所有 Buff
+/sym player level get <玩家>                        — 查询等级
+/sym player level set <玩家> <等级>                  — 设置等级
+/sym player rune activate <玩家> <符文ID> [等级]     — 激活符文
+/sym player rune fragment <玩家> <符文ID> <数量>     — 给予符文碎片
+```
+
+### 物品操作（主手物品）
+
+```
+/sym item attr add <属性ID> <值> [FLAT|PERCENT]     — 添加物品属性
+/sym item attr remove <属性ID>                      — 移除物品属性
+/sym item attr list                                 — 列出物品属性
+/sym item attr clear                                — 清空物品属性
+/sym item affix add <词条ID> [等级]                  — 添加词条
+/sym item affix list                                — 列出词条
+/sym item affix clear                               — 清除词条
+/sym item affix generate <词条池ID>                  — 从词条池生成
+/sym item enhance get                               — 查询强化等级
+/sym item enhance set <等级>                         — 设置强化等级
+/sym item gem list <装备槽>                          — 列出宝石槽
+/sym item gem insert <装备槽> <索引> <宝石ID> [等级]  — 镶嵌宝石
+/sym item gem remove <装备槽> <索引>                  — 移除宝石
+/sym item gem unlock <装备槽> <索引>                  — 解锁宝石槽
+/sym item set list                                  — 列出激活套装
+/sym item set mark <装备槽> <套装ID>                  — 标记套装件
+/sym item set unmark <装备槽>                        — 取消套装标记
+```
+
+### 通用命令
+
+```
+/sym reload                                         — 重载配置
+/sym explain <属性ID> [玩家]                         — 属性计算流水线明细
+/sym debug [玩家]                                    — 运行时状态概览
+/sym menu                                           — 打开属性面板
 ```
 
 slot 参数接受 `MAIN / OFF / HELMET / CHEST / LEGS / BOOTS`（或对应的 `HAND / OFF_HAND / HEAD / CHESTPLATE / LEGGINGS / FEET`），大小写不敏感。

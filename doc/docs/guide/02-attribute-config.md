@@ -161,8 +161,8 @@ passive_attributes:
 ```
 
 ```
-/sym attribute get <玩家> vampirism
-/sym attribute set <玩家> vampirism 0.1
+/sym player attr get <玩家> vampirism
+/sym player attr set <玩家> vampirism 0.1
 ```
 
 引用不存在的属性 ID 时，系统静默忽略并在控制台警告。

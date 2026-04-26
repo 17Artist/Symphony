@@ -68,9 +68,12 @@ object SymphonyCommands {
         }
     }
 
+    private val SLOT_NAMES = listOf("MAIN", "OFF", "HELMET", "CHEST", "LEGS", "BOOTS")
+
     fun register() {
         BlinkCommandRegistrar.register(bukkitPlugin,
             BlinkCommand("symphony", "sym")
+                // ── reload ──
                 .command("reload", "重载配置", permission = "symphony.admin") { ctx ->
                     ctx.reply("§e正在重载...")
                     SymphonyPlugin.config.reload()
@@ -111,253 +114,276 @@ object SymphonyCommands {
                     Bukkit.getOnlinePlayers().forEach { AttributeCache.markDirty(it.uniqueId) }
                     ctx.reply("§a重载完成 — 属性 §b${AttributeRegistry.ids().size}§a 个")
                 }
-                .command("attribute", "属性操作", args = arrayOf("action", "player", "?attribute", "?value"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
+                // ── player <sub> <player> ... ──
+                .command("player", "玩家操作", args = arrayOf("sub", "target", "?arg1", "?arg2", "?arg3", "?arg4"), permission = "symphony.admin") { ctx ->
+                    val sub = ctx.arg(0)
                     val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    when (action) {
-                        "get" -> {
-                            val attrId = ctx.arg(2)
-                            val value = AttributeCalculator.getValue(target, attrId)
-                            ctx.reply("§b${target.name} §f的 §e$attrId §f= §a${"%.2f".format(value)}")
-                        }
-                        "list" -> {
-                            val values = AttributeCalculator.getValues(target)
-                            ctx.reply("§b${target.name} §f的属性列表:")
-                            values.entries.sortedBy { AttributeRegistry.get(it.key)?.priority ?: 999 }.forEach { (id, value) ->
-                                val display = AttributeRegistry.get(id)?.displayName ?: id
-                                ctx.reply("  §7$display §f($id): §a${"%.2f".format(value)}")
+                    val a1 = ctx.arg(2); val a2 = ctx.arg(3); val a3 = ctx.arg(4); val a4 = ctx.arg(5)
+                    when (sub) {
+                        "attr" -> when (a1) {
+                            "get" -> {
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr get <玩家> <属性ID>")
+                                val value = AttributeCalculator.getValue(target, attrId)
+                                ctx.reply("§b${target.name} §f的 §e$attrId §f= §a${"%.2f".format(value)}")
                             }
-                        }
-                        "set" -> {
-                            val attrId = ctx.arg(2)
-                            val value = ctx.arg(3).toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
-                            val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
-                            data.runtime.activeBuffs.add(ActiveBuff(
-                                id = "cmd:set:$attrId",
-                                attribute = attrId,
-                                operation = Operation.FLAT,
-                                value = value,
-                                expireTime = -1L,
-                                source = "command:set"
-                            ))
-                            AttributeCache.markDirty(target.uniqueId)
-                            ctx.reply("§a已设置 ${target.name} 的 $attrId += $value (永久Buff)")
-                        }
-                        else -> ctx.reply("§c用法: /symphony attribute <get|list|set> <player> [attribute] [value]")
-                    }
-                }
-                .command("level", "等级操作", args = arrayOf("action", "player", "?value"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
-                    val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    when (action) {
-                        "get" -> {
-                            val data = PlayerDataManager.getData(target.uniqueId)
-                            ctx.reply("§b${target.name} §f等级: §a${data?.persistent?.level ?: 1} §f经验: §e${data?.persistent?.exp ?: 0}")
-                        }
-                        "set" -> {
-                            val level = ctx.argInt(2, 1)
-                            val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
-                            data.persistent.level = level
-                            data.dirty = true
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply("§a已设置 ${target.name} 等级为 $level")
-                        }
-                        else -> ctx.reply("§c用法: /symphony level <get|set|addexp> <player> [value]")
-                    }
-                }
-                .command("affix", "词条操作", args = arrayOf("action", "player", "?affix_id", "?level"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
-                    val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    when (action) {
-                        "list" -> {
-                            val item = target.inventory.itemInMainHand
-                            val affixes = AffixManagerImpl.collectItemAffixes(item)
-                            if (affixes.isEmpty()) return@command ctx.reply("§7主手物品无词条")
-                            ctx.reply("§b${target.name} §f主手词条:")
-                            affixes.forEach { a ->
-                                ctx.reply("  §e${a.affixId} §fLv.${a.level} §8(${a.uuid.toString().take(8)})")
+                            "set" -> {
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr set <玩家> <属性ID> <值> [FLAT|PERCENT]")
+                                val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
+                                val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                                val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
+                                data.runtime.activeBuffs.add(ActiveBuff(
+                                    id = "cmd:set:$attrId",
+                                    attribute = attrId,
+                                    operation = op,
+                                    value = value,
+                                    expireTime = -1L,
+                                    source = "command:set"
+                                ))
+                                AttributeCache.markDirty(target.uniqueId)
+                                val opLabel = if (op == Operation.PERCENT) "×${"%.1f%%".format(value * 100)}" else "+${"%.2f".format(value)}"
+                                ctx.reply("§a已设置 ${target.name} 的 $attrId $opLabel (永久)")
                             }
-                        }
-                        "add" -> {
-                            val affixId = ctx.arg(2)
-                            val level = ctx.argInt(3, 1)
-                            val item = target.inventory.itemInMainHand
-                            val def = AffixManagerImpl.getDefinition(affixId)
-                                ?: return@command ctx.reply("§c未知词条: $affixId")
-                            val instance = AffixInstance(UUID.randomUUID(), affixId, level, def.getLevelParams(level))
-                            SymphonyPlugin.apiImpl.affixManagerInstance.addAffix(item, instance)
-                            ctx.reply("§a已添加词条 $affixId Lv.$level")
-                        }
-                        "clear" -> {
-                            SymphonyPlugin.apiImpl.affixManagerInstance.clearAffixes(target.inventory.itemInMainHand)
-                            ctx.reply("§a已清除 ${target.name} 主手所有词条")
-                        }
-                        "generate" -> {
-                            val poolId = ctx.arg(2)
-                            val item = target.inventory.itemInMainHand
-                            val luck = AttributeCalculator.getValue(target, "luck")
-                            val affixes = SymphonyPlugin.apiImpl.affixManagerInstance.generateAffixes(poolId, AffixRarity.RARE, luck)
-                            if (affixes.isEmpty()) return@command ctx.reply("§c生成失败，检查词条池 $poolId")
-                            SymphonyPlugin.apiImpl.affixManagerInstance.applyAffixes(item, affixes)
-                            ctx.reply("§a已生成 ${affixes.size} 个词条")
-                        }
-                        else -> ctx.reply("§c用法: /sym affix <list|add|clear|generate> <player> [affix_id] [level]")
-                    }
-                }
-                .command("enhance", "强化操作", args = arrayOf("action", "player", "?level"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
-                    val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    val item = target.inventory.itemInMainHand
-                    when (action) {
-                        "get" -> ctx.reply("§b${target.name} §f主手强化等级: §a${SymphonyPlugin.growthManager.getEnhanceLevel(item)}")
-                        "set" -> {
-                            val level = ctx.argInt(2, 0)
-                            SymphonyPlugin.growthManager.setEnhanceLevel(item, level)
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply("§a已设置强化等级为 $level")
-                        }
-                        else -> ctx.reply("§c用法: /sym enhance <get|set> <player> [level]")
-                    }
-                }
-                .command("rune", "符文操作", args = arrayOf("action", "player", "?rune_id", "?value"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
-                    val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    when (action) {
-                        "activate" -> {
-                            val runeId = ctx.arg(2)
-                            val level = ctx.argInt(3, 1)
-                            SymphonyPlugin.growthManager.activateRune(target, runeId, level)
-                            ctx.reply("§a已激活符文 $runeId Lv.$level")
-                        }
-                        "fragment" -> {
-                            val runeId = ctx.arg(2)
-                            val amount = ctx.argInt(3, 1)
-                            SymphonyPlugin.growthManager.addFragments(target, runeId, amount)
-                            ctx.reply("§a已给予 ${target.name} $amount 个 $runeId 碎片")
-                        }
-                        else -> ctx.reply("§c用法: /sym rune <activate|fragment> <player> <rune_id> [value]")
-                    }
-                }
-                .command("gem", "宝石操作", args = arrayOf("action", "player", "?slot", "?index", "?gem_id", "?level"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
-                    val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    val slotName = ctx.arg(2).uppercase()
-                    val item = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
-                    when (action) {
-                        "list" -> {
-                            val slots = SymphonyPlugin.growthManager.getGemSlots(item)
-                            if (slots.isEmpty()) return@command ctx.reply("§7该装备无宝石槽")
-                            slots.forEach { s ->
-                                val mark = if (s.locked) "§8[锁定]" else if (s.gemId != null) "§a[${s.gemId} Lv.${s.gemLevel}]" else "§7[空]"
-                                ctx.reply("  §e#${s.index} §f$mark")
+                            "list" -> {
+                                val values = AttributeCalculator.getValues(target)
+                                ctx.reply("§b${target.name} §f的属性列表:")
+                                values.entries.sortedBy { AttributeRegistry.get(it.key)?.priority ?: 999 }.forEach { (id, value) ->
+                                    val display = AttributeRegistry.get(id)?.displayName ?: id
+                                    ctx.reply("  §7$display §f($id): §a${"%.2f".format(value)}")
+                                }
                             }
+                            else -> ctx.reply("§c用法: /sym player attr <get|set|list> <玩家> ...")
                         }
-                        "insert" -> {
-                            val idx = ctx.argInt(3, -1)
-                            val gemId = ctx.arg(4)
-                            val level = ctx.argInt(5, 1)
-                            if (idx < 0 || gemId.isEmpty()) return@command ctx.reply("§c用法: /sym gem insert <玩家> <槽位> <索引> <宝石ID> [等级]")
-                            val slots = SymphonyPlugin.growthManager.getGemSlots(item)
-                            if (idx >= slots.size) return@command ctx.reply("§c槽位索引越界：该装备仅 ${slots.size} 个宝石槽")
-                            val ok = SymphonyPlugin.growthManager.gemManager.insertGem(target, item, idx, gemId, level)
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply(if (ok) "§a已镶嵌 $gemId Lv.$level 到 $slotName #$idx" else "§c镶嵌失败（槽位被锁/已占用）")
-                        }
-                        "remove" -> {
-                            val idx = ctx.argInt(3, -1)
-                            if (idx < 0) return@command ctx.reply("§c用法: /sym gem remove <玩家> <槽位> <索引>")
-                            val ok = SymphonyPlugin.growthManager.removeGem(item, idx)
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply(if (ok) "§a已移除 $slotName #$idx 的宝石" else "§c移除失败（槽位为空）")
-                        }
-                        "unlock" -> {
-                            val idx = ctx.argInt(3, -1)
-                            if (idx < 0) return@command ctx.reply("§c用法: /sym gem unlock <玩家> <槽位> <索引>")
-                            val ok = SymphonyPlugin.growthManager.unlockSlot(item, idx)
-                            ctx.reply(if (ok) "§a已解锁 $slotName #$idx" else "§c解锁失败")
-                        }
-                        else -> ctx.reply("§c用法: /sym gem <list|insert|remove|unlock> <玩家> <槽位> ...")
-                    }
-                }
-                .command("set", "套装操作", args = arrayOf("action", "player", "?slot", "?set_id"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
-                    val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    when (action) {
-                        "list" -> {
-                            val sets = SymphonyPlugin.growthManager.setManager.detectSets(target)
-                            if (sets.isEmpty()) return@command ctx.reply("§7无激活套装")
-                            sets.forEach { (setId, pieces) ->
-                                val def = SymphonyPlugin.growthManager.setManager.getDefinition(setId)
-                                ctx.reply("  §e${def?.displayName ?: setId} §f($setId) §7× $pieces")
+                        "buff" -> when (a1) {
+                            "add" -> {
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player buff add <玩家> <属性ID> <值> [FLAT|PERCENT] [秒]")
+                                val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
+                                val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                                val duration = ctx.arg(5).toLongOrNull() ?: -1L
+                                val expire = if (duration > 0) System.currentTimeMillis() + duration * 1000L else -1L
+                                val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
+                                data.runtime.activeBuffs.add(ActiveBuff(
+                                    id = "cmd:buff:$attrId:${UUID.randomUUID().toString().take(8)}",
+                                    attribute = attrId,
+                                    operation = op,
+                                    value = value,
+                                    expireTime = expire,
+                                    source = "command:buff"
+                                ))
+                                AttributeCache.markDirty(target.uniqueId)
+                                val durLabel = if (duration > 0) "${duration}s" else "永久"
+                                ctx.reply("§a已添加 Buff $attrId ($durLabel)")
                             }
+                            "list" -> {
+                                val data = PlayerDataManager.getData(target.uniqueId) ?: return@command ctx.reply("§c无数据")
+                                val buffs = data.runtime.activeBuffs
+                                if (buffs.isEmpty()) return@command ctx.reply("§7${target.name} 无活跃 Buff")
+                                ctx.reply("§b${target.name} §f的 Buff (${buffs.size}):")
+                                buffs.forEach { b ->
+                                    val opMark = if (b.operation == Operation.PERCENT) "×${"%.1f%%".format(b.value * 100)}" else "+${"%.2f".format(b.value)}"
+                                    val durMark = if (b.expireTime < 0) "§7永久" else "§7${((b.expireTime - System.currentTimeMillis()) / 1000).coerceAtLeast(0)}s"
+                                    ctx.reply("  §e${b.attribute} §f$opMark $durMark §8(${b.id})")
+                                }
+                            }
+                            "clear" -> {
+                                val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
+                                val count = data.runtime.activeBuffs.size
+                                data.runtime.activeBuffs.clear()
+                                AttributeCache.markDirty(target.uniqueId)
+                                ctx.reply("§a已清除 ${target.name} 的 $count 个 Buff")
+                            }
+                            else -> ctx.reply("§c用法: /sym player buff <add|list|clear> <玩家> ...")
                         }
-                        "mark" -> {
-                            val slotName = ctx.arg(2).uppercase()
-                            val setId = ctx.arg(3)
-                            if (setId.isEmpty()) return@command ctx.reply("§c用法: /sym set mark <玩家> <槽位> <套装ID>")
-                            if (SymphonyPlugin.growthManager.setManager.getDefinition(setId) == null) return@command ctx.reply("§c未知套装: $setId")
-                            val item = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
-                            SymphonyItemData.setString(item, "set_id", setId)
-                            target.updateInventory()
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply("§a已标记 $slotName 为套装 $setId")
+                        "level" -> when (a1) {
+                            "get" -> {
+                                val data = PlayerDataManager.getData(target.uniqueId)
+                                ctx.reply("§b${target.name} §f等级: §a${data?.persistent?.level ?: 1} §f经验: §e${data?.persistent?.exp ?: 0}")
+                            }
+                            "set" -> {
+                                val level = a2.toIntOrNull() ?: return@command ctx.reply("§c无效等级")
+                                val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
+                                data.persistent.level = level
+                                data.dirty = true
+                                AttributeCalculator.markDirty(target)
+                                ctx.reply("§a已设置 ${target.name} 等级为 $level")
+                            }
+                            else -> ctx.reply("§c用法: /sym player level <get|set> <玩家> [值]")
                         }
-                        "unmark" -> {
-                            val slotName = ctx.arg(2).uppercase()
-                            val item = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
-                            SymphonyItemData.remove(item, "set_id")
-                            target.updateInventory()
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply("§a已取消标记 $slotName")
+                        "rune" -> when (a1) {
+                            "activate" -> {
+                                val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune activate <玩家> <符文ID> [等级]")
+                                val level = a3.toIntOrNull() ?: 1
+                                SymphonyPlugin.growthManager.activateRune(target, runeId, level)
+                                ctx.reply("§a已激活符文 $runeId Lv.$level")
+                            }
+                            "fragment" -> {
+                                val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune fragment <玩家> <符文ID> [数量]")
+                                val amount = a3.toIntOrNull() ?: 1
+                                SymphonyPlugin.growthManager.addFragments(target, runeId, amount)
+                                ctx.reply("§a已给予 ${target.name} $amount 个 $runeId 碎片")
+                            }
+                            else -> ctx.reply("§c用法: /sym player rune <activate|fragment> <玩家> <符文ID> ...")
                         }
-                        else -> ctx.reply("§c用法: /sym set <list|mark|unmark> <玩家> <槽位> [套装ID]")
+                        else -> ctx.reply("§c用法: /sym player <attr|buff|level|rune> <玩家> ...")
                     }
                 }
-                .command("item", "物品属性操作", args = arrayOf("action", "?attr_id", "?value", "?op"), permission = "symphony.admin") { ctx ->
-                    val action = ctx.arg(0)
+                // ── item <sub> ... ──（操作执行者主手物品）
+                .command("item", "物品操作", args = arrayOf("sub", "?arg1", "?arg2", "?arg3", "?arg4", "?arg5"), permission = "symphony.admin") { ctx ->
+                    val sub = ctx.arg(0)
                     val target = ctx.player ?: return@command ctx.reply("§c仅玩家可用")
+                    val a1 = ctx.arg(1); val a2 = ctx.arg(2); val a3 = ctx.arg(3); val a4 = ctx.arg(4); val a5 = ctx.arg(5)
                     val item = target.inventory.itemInMainHand
                     if (item.type.isAir) return@command ctx.reply("§c主手没有物品")
-                    when (action) {
-                        "list" -> {
-                            val mods = readItemModifiers(item)
-                            if (mods.isEmpty()) return@command ctx.reply("§7主手物品无属性")
-                            ctx.reply("§b主手物品属性:")
-                            mods.forEach { m ->
-                                val display = AttributeRegistry.get(m.attr)?.displayName ?: m.attr
-                                val opMark = if (m.op.uppercase() == "PERCENT") "§7×§f${"%.1f%%".format(m.value * 100)}" else "§7+§f${"%.2f".format(m.value)}"
-                                ctx.reply("  §e$display §f(${m.attr}) $opMark")
+                    when (sub) {
+                        "attr" -> when (a1) {
+                            "add" -> {
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item attr add <属性ID> <值> [FLAT|PERCENT]")
+                                val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
+                                val op = a4.uppercase().takeIf { it == "PERCENT" } ?: "FLAT"
+                                val mods = readItemModifiers(item)
+                                mods.add(ModData(attrId, op, value))
+                                writeItemModifiers(item, mods)
+                                AttributeCalculator.markDirty(target)
+                                val opLabel = if (op == "PERCENT") "×${"%.1f%%".format(value * 100)}" else "+${"%.2f".format(value)}"
+                                ctx.reply("§a已添加属性 $attrId $opLabel")
+                            }
+                            "remove" -> {
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item attr remove <属性ID>")
+                                val mods = readItemModifiers(item)
+                                val before = mods.size
+                                mods.removeAll { it.attr == attrId }
+                                if (mods.size == before) return@command ctx.reply("§c未找到属性 $attrId")
+                                writeItemModifiers(item, mods)
+                                AttributeCalculator.markDirty(target)
+                                ctx.reply("§a已移除属性 $attrId (${before - mods.size} 条)")
+                            }
+                            "list" -> {
+                                val mods = readItemModifiers(item)
+                                if (mods.isEmpty()) return@command ctx.reply("§7主手物品无属性")
+                                ctx.reply("§b主手物品属性:")
+                                mods.forEach { m ->
+                                    val display = AttributeRegistry.get(m.attr)?.displayName ?: m.attr
+                                    val opMark = if (m.op.uppercase() == "PERCENT") "§7×§f${"%.1f%%".format(m.value * 100)}" else "§7+§f${"%.2f".format(m.value)}"
+                                    ctx.reply("  §e$display §f(${m.attr}) $opMark")
+                                }
+                            }
+                            "clear" -> {
+                                writeItemModifiers(item, emptyList())
+                                AttributeCalculator.markDirty(target)
+                                ctx.reply("§a已清空主手物品所有属性")
+                            }
+                            else -> ctx.reply("§c用法: /sym item attr <add|remove|list|clear> ...")
+                        }
+                        "affix" -> when (a1) {
+                            "list" -> {
+                                val affixes = AffixManagerImpl.collectItemAffixes(item)
+                                if (affixes.isEmpty()) return@command ctx.reply("§7主手物品无词条")
+                                ctx.reply("§b主手词条:")
+                                affixes.forEach { a ->
+                                    ctx.reply("  §e${a.affixId} §fLv.${a.level} §8(${a.uuid.toString().take(8)})")
+                                }
+                            }
+                            "add" -> {
+                                val affixId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item affix add <词条ID> [等级]")
+                                val level = a3.toIntOrNull() ?: 1
+                                val def = AffixManagerImpl.getDefinition(affixId)
+                                    ?: return@command ctx.reply("§c未知词条: $affixId")
+                                val instance = AffixInstance(UUID.randomUUID(), affixId, level, def.getLevelParams(level))
+                                SymphonyPlugin.apiImpl.affixManagerInstance.addAffix(item, instance)
+                                ctx.reply("§a已添加词条 $affixId Lv.$level")
+                            }
+                            "clear" -> {
+                                SymphonyPlugin.apiImpl.affixManagerInstance.clearAffixes(item)
+                                ctx.reply("§a已清除主手所有词条")
+                            }
+                            "generate" -> {
+                                val poolId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item affix generate <词条池ID>")
+                                val luck = AttributeCalculator.getValue(target, "luck")
+                                val affixes = SymphonyPlugin.apiImpl.affixManagerInstance.generateAffixes(poolId, AffixRarity.RARE, luck)
+                                if (affixes.isEmpty()) return@command ctx.reply("§c生成失败，检查词条池 $poolId")
+                                SymphonyPlugin.apiImpl.affixManagerInstance.applyAffixes(item, affixes)
+                                ctx.reply("§a已生成 ${affixes.size} 个词条")
+                            }
+                            else -> ctx.reply("§c用法: /sym item affix <list|add|clear|generate> ...")
+                        }
+                        "enhance" -> when (a1) {
+                            "get" -> ctx.reply("§b主手强化等级: §a${SymphonyPlugin.growthManager.getEnhanceLevel(item)}")
+                            "set" -> {
+                                val level = a2.toIntOrNull() ?: return@command ctx.reply("§c无效等级")
+                                SymphonyPlugin.growthManager.setEnhanceLevel(item, level)
+                                AttributeCalculator.markDirty(target)
+                                ctx.reply("§a已设置强化等级为 $level")
+                            }
+                            else -> ctx.reply("§c用法: /sym item enhance <get|set> [等级]")
+                        }
+                        "gem" -> {
+                            val slotName = a2.uppercase()
+                            val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName (可选: ${SLOT_NAMES.joinToString()})")
+                            when (a1) {
+                                "list" -> {
+                                    val slots = SymphonyPlugin.growthManager.getGemSlots(slotItem)
+                                    if (slots.isEmpty()) return@command ctx.reply("§7该装备无宝石槽")
+                                    slots.forEach { s ->
+                                        val mark = if (s.locked) "§8[锁定]" else if (s.gemId != null) "§a[${s.gemId} Lv.${s.gemLevel}]" else "§7[空]"
+                                        ctx.reply("  §e#${s.index} §f$mark")
+                                    }
+                                }
+                                "insert" -> {
+                                    val idx = a3.toIntOrNull() ?: return@command ctx.reply("§c用法: /sym item gem insert <槽位> <索引> <宝石ID> [等级]")
+                                    val gemId = a4.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c缺少宝石ID")
+                                    val level = a5.toIntOrNull() ?: 1
+                                    val slots = SymphonyPlugin.growthManager.getGemSlots(slotItem)
+                                    if (idx >= slots.size) return@command ctx.reply("§c槽位索引越界：该装备仅 ${slots.size} 个宝石槽")
+                                    val ok = SymphonyPlugin.growthManager.gemManager.insertGem(target, slotItem, idx, gemId, level)
+                                    AttributeCalculator.markDirty(target)
+                                    ctx.reply(if (ok) "§a已镶嵌 $gemId Lv.$level 到 $slotName #$idx" else "§c镶嵌失败（槽位被锁/已占用）")
+                                }
+                                "remove" -> {
+                                    val idx = a3.toIntOrNull() ?: return@command ctx.reply("§c用法: /sym item gem remove <槽位> <索引>")
+                                    val ok = SymphonyPlugin.growthManager.removeGem(slotItem, idx)
+                                    AttributeCalculator.markDirty(target)
+                                    ctx.reply(if (ok) "§a已移除 $slotName #$idx 的宝石" else "§c移除失败（槽位为空）")
+                                }
+                                "unlock" -> {
+                                    val idx = a3.toIntOrNull() ?: return@command ctx.reply("§c用法: /sym item gem unlock <槽位> <索引>")
+                                    val ok = SymphonyPlugin.growthManager.unlockSlot(slotItem, idx)
+                                    ctx.reply(if (ok) "§a已解锁 $slotName #$idx" else "§c解锁失败")
+                                }
+                                else -> ctx.reply("§c用法: /sym item gem <list|insert|remove|unlock> <槽位> ...")
                             }
                         }
-                        "add" -> {
-                            val attrId = ctx.arg(1).takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item add <属性ID> <数值> [FLAT|PERCENT]")
-                            val value = ctx.arg(2).toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
-                            val op = ctx.arg(3).uppercase().takeIf { it == "PERCENT" } ?: "FLAT"
-                            val mods = readItemModifiers(item)
-                            mods.add(ModData(attrId, op, value))
-                            writeItemModifiers(item, mods)
-                            AttributeCalculator.markDirty(target)
-                            val opLabel = if (op == "PERCENT") "×${"%.1f%%".format(value * 100)}" else "+${"%.2f".format(value)}"
-                            ctx.reply("§a已添加属性 $attrId $opLabel")
+                        "set" -> when (a1) {
+                            "list" -> {
+                                val sets = SymphonyPlugin.growthManager.setManager.detectSets(target)
+                                if (sets.isEmpty()) return@command ctx.reply("§7无激活套装")
+                                sets.forEach { (setId, pieces) ->
+                                    val def = SymphonyPlugin.growthManager.setManager.getDefinition(setId)
+                                    ctx.reply("  §e${def?.displayName ?: setId} §f($setId) §7× $pieces")
+                                }
+                            }
+                            "mark" -> {
+                                val slotName = a2.uppercase()
+                                val setId = a3.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item set mark <槽位> <套装ID>")
+                                if (SymphonyPlugin.growthManager.setManager.getDefinition(setId) == null) return@command ctx.reply("§c未知套装: $setId")
+                                val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
+                                SymphonyItemData.setString(slotItem, "set_id", setId)
+                                target.updateInventory()
+                                AttributeCalculator.markDirty(target)
+                                ctx.reply("§a已标记 $slotName 为套装 $setId")
+                            }
+                            "unmark" -> {
+                                val slotName = a2.uppercase()
+                                val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
+                                SymphonyItemData.remove(slotItem, "set_id")
+                                target.updateInventory()
+                                AttributeCalculator.markDirty(target)
+                                ctx.reply("§a已取消标记 $slotName")
+                            }
+                            else -> ctx.reply("§c用法: /sym item set <list|mark|unmark> ...")
                         }
-                        "remove" -> {
-                            val attrId = ctx.arg(1).takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item remove <属性ID>")
-                            val mods = readItemModifiers(item)
-                            val before = mods.size
-                            mods.removeAll { it.attr == attrId }
-                            if (mods.size == before) return@command ctx.reply("§c未找到属性 $attrId")
-                            writeItemModifiers(item, mods)
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply("§a已移除属性 $attrId (${before - mods.size} 条)")
-                        }
-                        "clear" -> {
-                            writeItemModifiers(item, emptyList())
-                            AttributeCalculator.markDirty(target)
-                            ctx.reply("§a已清空主手物品所有属性")
-                        }
-                        else -> ctx.reply("§c用法: /sym item <list|add|remove|clear> [属性ID] [数值] [FLAT|PERCENT]")
+                        else -> ctx.reply("§c用法: /sym item <attr|affix|enhance|gem|set> ...")
                     }
                 }
+                // ── 通用命令 ──
                 .command("debug", "调试信息", args = arrayOf("?player"), permission = "symphony.admin") { ctx ->
                     val target = ctx.argPlayer(0) ?: (ctx.player ?: return@command ctx.reply("§c请指定玩家"))
                     val data = PlayerDataManager.getData(target.uniqueId)
@@ -365,8 +391,8 @@ object SymphonyCommands {
                     ctx.reply("§8  §7lvl §f${data?.persistent?.level ?: 1}  §7exp §f${data?.persistent?.exp ?: 0}  §7combat §f${data?.runtime?.inCombat ?: false}")
                     ctx.reply("§8  §7buff §f${data?.runtime?.activeBuffs?.size ?: 0}  §7temp_affix §f${data?.runtime?.tempAffixes?.size ?: 0}  §7registered §f${AttributeRegistry.ids().size}")
                 }
-                .command("explain", "属性流水线", args = arrayOf("attr_id", "?player"), permission = "symphony.admin") { ctx ->
-                    val attrId = ctx.arg(0).takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym explain <attr_id> [player]")
+                .command("explain", "属性流水线", args = arrayOf("explain_attr", "?player"), permission = "symphony.admin") { ctx ->
+                    val attrId = ctx.arg(0).takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym explain <属性ID> [玩家]")
                     val target = ctx.argPlayer(1) ?: (ctx.player ?: return@command ctx.reply("§c请指定玩家"))
                     val explain = AttributeCalculator.explain(target, attrId)
                     if (explain == null) { ctx.reply("§c未找到属性 $attrId"); return@command }
@@ -394,10 +420,12 @@ object SymphonyCommands {
                     val target = ctx.player ?: return@command ctx.reply("§c仅玩家可用")
                     SymphonyPlugin.guiProvider.open(target)
                 }
-                .tabComplete("action") { listOf("get", "set", "list", "addexp") }
-                .tabComplete("attribute") { AttributeRegistry.ids().toList() }
-                .tabComplete("attr_id") { AttributeRegistry.ids().toList() }
-                .tabComplete("op") { listOf("FLAT", "PERCENT") }
+                // ── Tab 补全 ──
+                .tabComplete("sub") { listOf("attr", "buff", "level", "rune", "affix", "enhance", "gem", "set") }
+                .tabComplete("arg1") { listOf("get", "set", "list", "add", "remove", "clear", "activate", "fragment", "insert", "unlock", "generate", "mark", "unmark") }
+                .tabComplete("arg2") { AttributeRegistry.ids().toList() + SLOT_NAMES }
+                .tabComplete("arg4") { listOf("FLAT", "PERCENT") }
+                .tabComplete("explain_attr") { AttributeRegistry.ids().toList() }
         )
     }
 }

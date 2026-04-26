@@ -283,7 +283,7 @@ generation:
 ### 生成命令
 
 ```
-/sym affix generate <玩家> weapon_pool
+/sym item affix generate weapon_pool
 ```
 
 ## 5. 词条示例集

@@ -60,11 +60,11 @@ level:
 ### 命令
 
 ```
-/sym level get <玩家>
-/sym level set <玩家> <等级>
+/sym player level get <玩家>
+/sym player level set <玩家> <等级>
 ```
 
-> 目前只有 get/set，没有 addexp 子命令——直接改 `data.persistent.exp` 的话用 API 或 `/sym attribute set` 绕过。
+> 目前只有 get/set，没有 addexp 子命令——直接改 `data.persistent.exp` 的话用 API 或 `/sym player attr set` 绕过。
 
 ## 2. 宝石系统
 
@@ -143,10 +143,10 @@ gem_slots:
 ### 2.3 操作命令
 
 ```
-/sym gem list <玩家> <装备槽>
-/sym gem insert <玩家> <装备槽> <宝石槽索引> <宝石ID> [等级]
-/sym gem remove <玩家> <装备槽> <宝石槽索引>
-/sym gem unlock <玩家> <装备槽> <宝石槽索引>
+/sym item gem list <装备槽>
+/sym item gem insert <装备槽> <宝石槽索引> <宝石ID> [等级]
+/sym item gem remove <装备槽> <宝石槽索引>
+/sym item gem unlock <装备槽> <宝石槽索引>
 ```
 
 装备槽大小写不敏感，写 `MAIN / OFF / HELMET / CHEST / LEGS / BOOTS` 或对应的 `HAND / OFF_HAND / HEAD / CHESTPLATE / LEGGINGS / FEET` 都行。
@@ -254,8 +254,8 @@ fragment_sources:
 ### 3.3 命令
 
 ```
-/sym rune activate <玩家> <符文ID> [等级]
-/sym rune fragment <玩家> <符文ID> <数量>
+/sym player rune activate <玩家> <符文ID> [等级]
+/sym player rune fragment <玩家> <符文ID> <数量>
 ```
 
 > 停用符文不通过命令——目前需要通过 API `GrowthManager.deactivateRune(player, runeId)`，命令没对外开这个子项。
@@ -285,11 +285,11 @@ fragment_sources:
 ### 4.4 命令
 
 ```
-/sym enhance get <玩家>
-/sym enhance set <玩家> <等级>
+/sym item enhance get
+/sym item enhance set <等级>
 ```
 
-作用对象是玩家主手物品。
+作用对象是执行者主手物品。
 
 ## 5. 套装系统
 
@@ -349,9 +349,9 @@ bonuses:
 通过命令或 API 在物品 PDC 上写 `set_id`：
 
 ```
-/sym set list <玩家>
-/sym set mark <玩家> <装备槽> <套装ID>
-/sym set unmark <玩家> <装备槽>
+/sym item set list
+/sym item set mark <装备槽> <套装ID>
+/sym item set unmark <装备槽>
 ```
 
 物品 Lore 会自动显示套装信息：

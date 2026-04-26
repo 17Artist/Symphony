@@ -157,16 +157,16 @@ triggers:
 ## 5. 给物品添加词条
 
 ```
-/sym affix add <玩家> thunder_strike 2
+/sym item affix add thunder_strike 2
 ```
 
-会把玩家主手物品上挂一条 2 级「雷霆一击」。操作对象是主手物品的 NBT，不是背包某格。
+会把执行者主手物品上挂一条 2 级「雷霆一击」。操作对象是主手物品的 NBT，不是背包某格。
 
 ## 6. 查看属性
 
 ```
-/sym attribute list <玩家>
-/sym attribute get <玩家> physical_damage
+/sym player attr list <玩家>
+/sym player attr get <玩家> physical_damage
 /sym debug <玩家>
 ```
 
