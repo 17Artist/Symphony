@@ -1,12 +1,13 @@
 package priv.seventeen.artist.symphony.core.script
 
+import priv.seventeen.artist.aria.Aria
 import priv.seventeen.artist.aria.callable.ICallable
 import priv.seventeen.artist.aria.value.FunctionValue
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.blink.script.AriaScriptManager
 
 /**
- * 轻量表达式编译器 — 把字符串表达式包装为 Aria lambda 并编译缓存。
+ * 轻量表达式编译器 — 把字符串表达式包装为 Aria lambda 并预编译。
  *
  * 表达式内部可引用以下自动绑定：
  * - `entity` — 当前实体（LivingEntity，`args[0]` 透传）
@@ -30,7 +31,8 @@ object ExpressionCompiler {
             }
         """.trimIndent()
         return try {
-            val result = AriaScriptManager.eval(code)
+            val routine = Aria.compile("expr:${attrId}:${kind}", code)
+            val result = routine.execute(Aria.createContext())
             if (result is FunctionValue) result.jvmValue()
             else {
                 BlinkLog.warn("表达式 §c${attrId}.${kind}Expr §f返回类型非 Function")

@@ -74,7 +74,7 @@ object SymphonyPlugin {
         skillProviderManager = SkillProviderManagerImpl()
         SkillDispatcher.providerManager = skillProviderManager
         skillProviderManager.registerProvider(SymphonySkillProvider())
-        skillProviderManager.registerProvider(AriaSkillProvider(scriptEngine))
+        skillProviderManager.registerProvider(AriaSkillProvider())
 
         val mmBridge = MythicMobsBridge()
         if (mmBridge.isAvailable()) {

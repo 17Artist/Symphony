@@ -1,11 +1,22 @@
 package priv.seventeen.artist.symphony.core.affix.action
 
+import priv.seventeen.artist.aria.Aria
+import priv.seventeen.artist.aria.api.AriaCompiledRoutine
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.blink.script.AriaScriptManager
 import priv.seventeen.artist.symphony.api.affix.AffixInstance
 import priv.seventeen.artist.symphony.api.trigger.ITriggerContext
+import priv.seventeen.artist.symphony.core.script.SymphonyScriptEngine
+import java.util.concurrent.ConcurrentHashMap
 
 class ScriptActionHandler : ActionHandler {
+
+    companion object {
+        /** code hash → 编译产物缓存 */
+        private val cache = ConcurrentHashMap<Int, AriaCompiledRoutine>()
+
+        fun clearCache() = cache.clear()
+    }
 
     override fun execute(params: Map<String, Any>, context: ITriggerContext, affix: AffixInstance) {
         val code = resolveParam(params["code"], affix.parameters)
@@ -19,21 +30,8 @@ class ScriptActionHandler : ActionHandler {
         }
 
         try {
-            // 构建上下文变量
-            val vars = mutableMapOf<String, Any>(
-                "trigger_entity" to context.entity,
-                "trigger_type" to context.triggerType.id,
-                "trigger_location" to context.location,
-                "affix_id" to affix.affixId,
-                "affix_level" to affix.level
-            )
-            context.target?.let { vars["trigger_victim"] = it }
-            context.damage?.let { vars["trigger_damage"] = it }
-            affix.parameters.forEach { (k, v) -> vars[k] = v }
-
             val scriptCode = if (file != null) {
                 val fileObj = java.io.File(file)
-                // 安全检查：脚本文件必须在 plugins 目录下
                 val canonical = fileObj.canonicalPath
                 val pluginsDir = java.io.File("plugins").canonicalPath
                 if (!canonical.startsWith(pluginsDir)) {
@@ -43,7 +41,23 @@ class ScriptActionHandler : ActionHandler {
                 if (fileObj.exists()) fileObj.readText() else code
             } else code
 
-            AriaScriptManager.eval(scriptCode, vars)
+            val routine = cache.computeIfAbsent(scriptCode.hashCode()) {
+                Aria.compile("action:${affix.affixId}:${it}", scriptCode)
+            }
+
+            val ctx = Aria.createContext()
+            val vars = buildMap<String, Any?> {
+                put("trigger_entity", context.entity)
+                put("trigger_type", context.triggerType.id)
+                put("trigger_location", context.location)
+                put("affix_id", affix.affixId)
+                put("affix_level", affix.level)
+                context.target?.let { put("trigger_victim", it) }
+                context.damage?.let { put("trigger_damage", it) }
+                affix.parameters.forEach { (k, v) -> put(k, v) }
+            }
+            SymphonyScriptEngine.injectVars(ctx, vars)
+            routine.execute(ctx)
         } catch (e: Exception) {
             BlinkLog.warn("脚本 Action 执行失败: ${e.message}")
         }

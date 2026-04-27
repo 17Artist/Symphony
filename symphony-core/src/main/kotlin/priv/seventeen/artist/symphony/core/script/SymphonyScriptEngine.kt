@@ -1,17 +1,37 @@
 package priv.seventeen.artist.symphony.core.script
 
+import priv.seventeen.artist.aria.Aria
+import priv.seventeen.artist.aria.api.AriaCompiledRoutine
+import priv.seventeen.artist.aria.callable.NativeCallable
+import priv.seventeen.artist.aria.context.Context
+import priv.seventeen.artist.aria.context.VariableKey
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.blink.script.AriaScriptManager
 import priv.seventeen.artist.symphony.core.script.annotation.AttributeAnnotationProcessor
 import priv.seventeen.artist.symphony.core.script.namespace.NamespaceRegistrar
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Symphony Aria 脚本引擎封装。
- * 直接使用 AriaScriptManager（Blink 自动初始化 Aria）。
+ * 所有脚本在加载时预编译为 [AriaCompiledRoutine]，运行时直接执行编译产物。
  */
 class SymphonyScriptEngine {
     private var initialized = false
+
+    /** code hash → 编译产物缓存 */
+    private val routineCache = ConcurrentHashMap<Int, AriaCompiledRoutine>()
+    private var nameCounter = 0
+
+    companion object {
+        /** 向 Aria Context 注入变量的工具方法 */
+        fun injectVars(ctx: Context, vars: Map<String, Any?>) {
+            val gs = ctx.globalStorage
+            for ((key, value) in vars) {
+                gs.getGlobalVariable(VariableKey.of(key)).setValue(NativeCallable.wrapObject(value))
+            }
+        }
+    }
 
     fun initialize(dataFolder: File) {
         BlinkLog.info("初始化脚本引擎...")
@@ -26,7 +46,6 @@ class SymphonyScriptEngine {
             return
         }
 
-        // 注册 symphony.* 命名空间到 Aria
         NamespaceRegistrar.registerAll()
 
         initialized = true
@@ -47,13 +66,13 @@ class SymphonyScriptEngine {
         BlinkLog.info("加载 §b${files.size} §f个属性脚本...")
         for (file in files) {
             try {
+                // 属性脚本需要执行注解注册，用 evalFile 走全局上下文
                 AriaScriptManager.evalFile(file)
                 BlinkLog.detail("  §7已执行: §f${file.relativeTo(dir).path.replace('\\', '/')}")
             } catch (e: Exception) {
                 BlinkLog.warn("  属性脚本执行失败 ${file.name}: ${e.message}")
             }
         }
-        // 注解处理：将所有 @attribute 类聚合后注册到 AttributeRegistry
         try {
             val n = AttributeAnnotationProcessor.process()
             BlinkLog.success("注解处理完成 — 注册 §b${n} §f个属性")
@@ -95,10 +114,33 @@ class SymphonyScriptEngine {
         }
     }
 
+    /**
+     * 编译并缓存脚本，相同 code 只编译一次。
+     */
+    fun compile(name: String, code: String): AriaCompiledRoutine? {
+        if (!initialized) return null
+        return try {
+            routineCache.computeIfAbsent(code.hashCode()) {
+                Aria.compile(name, code)
+            }
+        } catch (e: Exception) {
+            BlinkLog.warn("脚本编译失败 $name: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * 执行脚本。优先走编译缓存，每次创建新 Context 传入变量。
+     */
     fun eval(code: String, vars: Map<String, Any> = emptyMap()): Any? {
         if (!initialized) return null
         return try {
-            AriaScriptManager.eval(code, vars)
+            val routine = routineCache.computeIfAbsent(code.hashCode()) {
+                Aria.compile("eval:${nameCounter++}", code)
+            }
+            val ctx = Aria.createContext()
+            injectVars(ctx, vars)
+            routine.execute(ctx)?.jvmValue()
         } catch (e: Exception) {
             BlinkLog.warn("脚本执行失败: ${e.message}")
             null
@@ -115,17 +157,8 @@ class SymphonyScriptEngine {
         }
     }
 
-    fun compile(name: String, code: String): Any? {
-        if (!initialized) return null
-        return try {
-            AriaScriptManager.compile(name, code)
-        } catch (e: Exception) {
-            BlinkLog.warn("脚本编译失败 $name: ${e.message}")
-            null
-        }
-    }
-
     fun shutdown() {
+        routineCache.clear()
         initialized = false
         BlinkLog.info("脚本引擎已关闭")
     }
