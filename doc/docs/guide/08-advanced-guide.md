@@ -33,15 +33,15 @@ symphony.interaction.register({
 
 ### 交互类型速查
 
-| 类型 | 用途 | 关键参数 |
-|------|------|----------|
-| `CONVERSION` | A 按比例转化为 B | source, target, ratio |
-| `OVERFLOW` | A 超过阈值后溢出转化为 B | source, target, threshold, ratio |
-| `THRESHOLD` | A 达到阈值时激活效果 | source, threshold, effect |
-| `SYNERGY` | 多属性同时达标时互相增幅 | attributes, threshold, bonus |
-| `CONFLICT` | 两属性互斥衰减 | attribute_a, attribute_b, threshold_a, penalty_b |
-| `AMPLIFY` | 满足条件时属性获得倍率 | target, condition, multiplier |
-| `DIMINISH` | 递减收益曲线 | source, curve (Aria 函数) |
+| 类型           | 用途             | 关键参数                                             |
+|--------------|----------------|--------------------------------------------------|
+| `CONVERSION` | A 按比例转化为 B     | source, target, ratio                            |
+| `OVERFLOW`   | A 超过阈值后溢出转化为 B | source, target, threshold, ratio                 |
+| `THRESHOLD`  | A 达到阈值时激活效果    | source, threshold, effect                        |
+| `SYNERGY`    | 多属性同时达标时互相增幅   | attributes, threshold, bonus                     |
+| `CONFLICT`   | 两属性互斥衰减        | attribute_a, attribute_b, threshold_a, penalty_b |
+| `AMPLIFY`    | 满足条件时属性获得倍率    | target, condition, multiplier                    |
+| `DIMINISH`   | 递减收益曲线         | source, curve (Aria 函数)                          |
 
 ## 2. 元素反应系统
 
@@ -53,16 +53,16 @@ symphony.interaction.register({
 
 ### 默认反应表
 
-| 触发 | 底层 | 反应 | 类型 | 效果 |
-|------|------|------|------|------|
-| 火 | 水 | 蒸发 | 倍率 | 伤害 ×2.0 |
-| 水 | 火 | 蒸发(逆) | 倍率 | 伤害 ×1.5 |
-| 火 | 冰 | 融化 | 倍率 | 伤害 ×2.0 |
-| 冰 | 火 | 融化(逆) | 倍率 | 伤害 ×1.5 |
-| 雷 | 冰 | 超导 | 减防 | 目标物防 -40%，AOE 伤害 |
-| 雷 | 水 | 感电 | 持续AOE | 每秒跳伤，传播水元素 |
-| 冰 | 水 | 冻结 | 控制 | 冻结 3 秒 |
-| 风 | 任意 | 扩散 | 传播 | 将元素传播给范围内敌人 |
+| 触发 | 底层 | 反应    | 类型    | 效果               |
+|----|----|-------|-------|------------------|
+| 火  | 水  | 蒸发    | 倍率    | 伤害 ×2.0          |
+| 水  | 火  | 蒸发(逆) | 倍率    | 伤害 ×1.5          |
+| 火  | 冰  | 融化    | 倍率    | 伤害 ×2.0          |
+| 冰  | 火  | 融化(逆) | 倍率    | 伤害 ×1.5          |
+| 雷  | 冰  | 超导    | 减防    | 目标物防 -40%，AOE 伤害 |
+| 雷  | 水  | 感电    | 持续AOE | 每秒跳伤，传播水元素       |
+| 冰  | 水  | 冻结    | 控制    | 冻结 3 秒           |
+| 风  | 任意 | 扩散    | 传播    | 将元素传播给范围内敌人      |
 
 ### 自定义反应
 

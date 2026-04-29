@@ -1,8 +1,5 @@
 package priv.seventeen.artist.symphony.core.affix
 
-import org.bukkit.Bukkit
-import org.bukkit.entity.LivingEntity
-import org.bukkit.entity.Player
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.affix.AffixInstance
 import priv.seventeen.artist.symphony.api.affix.IActionHandler

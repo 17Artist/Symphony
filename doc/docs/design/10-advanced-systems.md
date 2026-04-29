@@ -4,14 +4,14 @@
 
 当前 MC 属性插件的共同瓶颈：
 
-| 问题 | 现状 | 现代 ARPG 的做法 |
-|------|------|-----------------|
+| 问题      | 现状                     | 现代 ARPG 的做法                  |
+|---------|------------------------|------------------------------|
 | 属性是孤立数字 | 攻击力 100 就是 100，属性之间无交互 | PoE：力量每 10 点 +5 生命；D4：智力提供全抗 |
-| 元素是数值贴纸 | 火焰伤害 = 额外加一个数字 | 原神：两种元素叠加触发反应，产生倍率/控制 |
-| 词条无协同 | 词条各自独立，堆得越多越好 | Lost Ark：铭刻达到阈值激活质变效果 |
-| 成长是线性的 | 等级越高数字越大，没有质变 | PoE：天赋树 Keystone 改变玩法规则 |
-| 没有状态深度 | 中毒 = 持续掉血，没有层数/叠加/爆发 | Lost Ark/PoE2：异常状态叠层到阈值触发爆发 |
-| 环境无意义 | 在哪打都一样 | 原神：草地上放火扩散，水边雷电感电 |
+| 元素是数值贴纸 | 火焰伤害 = 额外加一个数字         | 原神：两种元素叠加触发反应，产生倍率/控制        |
+| 词条无协同   | 词条各自独立，堆得越多越好          | Lost Ark：铭刻达到阈值激活质变效果        |
+| 成长是线性的  | 等级越高数字越大，没有质变          | PoE：天赋树 Keystone 改变玩法规则      |
+| 没有状态深度  | 中毒 = 持续掉血，没有层数/叠加/爆发   | Lost Ark/PoE2：异常状态叠层到阈值触发爆发  |
+| 环境无意义   | 在哪打都一样                 | 原神：草地上放火扩散，水边雷电感电            |
 
 Symphony 的 6 个划时代系统逐一解决这些问题。
 
@@ -25,15 +25,15 @@ Symphony 的 6 个划时代系统逐一解决这些问题。
 
 ### 1.2 交互类型
 
-| 交互类型 | 说明 | 示例 |
-|----------|------|------|
-| `OVERFLOW` | 溢出转化 — 属性超过阈值后，溢出部分按比例转化为另一属性 | 暴击率 > 100% 时，每 1% 溢出转化为 0.5% 暴击伤害 |
-| `THRESHOLD` | 阈值突变 — 属性达到阈值时触发质变效果 | 攻击速度 > 2.0 时解锁「疾风连斩」：每次攻击额外打一刀 |
-| `SYNERGY` | 协同增幅 — 两个属性同时高于某值时，互相增幅 | 力量 > 50 且 体力 > 50 时，两者各 +10% |
-| `CONVERSION` | 持续转化 — A 属性的一定比例持续转化为 B 属性 | 每 10 点智力 → +5 最大法力 |
-| `DIMINISH` | 递减收益 — 属性越高，每点收益越低 | 闪避率：前 30% 线性，30%~60% 半衰，60%+ 极度递减 |
-| `CONFLICT` | 互斥衰减 — 两个属性同时存在时互相削弱 | 重甲防御 和 闪避率 同时存在时，闪避率 -30% |
-| `AMPLIFY` | 条件增幅 — 满足条件时属性获得额外倍率 | 生命值 < 30% 时，物理攻击力 ×1.5（狂战士） |
+| 交互类型         | 说明                            | 示例                                |
+|--------------|-------------------------------|-----------------------------------|
+| `OVERFLOW`   | 溢出转化 — 属性超过阈值后，溢出部分按比例转化为另一属性 | 暴击率 > 100% 时，每 1% 溢出转化为 0.5% 暴击伤害 |
+| `THRESHOLD`  | 阈值突变 — 属性达到阈值时触发质变效果          | 攻击速度 > 2.0 时解锁「疾风连斩」：每次攻击额外打一刀    |
+| `SYNERGY`    | 协同增幅 — 两个属性同时高于某值时，互相增幅       | 力量 > 50 且 体力 > 50 时，两者各 +10%      |
+| `CONVERSION` | 持续转化 — A 属性的一定比例持续转化为 B 属性    | 每 10 点智力 → +5 最大法力                |
+| `DIMINISH`   | 递减收益 — 属性越高，每点收益越低            | 闪避率：前 30% 线性，30%~60% 半衰，60%+ 极度递减 |
+| `CONFLICT`   | 互斥衰减 — 两个属性同时存在时互相削弱          | 重甲防御 和 闪避率 同时存在时，闪避率 -30%         |
+| `AMPLIFY`    | 条件增幅 — 满足条件时属性获得额外倍率          | 生命值 < 30% 时，物理攻击力 ×1.5（狂战士）       |
 
 ### 1.3 脚本定义
 
@@ -387,15 +387,15 @@ effects:
 
 ### 3.3 共鸣条件类型
 
-| 条件类型 | 说明 | 参数 |
-|----------|------|------|
-| `AFFIX_TAG_COUNT` | 指定标签的词条数量 | tag, count |
-| `AFFIX_ID_SET` | 指定词条 ID 组合 | affix_ids (列表) |
-| `AFFIX_RARITY_COUNT` | 指定稀有度的词条数量 | rarity, count |
-| `AFFIX_CATEGORY_COUNT` | 指定类别的词条数量 | category, count |
-| `AFFIX_LEVEL_SUM` | 词条等级之和 | min_sum |
-| `MULTI_TAG` | 多标签组合 | tags (map: tag → count) |
-| `SCRIPT` | Aria 脚本自定义条件 | code |
+| 条件类型                   | 说明           | 参数                      |
+|------------------------|--------------|-------------------------|
+| `AFFIX_TAG_COUNT`      | 指定标签的词条数量    | tag, count              |
+| `AFFIX_ID_SET`         | 指定词条 ID 组合   | affix_ids (列表)          |
+| `AFFIX_RARITY_COUNT`   | 指定稀有度的词条数量   | rarity, count           |
+| `AFFIX_CATEGORY_COUNT` | 指定类别的词条数量    | category, count         |
+| `AFFIX_LEVEL_SUM`      | 词条等级之和       | min_sum                 |
+| `MULTI_TAG`            | 多标签组合        | tags (map: tag → count) |
+| `SCRIPT`               | Aria 脚本自定义条件 | code                    |
 
 ### 3.4 高级共鸣示例
 
@@ -899,15 +899,15 @@ EnvironmentProvider（优先级 750）：
 
 ### 7.2 新增 Aria 命名空间汇总
 
-| 命名空间 | 说明 |
-|----------|------|
-| `symphony.interaction.*` | 属性交互网络（register/remove/list） |
-| `symphony.element.*` | 元素系统（registerAura/registerReaction/applyAura/getAura） |
-| `symphony.resonance.*` | 词条共鸣（register/check/getActive） |
-| `symphony.talent.*` | 天赋门（register/unlockSlot/getStatus） |
-| `symphony.status.*` | 状态层（register/addStacks/getStacks/clearStacks） |
-| `symphony.environment.*` | 环境系统（registerModifier/registerCombatModifier） |
-| `symphony.world.*` | 世界信息（getTime/isRaining/isThundering/getDimension/getBiome） |
+| 命名空间                     | 说明                                                                   |
+|--------------------------|----------------------------------------------------------------------|
+| `symphony.interaction.*` | 属性交互网络（register/remove/list）                                         |
+| `symphony.element.*`     | 元素系统（applyAura/getAura/removeAura/getAllAuras/tryReaction）           |
+| `symphony.resonance.*`   | 词条共鸣（register/getActive/check/list）                                  |
+| `symphony.talent.*`      | 天赋门（register/isUnlocked/check/getStatus/list）                        |
+| `symphony.status.*`      | 状态层（register/addStacks/getStacks/clearStacks/setImmune/list）         |
+| `symphony.environment.*` | 环境系统（register/getActive/list）                                        |
+| `symphony.world.*`       | 世界信息（getTime/isRaining/isThundering/getDimension/getBiome/isOutdoor） |
 
 ### 7.3 新增脚本目录
 

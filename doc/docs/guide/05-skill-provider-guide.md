@@ -6,10 +6,10 @@
 
 内置提供者：
 
-| 提供者 ID | 说明 |
-|-----------|------|
-| `symphony` | Symphony 内置技能（YAML Action 序列） |
-| `aria` | Aria 脚本技能 |
+| 提供者 ID       | 说明                              |
+|--------------|---------------------------------|
+| `symphony`   | Symphony 内置技能（YAML Action 序列）   |
+| `aria`       | Aria 脚本技能                       |
 | `mythicmobs` | MythicMobs 技能桥接（需安装 MythicMobs） |
 
 ## 2. Symphony 内置技能
@@ -86,15 +86,15 @@ triggers:
 
 ### 2.3 目标选择器
 
-| 类型 | 说明 | 参数 |
-|------|------|------|
-| `TRIGGER_TARGET` | 触发器目标 | — |
-| `SELF` | 施法者自身 | — |
-| `NEARBY_ENEMIES` | 附近敌对实体 | `radius` |
-| `NEARBY_ALLIES` | 附近友方实体 | `radius` |
-| `NEARBY_ALL` | 附近所有实体 | `radius` |
-| `LINE_OF_SIGHT` | 视线方向实体 | `range`, `width` |
-| `CONE` | 锥形范围 | `range`, `angle` |
+| 类型               | 说明     | 参数               |
+|------------------|--------|------------------|
+| `TRIGGER_TARGET` | 触发器目标  | —                |
+| `SELF`           | 施法者自身  | —                |
+| `NEARBY_ENEMIES` | 附近敌对实体 | `radius`         |
+| `NEARBY_ALLIES`  | 附近友方实体 | `radius`         |
+| `NEARBY_ALL`     | 附近所有实体 | `radius`         |
+| `LINE_OF_SIGHT`  | 视线方向实体 | `range`, `width` |
+| `CONE`           | 锥形范围   | `range`, `angle` |
 
 ## 3. Aria 脚本技能
 
@@ -156,14 +156,14 @@ script: |
 
 ### 3.3 脚本上下文变量
 
-| 变量 | 类型 | 说明 |
-|------|------|------|
-| `server.caster` | LivingEntity | 施法者 |
-| `server.target` | LivingEntity | 主目标 |
-| `server.targets` | List | 多目标列表 |
-| `server.skill_level` | Number | 技能等级 |
-| `server.skill_id` | String | 技能 ID |
-| `server.origin` | Location | 施法位置 |
+| 变量                   | 类型           | 说明    |
+|----------------------|--------------|-------|
+| `server.caster`      | LivingEntity | 施法者   |
+| `server.target`      | LivingEntity | 主目标   |
+| `server.targets`     | List         | 多目标列表 |
+| `server.skill_level` | Number       | 技能等级  |
+| `server.skill_id`    | String       | 技能 ID |
+| `server.origin`      | Location     | 施法位置  |
 
 ## 4. MythicMobs 桥接
 

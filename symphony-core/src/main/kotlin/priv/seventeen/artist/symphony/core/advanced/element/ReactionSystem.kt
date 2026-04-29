@@ -7,6 +7,7 @@ import priv.seventeen.artist.symphony.api.attribute.Operation
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.CooldownManager
 import java.util.UUID
@@ -127,8 +128,22 @@ object ReactionSystem {
                 }
             }
             ReactionType.DOT_AOE -> {
-                // 持续范围伤害（简化实现：一次性伤害）
-                if (attacker != null) {
+                val callbackId = "reaction:${reaction.id}:on_tick"
+                if (AriaCallbackManager.has(callbackId) && attacker != null) {
+                    // 使用脚本回调实现多 tick 伤害
+                    val baseDamage = 20.0 + em * 1.5
+                    val plugin = Bukkit.getPluginManager().getPlugin("Symphony")
+                    if (plugin != null) {
+                        for (tick in 0 until reaction.ticks) {
+                            Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                                if (entity.isValid && !entity.isDead) {
+                                    AriaCallbackManager.invoke(callbackId, entity, tick, baseDamage, attacker)
+                                }
+                            }, (tick * (reaction.interval / 50)))
+                        }
+                    }
+                } else if (attacker != null) {
+                    // fallback: 一次性伤害
                     val damage = (20.0 + em * 1.5) * reaction.ticks
                     entity.damage(damage, attacker)
                 }

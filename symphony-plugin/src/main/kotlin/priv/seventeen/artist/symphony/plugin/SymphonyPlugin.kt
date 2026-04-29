@@ -89,6 +89,7 @@ object SymphonyPlugin {
         growthManager.enhanceManager.loadDefaults()
 
         AttributeProviderRegistry.register(BaseProvider())
+        AttributeProviderRegistry.register(LevelProvider(growthManager.levelManager))
         AttributeProviderRegistry.register(EquipmentProvider())
         AttributeProviderRegistry.register(GemProvider(growthManager.gemManager))
         AttributeProviderRegistry.register(EnhanceProvider(growthManager.enhanceManager))
@@ -124,12 +125,16 @@ object SymphonyPlugin {
 
         val symphonyProvider = skillProviderManager.getProvider("symphony") as? SymphonySkillProvider ?: SymphonySkillProvider()
         val ariaProvider = skillProviderManager.getProvider("aria") as? AriaSkillProvider
+        val gemProvider = AttributeProviderRegistry.getAll().filterIsInstance<GemProvider>().firstOrNull()
         ConfigLoader.loadAll(
             bukkitPlugin.dataFolder,
             apiImpl.affixManagerInstance,
             symphonyProvider,
             growthManager.setManager,
-            ariaProvider
+            ariaProvider,
+            growthManager.levelManager,
+            growthManager.enhanceManager,
+            gemProvider
         )
 
         SymphonyCommands.register()

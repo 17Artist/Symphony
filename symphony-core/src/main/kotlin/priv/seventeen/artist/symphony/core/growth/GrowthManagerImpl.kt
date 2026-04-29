@@ -24,6 +24,8 @@ class GrowthManagerImpl : IGrowthManager {
 
     override fun getGemSlots(item: ItemStack) = gemManager.getGemSlots(item)
     override fun insertGem(item: ItemStack, slotIndex: Int, gemId: String, gemLevel: Int) = gemManager.insertGem(item, slotIndex, gemId, gemLevel)
+    /** 带 Player 参数的版本，会触发 GemInsertEvent */
+    fun insertGem(player: Player, item: ItemStack, slotIndex: Int, gemId: String, gemLevel: Int) = gemManager.insertGem(player, item, slotIndex, gemId, gemLevel)
     override fun removeGem(item: ItemStack, slotIndex: Int) = gemManager.removeGem(item, slotIndex)
     override fun unlockSlot(item: ItemStack, slotIndex: Int) = gemManager.unlockSlot(item, slotIndex)
 

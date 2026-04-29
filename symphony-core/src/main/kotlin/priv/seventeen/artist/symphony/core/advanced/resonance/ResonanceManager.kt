@@ -6,6 +6,7 @@ import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.Operation
 import priv.seventeen.artist.symphony.core.affix.AffixManagerImpl
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import java.util.concurrent.ConcurrentHashMap
 
@@ -109,6 +110,10 @@ object ResonanceManager {
                 val rarity = condition.rarity ?: return false
                 affixes.count { AffixManagerImpl.getDefinition(it.affixId)?.rarity?.name == rarity } >= condition.count
             }
+            ResonanceConditionType.AFFIX_CATEGORY_COUNT -> {
+                val category = condition.tag ?: return false // 复用 tag 字段存储 category
+                affixes.count { AffixManagerImpl.getDefinition(it.affixId)?.category == category } >= condition.count
+            }
             ResonanceConditionType.AFFIX_LEVEL_SUM -> {
                 affixes.sumOf { it.level } >= condition.minSum
             }
@@ -123,7 +128,14 @@ object ResonanceManager {
                     }
                 }
             }
-            else -> false
+            ResonanceConditionType.SCRIPT -> {
+                val code = condition.mode.takeIf { it != "ANY" } ?: return false
+                val callbackId = "resonance_cond:${code.hashCode()}"
+                if (!AriaCallbackManager.has(callbackId)) {
+                    AriaCallbackManager.compile(callbackId, code)
+                }
+                AriaCallbackManager.invokeCondition(callbackId, affixes)
+            }
         }
     }
 

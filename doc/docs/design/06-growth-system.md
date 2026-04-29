@@ -4,15 +4,15 @@
 
 成长系统包含 5 个子系统，它们共同构成角色的养成体系：
 
-| 子系统 | 说明 | 属性来源优先级 |
-|--------|------|---------------|
-| 等级系统 | 经验升级，每级提供基础属性成长 | 100 |
-| 宝石系统 | 镶嵌到装备槽位，提供固定属性加成 | 300 |
-| 符文系统 | 收集碎片激活，提供被动效果和触发效果 | 400 |
-| 强化系统 | 强化装备提升基础属性倍率 | 500 |
-| 套装系统 | 穿戴同套装多件装备激活套装效果 | 550 |
+| 子系统  | 说明                 | 属性来源优先级 |
+|------|--------------------|---------|
+| 等级系统 | 经验升级，每级提供基础属性成长    | 100     |
+| 宝石系统 | 镶嵌到装备槽位，提供固定属性加成   | 300     |
+| 符文系统 | 收集碎片激活，提供被动效果和触发效果 | 400     |
+| 强化系统 | 强化装备提升基础属性倍率       | 500     |
+| 套装系统 | 穿戴同套装多件装备激活套装效果    | 550     |
 
-所有子系统的属性加成统一通过 `GrowthAttributeProvider` 汇入属性计算管线。
+各子系统通过独立的 AttributeProvider 汇入属性计算管线（LevelProvider/GemProvider/RuneProvider/EnhanceProvider/SetProvider）。
 
 ## 2. 等级系统
 
@@ -202,7 +202,9 @@ synthesis:
 - 拆卸：取出已镶嵌的宝石（可配置是否消耗道具）
 - 解锁：使用解锁道具开启锁定槽位
 
-### 3.3 宝石合成
+### 3.3 宝石合成（规划中）
+
+> ⚠️ 宝石合成功能当前处于规划阶段，尚未实现。以下为设计规范。
 
 ```yaml
 # config/gem-synthesis.yml
@@ -417,25 +419,25 @@ enhancement:
       custom_model_data: 4012
       effect: "success_rate_bonus"
       value: 0.10
+
+> 保护道具匹配支持 `"MATERIAL"` 或 `"MATERIAL:CMD"` 格式。例如 `"PAPER:4010"` 匹配 Material=PAPER 且 CustomModelData=4010。
+> 强化成功率计算公式：`effectiveRate = baseRate + successBonus + luck * 0.01`，其中 luck 为玩家 `luck` 属性值。
   
   # 成功率公式（可自定义）
   success_rate_formula: |
     val.baseRate = args[0]
     val.luck = args[1]
     val.bonusRate = args[2]
-    return math.min(1.0, baseRate + luck * 0.001 + bonusRate)
+    return math.min(1.0, baseRate + luck * 0.01 + bonusRate)
   
   # 特效
   effects:
-    success:
-      sound: "entity.player.levelup"
-      particle: "VILLAGER_HAPPY"
-    failure:
-      sound: "entity.villager.no"
-      particle: "SMOKE_NORMAL"
-    destroy:
-      sound: "entity.item.break"
-      particle: "EXPLOSION_NORMAL"
+    success_sound: "entity.player.levelup"
+    success_particle: "VILLAGER_HAPPY"
+    failure_sound: "entity.villager.no"
+    failure_particle: "SMOKE_NORMAL"
+    destroy_sound: "entity.item.break"
+    destroy_particle: "EXPLOSION_NORMAL"
 ```
 
 ### 5.2 强化逻辑

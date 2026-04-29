@@ -4,6 +4,8 @@ import org.bukkit.Bukkit
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.event.SkillCastEvent
 import priv.seventeen.artist.symphony.api.skill.SkillContext
+import priv.seventeen.artist.symphony.api.trigger.TriggerType
+import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 
 object SkillDispatcher {
     lateinit var providerManager: SkillProviderManagerImpl
@@ -24,6 +26,18 @@ object SkillDispatcher {
         Bukkit.getPluginManager().callEvent(event)
         if (event.isCancelled) return false
 
-        return provider.cast(skillId, level, context)
+        val result = provider.cast(skillId, level, context)
+
+        // ON_SKILL_CAST 触发器
+        if (result) {
+            TriggerDispatcher.dispatch(TriggerType.ON_SKILL_CAST, context.caster) {
+                context.target?.let { target(it) }
+                set("skillId", skillId)
+                set("providerId", providerId)
+                set("skillLevel", level)
+            }
+        }
+
+        return result
     }
 }

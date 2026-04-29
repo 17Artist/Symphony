@@ -10,7 +10,7 @@ import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 
 class RuneProvider : IAttributeProvider {
     override val id = "rune"
-    override val priority = 600
+    override val priority = 400
     override fun appliesTo(entity: LivingEntity): Boolean = entity is Player
 
     override fun provide(entity: LivingEntity): List<AttributeModifier> {

@@ -1,7 +1,9 @@
 package priv.seventeen.artist.symphony.core.affix.action
 
+import org.bukkit.Bukkit
 import priv.seventeen.artist.symphony.api.affix.AffixInstance
 import priv.seventeen.artist.symphony.api.attribute.Operation
+import priv.seventeen.artist.symphony.api.event.BuffApplyEvent
 import priv.seventeen.artist.symphony.api.trigger.ITriggerContext
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
@@ -15,14 +17,22 @@ class AttributeBuffActionHandler : ActionHandler {
         val duration = resolveDouble(params["duration"], affix.parameters).toLong()
         val operation = if (opStr == "PERCENT") Operation.PERCENT else Operation.FLAT
 
+        val buffId = "affix:${affix.affixId}:${System.currentTimeMillis()}"
+        val source = "affix:${affix.affixId}"
+
+        // 发布 BuffApplyEvent，允许外部取消或修改 value/duration
+        val applyEvent = BuffApplyEvent(context.entity, buffId, attribute, value, duration, source)
+        Bukkit.getPluginManager().callEvent(applyEvent)
+        if (applyEvent.isCancelled) return
+
         val data = PlayerDataManager.getData(context.entity.uniqueId) ?: return
         data.runtime.activeBuffs.add(ActiveBuff(
-            id = "affix:${affix.affixId}:${System.currentTimeMillis()}",
+            id = buffId,
             attribute = attribute,
             operation = operation,
-            value = value,
-            expireTime = if (duration > 0) System.currentTimeMillis() + duration else -1L,
-            source = "affix:${affix.affixId}"
+            value = applyEvent.value,
+            expireTime = if (applyEvent.durationMs > 0) System.currentTimeMillis() + applyEvent.durationMs else -1L,
+            source = source
         ))
         AttributeCache.markDirty(context.entity.uniqueId)
     }

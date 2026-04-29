@@ -1,16 +1,25 @@
 package priv.seventeen.artist.symphony.core.growth.enhance
 
 import org.bukkit.Bukkit
+import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import priv.seventeen.artist.symphony.api.event.EnhanceEvent
 import priv.seventeen.artist.symphony.api.growth.EnhanceResult
+import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.nms.SymphonyItemData
 import java.util.concurrent.ThreadLocalRandom
 
 class EnhanceManager {
     var maxLevel = 15
+    var preventDestroyItem: String? = null
+    var preventDowngradeItem: String? = null
+    var successBonusItem: String? = null
+    var downgradeLevels = 1
+    var successSound: String? = null
+    var failureSound: String? = null
+    var destroySound: String? = null
 
     data class LevelConfig(val multiplier: Double, val successRate: Double, val destroyRate: Double)
 
@@ -34,6 +43,11 @@ class EnhanceManager {
         levelConfigs[15] = LevelConfig(3.50, 0.03, 0.40)
     }
 
+    fun loadConfig(configs: Map<Int, LevelConfig>) {
+        levelConfigs.clear()
+        levelConfigs.putAll(configs)
+    }
+
     fun getEnhanceLevel(item: ItemStack): Int {
         return SymphonyItemData.getInt(item, "enhance_level") ?: 0
     }
@@ -51,28 +65,90 @@ class EnhanceManager {
         if (currentLevel >= maxLevel) return EnhanceResult.MAX_LEVEL
 
         val config = levelConfigs[currentLevel + 1] ?: return EnhanceResult.MAX_LEVEL
+
+        // 保护道具检查
+        var hasPreventDestroy = false
+        var hasPreventDowngrade = false
+        var successBonus = 0.0
+        for (protection in protections) {
+            if (matchProtection(protection, preventDestroyItem)) {
+                hasPreventDestroy = true
+            }
+            if (matchProtection(protection, preventDowngradeItem)) {
+                hasPreventDowngrade = true
+            }
+            if (matchProtection(protection, successBonusItem)) {
+                successBonus += 0.1
+            }
+        }
+
+        // luck 属性参与成功率计算
+        val luck = AttributeCache.get(player.uniqueId, "luck") ?: 0.0
+        val effectiveSuccessRate = (config.successRate + successBonus + luck * 0.01).coerceIn(0.0, 1.0)
+
         val random = ThreadLocalRandom.current().nextDouble()
 
         val result = when {
-            random < config.successRate -> {
+            random < effectiveSuccessRate -> {
                 setEnhanceLevel(item, currentLevel + 1)
                 AttributeCalculator.markDirty(player)
                 EnhanceResult.SUCCESS
             }
-            random < config.successRate + config.destroyRate -> {
-                EnhanceResult.DESTROYED
+            random < effectiveSuccessRate + config.destroyRate -> {
+                if (hasPreventDestroy) {
+                    EnhanceResult.FAILURE
+                } else {
+                    EnhanceResult.DESTROYED
+                }
             }
             else -> {
-                val newLevel = maxOf(0, currentLevel - 1)
-                setEnhanceLevel(item, newLevel)
-                AttributeCalculator.markDirty(player)
-                EnhanceResult.FAILURE
+                if (hasPreventDowngrade) {
+                    EnhanceResult.FAILURE
+                } else {
+                    val newLevel = maxOf(0, currentLevel - downgradeLevels)
+                    setEnhanceLevel(item, newLevel)
+                    AttributeCalculator.markDirty(player)
+                    EnhanceResult.FAILURE
+                }
             }
         }
+
+        // 特效
+        val sound = when (result) {
+            EnhanceResult.SUCCESS -> successSound
+            EnhanceResult.DESTROYED -> destroySound
+            else -> failureSound
+        }
+        sound?.let { s ->
+            try {
+                val enumName = s.uppercase().replace(".", "_")
+                player.playSound(player.location, Sound.valueOf(enumName), 1.0f, 1.0f)
+            } catch (_: Exception) {
+                try { player.playSound(player.location, s, 1.0f, 1.0f) } catch (_: Exception) {}
+            }
+        }
+
         val newLevel = getEnhanceLevel(item)
         Bukkit.getPluginManager().callEvent(
             EnhanceEvent(player, item, currentLevel, newLevel, result)
         )
         return result
+    }
+
+    /**
+     * 匹配保护道具 — 支持 "MATERIAL" 或 "MATERIAL:CMD" 格式。
+     * 例如 "PAPER:1001" 匹配 Material=PAPER 且 CustomModelData=1001。
+     */
+    private fun matchProtection(item: ItemStack, pattern: String?): Boolean {
+        if (pattern == null) return false
+        val parts = pattern.split(":", limit = 2)
+        val materialMatch = item.type.name.equals(parts[0], ignoreCase = true)
+        if (!materialMatch) return false
+        if (parts.size > 1) {
+            val expectedCmd = parts[1].toIntOrNull() ?: return materialMatch
+            val meta = item.itemMeta ?: return false
+            return meta.hasCustomModelData() && meta.customModelData == expectedCmd
+        }
+        return true
     }
 }

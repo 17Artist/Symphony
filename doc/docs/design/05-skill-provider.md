@@ -180,15 +180,15 @@ script: |
 
 脚本技能的上下文变量通过 `server.*` 注入：
 
-| 变量 | 类型 | 说明 |
-|------|------|------|
-| `server.caster` | LivingEntity | 施法者 |
-| `server.target` | LivingEntity | 主目标 |
-| `server.targets` | List | 多目标列表 |
-| `server.skill_level` | Number | 技能等级 |
-| `server.skill_id` | String | 技能 ID |
-| `server.origin` | Location | 施法位置 |
-| `server.trigger_*` | Any | 关联触发器的上下文变量 |
+| 变量                   | 类型           | 说明          |
+|----------------------|--------------|-------------|
+| `server.caster`      | LivingEntity | 施法者         |
+| `server.target`      | LivingEntity | 主目标         |
+| `server.targets`     | List         | 多目标列表       |
+| `server.skill_level` | Number       | 技能等级        |
+| `server.skill_id`    | String       | 技能 ID       |
+| `server.origin`      | Location     | 施法位置        |
+| `server.trigger_*`   | Any          | 关联触发器的上下文变量 |
 
 ### 4.3 MythicMobs 桥接提供者 (`mythicmobs`)
 

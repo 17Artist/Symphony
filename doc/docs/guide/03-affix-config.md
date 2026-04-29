@@ -92,26 +92,26 @@ triggers:
 
 ### 基础参数
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | String | 是 | 唯一标识符 |
-| `display_name` | String | 是 | 显示名称（支持颜色代码） |
-| `description` | List | 是 | 描述文本，`{param}` 引用等级参数 |
-| `max_level` | Integer | 是 | 最大等级 |
-| `rarity` | String | 是 | 稀有度 |
-| `category` | String | 否 | 可附着类别：`weapon`/`armor`/`accessory`/`any` |
-| `exclusive_group` | String | 否 | 互斥组，同组词条不能共存 |
+| 参数                | 类型      | 必填 | 说明                                       |
+|-------------------|---------|----|------------------------------------------|
+| `id`              | String  | 是  | 唯一标识符                                    |
+| `display_name`    | String  | 是  | 显示名称（支持颜色代码）                             |
+| `description`     | List    | 是  | 描述文本，`{param}` 引用等级参数                    |
+| `max_level`       | Integer | 是  | 最大等级                                     |
+| `rarity`          | String  | 是  | 稀有度                                      |
+| `category`        | String  | 否  | 可附着类别：`weapon`/`armor`/`accessory`/`any` |
+| `exclusive_group` | String  | 否  | 互斥组，同组词条不能共存                             |
 
 ### 稀有度
 
-| 稀有度 | 颜色 | 说明 |
-|--------|------|------|
-| `COMMON` | &f 白色 | 普通 |
-| `UNCOMMON` | &a 绿色 | 非凡 |
-| `RARE` | &9 蓝色 | 稀有 |
-| `EPIC` | &5 紫色 | 史诗 |
+| 稀有度         | 颜色    | 说明 |
+|-------------|-------|----|
+| `COMMON`    | &f 白色 | 普通 |
+| `UNCOMMON`  | &a 绿色 | 非凡 |
+| `RARE`      | &9 蓝色 | 稀有 |
+| `EPIC`      | &5 紫色 | 史诗 |
 | `LEGENDARY` | &6 金色 | 传说 |
-| `MYTHIC` | &c 红色 | 神话 |
+| `MYTHIC`    | &c 红色 | 神话 |
 
 ## 3. 触发器配置
 

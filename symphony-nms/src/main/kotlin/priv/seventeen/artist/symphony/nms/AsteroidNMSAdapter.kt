@@ -1,12 +1,27 @@
 package priv.seventeen.artist.symphony.nms
 
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.attribute.Attribute
+import org.bukkit.attribute.AttributeModifier as BukkitAttributeModifier
+import org.bukkit.boss.BarColor
+import org.bukkit.boss.BarStyle
+import org.bukkit.boss.BossBar
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.util.Vector
+import org.bukkit.util.io.BukkitObjectOutputStream
+import org.bukkit.util.io.BukkitObjectInputStream
+import net.md_5.bungee.api.ChatMessageType
+import net.md_5.bungee.api.chat.TextComponent
 import priv.seventeen.artist.asteroid.AsteroidAPI
 import priv.seventeen.artist.asteroid.item.ItemTag
 import priv.seventeen.artist.asteroid.item.ItemTagData
+import java.io.ByteArrayOutputStream
+import java.io.ByteArrayInputStream
+import java.util.UUID
 
 /**
  * Asteroid NMS 适配器 — 使用 Blink 的 Asteroid 模块实现跨版本 NMS 操作。
@@ -140,6 +155,62 @@ class AsteroidItemDataAccessor : ItemDataAccessor {
         item.itemMeta = meta
         return item
     }
+
+    override fun getItemAttributeModifiers(item: ItemStack): List<ItemAttributeModifier> {
+        val meta = item.itemMeta ?: return emptyList()
+        val modifiers = mutableListOf<ItemAttributeModifier>()
+        if (meta.hasAttributeModifiers()) {
+            meta.attributeModifiers?.entries()?.forEach { entry ->
+                val attr = entry.key
+                val mod = entry.value
+                modifiers.add(ItemAttributeModifier(
+                    attribute = attr.key.toString(),
+                    key = mod.name,
+                    amount = mod.amount,
+                    operation = mod.operation.ordinal,
+                    slot = mod.slot?.name?.lowercase() ?: "any"
+                ))
+            }
+        }
+        return modifiers
+    }
+
+    override fun setItemAttributeModifiers(item: ItemStack, modifiers: List<ItemAttributeModifier>): ItemStack {
+        val meta = item.itemMeta ?: return item
+        // 清除现有修改器
+        meta.attributeModifiers?.keySet()?.forEach { attr ->
+            meta.removeAttributeModifier(attr)
+        }
+        for (mod in modifiers) {
+            val attr = Attribute.values().find { 
+                it.key.toString() == mod.attribute || it.name.equals(mod.attribute, ignoreCase = true)
+            } ?: continue
+            val op = BukkitAttributeModifier.Operation.values().getOrNull(mod.operation)
+                ?: BukkitAttributeModifier.Operation.ADD_NUMBER
+            val slot = runCatching { EquipmentSlot.valueOf(mod.slot.uppercase()) }.getOrNull()
+            val bukMod = if (slot != null) {
+                BukkitAttributeModifier(UUID.randomUUID(), mod.key, mod.amount, op, slot)
+            } else {
+                BukkitAttributeModifier(UUID.randomUUID(), mod.key, mod.amount, op)
+            }
+            meta.addAttributeModifier(attr, bukMod)
+        }
+        item.itemMeta = meta
+        return item
+    }
+
+    override fun serializeItem(item: ItemStack): ByteArray {
+        val outputStream = ByteArrayOutputStream()
+        BukkitObjectOutputStream(outputStream).use { it.writeObject(item) }
+        return outputStream.toByteArray()
+    }
+
+    override fun deserializeItem(data: ByteArray): ItemStack {
+        val inputStream = ByteArrayInputStream(data)
+        BukkitObjectInputStream(inputStream).use {
+            return it.readObject() as ItemStack
+        }
+    }
 }
 
 /**
@@ -152,7 +223,7 @@ class AsteroidEntityAccessor : EntityAccessor {
 
     override fun knockback(entity: LivingEntity, strength: Double, dirX: Double, dirZ: Double) {
         entity.velocity = entity.velocity.add(
-            org.bukkit.util.Vector(dirX * strength, 0.3 * strength, dirZ * strength)
+            Vector(dirX * strength, 0.3 * strength, dirZ * strength)
         )
     }
 
@@ -164,7 +235,7 @@ class AsteroidEntityAccessor : EntityAccessor {
         return try {
             AsteroidAPI.getAttributeBridge().getFinalValue(entity, resolveHealthAttr())
         } catch (e: Exception) {
-            entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+            entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
         }
     }
 
@@ -210,10 +281,12 @@ class AsteroidEntityAccessor : EntityAccessor {
  * 显示适配 — 使用 Bukkit API（高版本已足够完善）。
  */
 class AsteroidDisplayAdapter : DisplayAdapter {
+    private val bossBars = mutableMapOf<String, BossBar>()
+
     override fun sendActionBar(player: Player, message: String) {
         player.spigot().sendMessage(
-            net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-            net.md_5.bungee.api.chat.TextComponent(ChatColor.translateAlternateColorCodes('&', message))
+            ChatMessageType.ACTION_BAR,
+            TextComponent(ChatColor.translateAlternateColorCodes('&', message))
         )
     }
 
@@ -223,5 +296,25 @@ class AsteroidDisplayAdapter : DisplayAdapter {
             ChatColor.translateAlternateColorCodes('&', subtitle),
             fadeIn, stay, fadeOut
         )
+    }
+
+    override fun showBossBar(player: Player, id: String, title: String, progress: Double, color: String) {
+        val barColor = runCatching { BarColor.valueOf(color.uppercase()) }.getOrDefault(BarColor.WHITE)
+        val bar = Bukkit.createBossBar(ChatColor.translateAlternateColorCodes('&', title), barColor, BarStyle.SOLID)
+        bar.progress = progress.coerceIn(0.0, 1.0)
+        bar.addPlayer(player)
+        bossBars["${player.uniqueId}:$id"]?.removeAll()
+        bossBars["${player.uniqueId}:$id"] = bar
+    }
+
+    override fun updateBossBar(player: Player, id: String, title: String?, progress: Double?, color: String?) {
+        val bar = bossBars["${player.uniqueId}:$id"] ?: return
+        title?.let { bar.setTitle(ChatColor.translateAlternateColorCodes('&', it)) }
+        progress?.let { bar.progress = it.coerceIn(0.0, 1.0) }
+        color?.let { c -> runCatching { bar.color = BarColor.valueOf(c.uppercase()) } }
+    }
+
+    override fun removeBossBar(player: Player, id: String) {
+        bossBars.remove("${player.uniqueId}:$id")?.removeAll()
     }
 }

@@ -4,8 +4,12 @@ import org.bukkit.configuration.file.YamlConfiguration
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.affix.AffixRarity
 import priv.seventeen.artist.symphony.core.affix.*
+import priv.seventeen.artist.symphony.core.attribute.provider.GemProvider
+import priv.seventeen.artist.symphony.core.growth.enhance.EnhanceManager
+import priv.seventeen.artist.symphony.core.growth.level.LevelManager
 import priv.seventeen.artist.symphony.core.growth.set.SetManager
 import priv.seventeen.artist.symphony.core.growth.rune.*
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.skill.builtin.AriaSkillProvider
 import priv.seventeen.artist.symphony.core.skill.builtin.SymphonySkillProvider
 import priv.seventeen.artist.symphony.core.advanced.resonance.*
@@ -17,13 +21,33 @@ import java.util.UUID
  */
 object ConfigLoader {
 
-    fun loadAll(dataFolder: File, affixManager: AffixManagerImpl, skillProvider: SymphonySkillProvider, setManager: SetManager, ariaProvider: AriaSkillProvider? = null) {
+    fun loadAll(
+        dataFolder: File,
+        affixManager: AffixManagerImpl,
+        skillProvider: SymphonySkillProvider,
+        setManager: SetManager,
+        ariaProvider: AriaSkillProvider? = null,
+        levelManager: LevelManager? = null,
+        enhanceManager: EnhanceManager? = null,
+        gemProvider: GemProvider? = null
+    ) {
         loadAffixes(File(dataFolder, "affixes"), affixManager)
         loadAffixPools(File(dataFolder, "affix-pools"), affixManager)
         loadSkills(File(dataFolder, "skills"), skillProvider, ariaProvider)
         loadSets(File(dataFolder, "sets"), setManager)
         loadResonances(File(dataFolder, "resonances"))
         loadRunes(File(dataFolder, "runes"))
+        loadStatuses(File(dataFolder, "statuses"))
+        loadTalents(File(dataFolder, "talents"))
+        loadInteractions(File(dataFolder, "interactions"))
+        loadEnvironments(File(dataFolder, "environments"))
+        loadReactions(File(dataFolder, "reactions"))
+        levelManager?.let { loadLevelConfig(File(dataFolder, "config"), it) }
+        enhanceManager?.let { loadEnhanceConfig(File(dataFolder, "config"), it) }
+        gemProvider?.let { loadGems(File(dataFolder, "gems"), it) }
+        if (AriaCallbackManager.size() > 0) {
+            BlinkLog.info("已预编译 ${AriaCallbackManager.size()} 个脚本回调")
+        }
     }
 
     fun loadAffixes(dir: File, manager: AffixManagerImpl) {
@@ -227,9 +251,12 @@ object ConfigLoader {
                                 )
                             }
                         }
+                        @Suppress("UNCHECKED_CAST")
+                        val triggers = sub.getMapList("triggers").map { it as Map<String, Any> }
                         bonuses[pieces] = SetManager.SetBonus(
                             display = sub.getString("display") ?: "",
-                            attributes = attrs
+                            attributes = attrs,
+                            triggers = triggers
                         )
                     }
                 }
@@ -338,5 +365,199 @@ object ConfigLoader {
             }
         }
         if (count > 0) BlinkLog.info("已加载 $count 个符文定义")
+    }
+
+    fun loadStatuses(dir: File) {
+        if (!dir.exists()) { dir.mkdirs(); return }
+        val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        for (file in files) {
+            try {
+                val config = YamlConfiguration.loadConfiguration(file)
+                val id = config.getString("id") ?: continue
+                // 预编译脚本回调
+                config.getString("on_max_stacks")?.let { code ->
+                    AriaCallbackManager.compile("status:$id:on_max_stacks", code)
+                }
+            } catch (e: Exception) {
+                BlinkLog.warn("加载状态层脚本失败 ${file.name}: ${e.message}")
+            }
+        }
+    }
+
+    fun loadTalents(dir: File) {
+        if (!dir.exists()) { dir.mkdirs(); return }
+        val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        for (file in files) {
+            try {
+                val config = YamlConfiguration.loadConfiguration(file)
+                val id = config.getString("id") ?: continue
+                config.getString("effect")?.let { AriaCallbackManager.compile("talent:$id:effect", it) }
+                config.getString("on_deactivate")?.let { AriaCallbackManager.compile("talent:$id:on_deactivate", it) }
+            } catch (e: Exception) {
+                BlinkLog.warn("加载天赋脚本失败 ${file.name}: ${e.message}")
+            }
+        }
+    }
+
+    fun loadInteractions(dir: File) {
+        if (!dir.exists()) { dir.mkdirs(); return }
+        val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        for (file in files) {
+            try {
+                val config = YamlConfiguration.loadConfiguration(file)
+                val id = config.getString("id") ?: continue
+                config.getString("condition")?.let { AriaCallbackManager.compile("interaction:$id:condition", it) }
+                config.getString("effect")?.let { AriaCallbackManager.compile("interaction:$id:effect", it) }
+            } catch (e: Exception) {
+                BlinkLog.warn("加载交互脚本失败 ${file.name}: ${e.message}")
+            }
+        }
+    }
+
+    fun loadEnvironments(dir: File) {
+        if (!dir.exists()) { dir.mkdirs(); return }
+        val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        for (file in files) {
+            try {
+                val config = YamlConfiguration.loadConfiguration(file)
+                val id = config.getString("id") ?: continue
+                config.getString("condition")?.let { AriaCallbackManager.compile("environment:$id:condition", it) }
+            } catch (e: Exception) {
+                BlinkLog.warn("加载环境脚本失败 ${file.name}: ${e.message}")
+            }
+        }
+    }
+
+    fun loadReactions(dir: File) {
+        if (!dir.exists()) { dir.mkdirs(); return }
+        val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        for (file in files) {
+            try {
+                val config = YamlConfiguration.loadConfiguration(file)
+                val id = config.getString("id") ?: continue
+                config.getString("on_tick")?.let { AriaCallbackManager.compile("reaction:$id:on_tick", it) }
+            } catch (e: Exception) {
+                BlinkLog.warn("加载反应脚本失败 ${file.name}: ${e.message}")
+            }
+        }
+    }
+
+    fun loadLevelConfig(configDir: File, levelManager: LevelManager) {
+        val file = File(configDir, "level.yml")
+        if (!file.exists()) return
+        try {
+            val root = YamlConfiguration.loadConfiguration(file)
+            val config = root.getConfigurationSection("level") ?: root // 兼容有/无根节点
+            levelManager.maxLevel = config.getInt("max_level", 100)
+            config.getString("exp_formula")?.let { formula ->
+                levelManager.expFormulaScript = formula
+            }
+            // attribute_growth
+            val growth = mutableMapOf<String, LevelManager.GrowthEntry>()
+            config.getConfigurationSection("attribute_growth")?.let { sec ->
+                for (key in sec.getKeys(false)) {
+                    val sub = sec.getConfigurationSection(key) ?: continue
+                    growth[key] = LevelManager.GrowthEntry(
+                        base = sub.getDouble("base", 0.0),
+                        perLevel = sub.getDouble("per_level", 0.0),
+                        formula = sub.getString("formula")
+                    )
+                }
+            }
+            levelManager.attributeGrowth = growth
+            // effects
+            config.getConfigurationSection("effects")?.let { sec ->
+                levelManager.levelUpSound = sec.getString("sound")
+                levelManager.levelUpParticle = sec.getString("particle")
+                sec.getConfigurationSection("title")?.let { titleSec ->
+                    levelManager.levelUpTitleMain = titleSec.getString("main")
+                    levelManager.levelUpTitleSub = titleSec.getString("sub")
+                    levelManager.levelUpTitleFadeIn = titleSec.getInt("fade_in", 10)
+                    levelManager.levelUpTitleStay = titleSec.getInt("stay", 40)
+                    levelManager.levelUpTitleFadeOut = titleSec.getInt("fade_out", 10)
+                }
+            }
+            BlinkLog.info("已加载等级配置 (max_level=${levelManager.maxLevel})")
+        } catch (e: Exception) {
+            BlinkLog.warn("加载等级配置失败: ${e.message}")
+        }
+    }
+
+    fun loadEnhanceConfig(configDir: File, enhanceManager: EnhanceManager) {
+        val file = File(configDir, "enhancement.yml")
+        if (!file.exists()) return
+        try {
+            val root = YamlConfiguration.loadConfiguration(file)
+            val config = root.getConfigurationSection("enhancement") ?: root // 兼容有/无根节点
+            enhanceManager.maxLevel = config.getInt("max_level", 15)
+            val levels = mutableMapOf<Int, EnhanceManager.LevelConfig>()
+            config.getConfigurationSection("levels")?.let { sec ->
+                for (key in sec.getKeys(false)) {
+                    val lvl = key.toIntOrNull() ?: continue
+                    val sub = sec.getConfigurationSection(key) ?: continue
+                    levels[lvl] = EnhanceManager.LevelConfig(
+                        multiplier = sub.getDouble("multiplier", 1.0),
+                        successRate = sub.getDouble("success_rate", 0.5),
+                        destroyRate = sub.getDouble("destroy_rate", 0.0)
+                    )
+                }
+            }
+            if (levels.isNotEmpty()) {
+                enhanceManager.loadConfig(levels)
+            }
+            // 保护道具配置
+            config.getConfigurationSection("protections")?.let { sec ->
+                enhanceManager.preventDestroyItem = sec.getString("prevent_destroy")
+                enhanceManager.preventDowngradeItem = sec.getString("prevent_downgrade")
+                enhanceManager.successBonusItem = sec.getString("success_rate_bonus")
+            }
+            // 失败配置
+            config.getConfigurationSection("on_failure")?.let { sec ->
+                enhanceManager.downgradeLevels = sec.getInt("downgrade_levels", 1)
+            }
+            // 特效配置
+            config.getConfigurationSection("effects")?.let { sec ->
+                enhanceManager.successSound = sec.getString("success_sound")
+                enhanceManager.failureSound = sec.getString("failure_sound")
+                enhanceManager.destroySound = sec.getString("destroy_sound")
+            }
+            BlinkLog.info("已加载强化配置 (max_level=${enhanceManager.maxLevel})")
+        } catch (e: Exception) {
+            BlinkLog.warn("加载强化配置失败: ${e.message}")
+        }
+    }
+
+    fun loadGems(dir: File, gemProvider: GemProvider) {
+        if (!dir.exists()) { dir.mkdirs(); return }
+        val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        var count = 0
+        for (file in files) {
+            try {
+                val config = YamlConfiguration.loadConfiguration(file)
+                val id = config.getString("id") ?: continue
+                val levelsMap = mutableMapOf<Int, Map<String, GemProvider.GemAttr>>()
+                config.getConfigurationSection("levels")?.let { levelsSec ->
+                    for (lvlKey in levelsSec.getKeys(false)) {
+                        val lvl = lvlKey.toIntOrNull() ?: continue
+                        val lvlSec = levelsSec.getConfigurationSection(lvlKey) ?: continue
+                        val attrs = mutableMapOf<String, GemProvider.GemAttr>()
+                        lvlSec.getConfigurationSection("attributes")?.let { attrSec ->
+                            for (attrKey in attrSec.getKeys(false)) {
+                                val sub = attrSec.getConfigurationSection(attrKey) ?: continue
+                                val op = sub.getString("operation") ?: "FLAT"
+                                val value = sub.getDouble("value", 0.0)
+                                attrs[attrKey] = GemProvider.GemAttr(op, value)
+                            }
+                        }
+                        levelsMap[lvl] = attrs
+                    }
+                }
+                gemProvider.registerGem(id, levelsMap)
+                count++
+            } catch (e: Exception) {
+                BlinkLog.warn("加载宝石文件失败 ${file.name}: ${e.message}")
+            }
+        }
+        if (count > 0) BlinkLog.info("已加载 $count 个宝石定义")
     }
 }

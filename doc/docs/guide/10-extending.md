@@ -287,25 +287,25 @@ sequenceDiagram
 
 ## 完整事件清单速查
 
-| 事件 | 时机 | 可取消 | 可改字段 |
-|------|------|--------|---------|
-| `AttributeUpdateEvent` | 属性值变更 | ✓ | — |
-| `SymphonyPreDamageEvent` | 暴击判定后 | ✓ | baseDamage, isCritical |
-| `SymphonyMitigationEvent` | 减伤后 | ✓ | finalPhysical |
-| `SymphonyDamageEvent` | 元素合并后 | ✓ | finalDamage, elementDamages |
-| `SymphonyHealEvent` | 治疗前 | ✓ | amount |
-| `SymphonyManaConsumeEvent` | 法力消耗前 | ✓ | amount |
-| `AffixEquipEvent` / `AffixUnequipEvent` | 词条装备态切换 | ✗ | — |
-| `AffixTriggerEvent` | 词条触发器执行前 | ✓ | — |
-| `BuffApplyEvent` | Buff 加入前 | ✓ | value, durationMs |
-| `BuffExpireEvent` | Buff 过期 | ✗ | — |
-| `TriggerDispatchEvent` | 触发器派发前 | ✓ | — |
-| `StatusLayerChangeEvent` | 状态层数变化 | ✗ | — |
-| `EnhanceEvent` | 强化结束 | ✓ | — |
-| `GemInsertEvent` | 宝石镶嵌 | ✓ | — |
-| `LevelChangeEvent` | 等级变化 | ✓ | — |
-| `RuneActivateEvent` | 符文激活 | ✓ | — |
-| `SkillCastEvent` | 技能施放前 | ✓ | — |
+| 事件                                      | 时机       | 可取消 | 可改字段                        |
+|-----------------------------------------|----------|-----|-----------------------------|
+| `AttributeUpdateEvent`                  | 属性值变更    | ✓   | —                           |
+| `SymphonyPreDamageEvent`                | 暴击判定后    | ✓   | baseDamage, isCritical      |
+| `SymphonyMitigationEvent`               | 减伤后      | ✓   | finalPhysical               |
+| `SymphonyDamageEvent`                   | 元素合并后    | ✓   | finalDamage, elementDamages |
+| `SymphonyHealEvent`                     | 治疗前      | ✓   | amount                      |
+| `SymphonyManaConsumeEvent`              | 法力消耗前    | ✓   | amount                      |
+| `AffixEquipEvent` / `AffixUnequipEvent` | 词条装备态切换  | ✗   | —                           |
+| `AffixTriggerEvent`                     | 词条触发器执行前 | ✓   | —                           |
+| `BuffApplyEvent`                        | Buff 加入前 | ✓   | value, durationMs           |
+| `BuffExpireEvent`                       | Buff 过期  | ✗   | —                           |
+| `TriggerDispatchEvent`                  | 触发器派发前   | ✓   | —                           |
+| `StatusLayerChangeEvent`                | 状态层数变化   | ✗   | —                           |
+| `EnhanceEvent`                          | 强化结束     | ✓   | —                           |
+| `GemInsertEvent`                        | 宝石镶嵌     | ✓   | —                           |
+| `LevelChangeEvent`                      | 等级变化     | ✓   | —                           |
+| `RuneActivateEvent`                     | 符文激活     | ✓   | —                           |
+| `SkillCastEvent`                        | 技能施放前    | ✓   | —                           |
 
 ## 设计原则
 

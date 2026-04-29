@@ -1,6 +1,7 @@
 package priv.seventeen.artist.symphony.core.advanced.status
 
 import org.bukkit.Bukkit
+import org.bukkit.Particle
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
@@ -11,6 +12,7 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.data.EntityRuntimeCache
 import priv.seventeen.artist.symphony.core.data.StatusStackData
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.trigger.CooldownManager
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -79,7 +81,7 @@ object StatusLayerSystem {
 
         val finalStacks = statusMap[statusId]?.stacks ?: 0
         if (finalStacks != oldStacks) {
-            org.bukkit.Bukkit.getPluginManager().callEvent(
+            Bukkit.getPluginManager().callEvent(
                 StatusLayerChangeEvent(
                     entity, statusId, oldStacks, finalStacks,
                     StatusLayerChangeEvent.Reason.STACK
@@ -180,12 +182,18 @@ object StatusLayerSystem {
     }
 
     private fun onMaxStacks(entity: LivingEntity, def: StatusDefinition, appliedBy: UUID?) {
-        val attacker = appliedBy?.let { Bukkit.getEntity(it) as? LivingEntity }
-
-        // 爆发伤害
-        if (attacker != null) {
-            val atk = AttributeCalculator.getValue(attacker, "physical_damage")
-            entity.damage(atk * 2.0, attacker)
+        val callbackId = "status:${def.id}:on_max_stacks"
+        if (AriaCallbackManager.has(callbackId)) {
+            // 使用脚本回调
+            AriaCallbackManager.invoke(callbackId, entity, def.maxStacks, appliedBy?.let { Bukkit.getEntity(it) })
+        } else {
+            // fallback 到默认逻辑
+            val attacker = appliedBy?.let { Bukkit.getEntity(it) as? LivingEntity }
+            if (attacker != null) {
+                val atk = AttributeCalculator.getValue(attacker, "physical_damage")
+                entity.damage(atk * 2.0, attacker)
+            }
+            entity.world.spawnParticle(Particle.DAMAGE_INDICATOR, entity.location.add(0.0, 1.0, 0.0), 30, 0.5, 0.5, 0.5)
         }
 
         // 清除层数
@@ -193,9 +201,6 @@ object StatusLayerSystem {
 
         // 设置免疫
         setImmune(entity, def.id, def.immuneDuration)
-
-        // 粒子效果
-        entity.world.spawnParticle(org.bukkit.Particle.DAMAGE_INDICATOR, entity.location.add(0.0, 1.0, 0.0), 30, 0.5, 0.5, 0.5)
     }
 
     private fun getStatusMap(entity: LivingEntity): MutableMap<String, StatusStackData> {

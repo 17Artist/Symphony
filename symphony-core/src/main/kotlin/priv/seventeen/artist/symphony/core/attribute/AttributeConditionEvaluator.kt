@@ -1,10 +1,12 @@
 package priv.seventeen.artist.symphony.core.attribute
 
 import org.bukkit.Material
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 属性条件谓词 — 属性 @when(...) 注解使用。
@@ -20,7 +22,7 @@ import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
  */
 object AttributeConditionEvaluator {
 
-    private val warnedUnknown = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+    private val warnedUnknown = ConcurrentHashMap.newKeySet<String>()
 
     fun allMatch(entity: LivingEntity, conditions: List<String>): Boolean {
         if (conditions.isEmpty()) return true
@@ -44,11 +46,11 @@ object AttributeConditionEvaluator {
             "raining" -> entity.world.hasStorm()
             "thundering" -> entity.world.isThundering
             "hp_low" -> {
-                val max = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+                val max = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
                 entity.health / max < 0.3
             }
             "hp_full" -> {
-                val max = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+                val max = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
                 entity.health / max >= 0.95
             }
             "holding_weapon" -> (entity as? Player)?.inventory?.itemInMainHand?.type

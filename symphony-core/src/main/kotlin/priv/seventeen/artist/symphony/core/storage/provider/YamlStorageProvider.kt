@@ -80,6 +80,7 @@ class YamlStorageProvider(private val dataFolder: File) : StorageProvider {
             data.statistics.totalReactionsTriggered = section.getInt("total_reactions_triggered")
             data.statistics.totalAffixesTriggered = section.getInt("total_affixes_triggered")
             data.statistics.highestDamageDealt = section.getDouble("highest_damage_dealt")
+            data.statistics.totalPlayTime = section.getLong("total_play_time")
         }
 
         // 加载偏好
@@ -87,7 +88,58 @@ class YamlStorageProvider(private val dataFolder: File) : StorageProvider {
             data.preferences.showDamageNumbers = section.getBoolean("show_damage_numbers", true)
             data.preferences.showStatusBars = section.getBoolean("show_status_bars", true)
             data.preferences.showEnvironmentIndicator = section.getBoolean("show_environment_indicator", true)
+            data.preferences.showResonanceProgress = section.getBoolean("show_resonance_progress", true)
             data.preferences.combatLogEnabled = section.getBoolean("combat_log_enabled", false)
+        }
+
+        // 加载保存的 Buff
+        config.getMapList("saved_buffs").forEach { map ->
+            @Suppress("UNCHECKED_CAST")
+            val m = map as Map<String, Any>
+            data.savedBuffs.add(SavedBuffData(
+                id = m["id"]?.toString() ?: return@forEach,
+                attribute = m["attribute"]?.toString() ?: return@forEach,
+                operation = m["operation"]?.toString() ?: "FLAT",
+                value = (m["value"] as? Number)?.toDouble() ?: 0.0,
+                expireTime = (m["expire_time"] as? Number)?.toLong() ?: 0L,
+                source = m["source"]?.toString() ?: "",
+                remainingDuration = (m["remaining_duration"] as? Number)?.toLong() ?: 0L
+            ))
+        }
+
+        // 加载保存的临时词条
+        config.getMapList("saved_temp_affixes").forEach { map ->
+            @Suppress("UNCHECKED_CAST")
+            val m = map as Map<String, Any>
+            @Suppress("UNCHECKED_CAST")
+            data.savedTempAffixes.add(SavedTempAffixData(
+                uuid = m["uuid"]?.toString() ?: return@forEach,
+                affixId = m["affix_id"]?.toString() ?: return@forEach,
+                level = (m["level"] as? Number)?.toInt() ?: 1,
+                params = (m["params"] as? Map<String, Any>) ?: emptyMap(),
+                source = m["source"]?.toString() ?: "",
+                remainingDuration = (m["remaining_duration"] as? Number)?.toLong() ?: 0L
+            ))
+        }
+
+        // 加载虚拟套装
+        config.getConfigurationSection("virtual_sets")?.let { section ->
+            for (key in section.getKeys(false)) {
+                val sub = section.getConfigurationSection(key) ?: continue
+                data.virtualSets[key] = VirtualSetData(
+                    setId = key,
+                    pieces = sub.getInt("pieces", 0),
+                    source = sub.getString("source") ?: "",
+                    expireTime = sub.getLong("expire_time", 0L)
+                )
+            }
+        }
+
+        // 加载共鸣覆盖
+        config.getConfigurationSection("resonance_overrides")?.let { section ->
+            for (key in section.getKeys(false)) {
+                data.resonanceOverrides[key] = section.getBoolean(key)
+            }
         }
 
         return data
@@ -119,11 +171,50 @@ class YamlStorageProvider(private val dataFolder: File) : StorageProvider {
         config.set("statistics.total_reactions_triggered", data.statistics.totalReactionsTriggered)
         config.set("statistics.total_affixes_triggered", data.statistics.totalAffixesTriggered)
         config.set("statistics.highest_damage_dealt", data.statistics.highestDamageDealt)
+        config.set("statistics.total_play_time", data.statistics.totalPlayTime)
 
         config.set("preferences.show_damage_numbers", data.preferences.showDamageNumbers)
         config.set("preferences.show_status_bars", data.preferences.showStatusBars)
         config.set("preferences.show_environment_indicator", data.preferences.showEnvironmentIndicator)
+        config.set("preferences.show_resonance_progress", data.preferences.showResonanceProgress)
         config.set("preferences.combat_log_enabled", data.preferences.combatLogEnabled)
+
+        // 保存 Buff
+        val buffList = data.savedBuffs.map { buff ->
+            mapOf(
+                "id" to buff.id,
+                "attribute" to buff.attribute,
+                "operation" to buff.operation,
+                "value" to buff.value,
+                "expire_time" to buff.expireTime,
+                "source" to buff.source,
+                "remaining_duration" to buff.remainingDuration
+            )
+        }
+        config.set("saved_buffs", buffList)
+
+        // 保存临时词条
+        val affixList = data.savedTempAffixes.map { affix ->
+            mapOf(
+                "uuid" to affix.uuid,
+                "affix_id" to affix.affixId,
+                "level" to affix.level,
+                "params" to affix.params,
+                "source" to affix.source,
+                "remaining_duration" to affix.remainingDuration
+            )
+        }
+        config.set("saved_temp_affixes", affixList)
+
+        // 保存虚拟套装
+        data.virtualSets.forEach { (k, v) ->
+            config.set("virtual_sets.$k.pieces", v.pieces)
+            config.set("virtual_sets.$k.source", v.source)
+            config.set("virtual_sets.$k.expire_time", v.expireTime)
+        }
+
+        // 保存共鸣覆盖
+        data.resonanceOverrides.forEach { (k, v) -> config.set("resonance_overrides.$k", v) }
 
         // 原子写入：先写临时文件，再重命名
         val tempFile = File(file.parentFile, "${file.name}.tmp")

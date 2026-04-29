@@ -36,7 +36,7 @@ object PlayerDataManager {
     }
 
     fun saveAllDirty() {
-        val snapshot = mutableMapOf<java.util.UUID, PersistentData>()
+        val snapshot = mutableMapOf<UUID, PersistentData>()
         // 收集 dirtySet 中的
         val iter = dirtySet.iterator()
         while (iter.hasNext()) {

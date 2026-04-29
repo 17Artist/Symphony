@@ -34,6 +34,18 @@ interface ItemDataAccessor {
     fun setLore(item: ItemStack, lore: List<String>): ItemStack
     fun setDisplayName(item: ItemStack, name: String): ItemStack
     fun setCustomModelData(item: ItemStack, data: Int): ItemStack
+
+    /** 获取物品的原版 AttributeModifier 列表 */
+    fun getItemAttributeModifiers(item: ItemStack): List<ItemAttributeModifier>
+
+    /** 设置物品的原版 AttributeModifier */
+    fun setItemAttributeModifiers(item: ItemStack, modifiers: List<ItemAttributeModifier>): ItemStack
+
+    /** 序列化物品为字节数组 */
+    fun serializeItem(item: ItemStack): ByteArray
+
+    /** 从字节数组反序列化物品 */
+    fun deserializeItem(data: ByteArray): ItemStack
 }
 
 data class ItemAttributeModifier(
@@ -58,4 +70,7 @@ interface EntityAccessor {
 interface DisplayAdapter {
     fun sendActionBar(player: Player, message: String)
     fun sendTitle(player: Player, title: String, subtitle: String, fadeIn: Int, stay: Int, fadeOut: Int)
+    fun showBossBar(player: Player, id: String, title: String, progress: Double, color: String)
+    fun updateBossBar(player: Player, id: String, title: String?, progress: Double?, color: String?)
+    fun removeBossBar(player: Player, id: String)
 }

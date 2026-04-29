@@ -6,6 +6,7 @@ import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.Operation
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import java.util.concurrent.ConcurrentHashMap
 
@@ -48,10 +49,20 @@ object TalentManager {
                 data.dirty = true
                 changed = true
                 BlinkLog.info("${player.name} 解锁天赋门: ${talent.displayName}")
+                // 激活回调
+                val effectId = "talent:${talent.id}:effect"
+                if (AriaCallbackManager.has(effectId)) {
+                    AriaCallbackManager.invoke(effectId, player)
+                }
             } else if (!isUnlocked && wasUnlocked) {
                 data.persistent.unlockedTalents.remove(talent.id)
                 data.dirty = true
                 changed = true
+                // 失活回调
+                val deactivateId = "talent:${talent.id}:on_deactivate"
+                if (AriaCallbackManager.has(deactivateId)) {
+                    AriaCallbackManager.invoke(deactivateId, player)
+                }
             }
         }
 

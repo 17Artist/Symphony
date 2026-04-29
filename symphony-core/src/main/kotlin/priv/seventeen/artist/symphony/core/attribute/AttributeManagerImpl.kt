@@ -65,7 +65,7 @@ class AttributeManagerImpl : IAttributeManager {
     }
 
     override fun addModifier(entity: LivingEntity, modifier: AttributeModifier) {
-        // 通过 ScriptProvider 添加动态修改器
+        // 动态修改器通过 ActiveBuff 机制实现（symphony.attribute.modify / buff）
         markDirty(entity)
     }
 

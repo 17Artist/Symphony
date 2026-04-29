@@ -67,32 +67,34 @@ passive_attributes:
 
 ## 3. 词条效果类型（Actions）
 
-| 类型 | 说明 | 关键参数 |
-|------|------|----------|
-| `SKILL` | 调用技能提供者 | provider, skill, level, params |
-| `ATTRIBUTE_BUFF` | 临时属性修改 | attribute, operation, value, duration |
-| `ATTRIBUTE_PERMANENT` | 永久属性修改（被动） | attribute, operation, value |
-| `DAMAGE` | 造成额外伤害 | amount, type, target |
-| `HEAL` | 恢复生命值 | amount, target |
-| `MANA` | 恢复/消耗法力 | amount, target |
-| `POTION` | 施加药水效果 | effect, duration, amplifier, target |
-| `PARTICLE` | 播放粒子效果 | particle, count, offset |
-| `SOUND` | 播放音效 | sound, volume, pitch |
-| `MESSAGE` | 发送消息 | message, type(chat/actionbar/title) |
-| `COMMAND` | 执行命令 | command, as(player/console) |
-| `SCRIPT` | 执行 Aria 脚本 | code 或 file |
+| 类型                    | 说明                                  | 关键参数                                  |
+|-----------------------|-------------------------------------|---------------------------------------|
+| `SKILL`               | 调用技能提供者                             | provider, skill, level, params        |
+| `ATTRIBUTE_BUFF`      | 临时属性修改                              | attribute, operation, value, duration |
+| `ATTRIBUTE_PERMANENT` | 永久属性修改（写入 ActiveBuff，expireTime=-1） | attribute, operation, value           |
+| `DAMAGE`              | 造成额外伤害                              | amount, damage_type, target           |
+| `HEAL`                | 恢复生命值                               | amount, target                        |
+| `MANA`                | 恢复/消耗法力                             | amount, target                        |
+| `POTION`              | 施加药水效果                              | effect, duration, amplifier, target   |
+| `PARTICLE`            | 播放粒子效果                              | particle, count, offset, target       |
+| `SOUND`               | 播放音效                                | sound, volume, pitch, target          |
+| `MESSAGE`             | 发送消息                                | message, type(chat/actionbar/title)   |
+| `COMMAND`             | 执行命令                                | command, as(player/console)           |
+| `SCRIPT`              | 执行 Aria 脚本                          | code 或 file                           |
+| `STATUS_STACK`        | 叠加状态层                               | status, stacks                        |
 
 ### target 参数
 
 动作中的 `target` 参数指定效果目标：
 
-| 值 | 说明 |
-|----|------|
-| `SELF` | 词条持有者自身 |
-| `TRIGGER_TARGET` | 触发器上下文中的目标 |
-| `TRIGGER_ATTACKER` | 触发器上下文中的攻击者 |
-| `NEARBY_ENEMIES` | 附近敌对实体 |
-| `NEARBY_ALLIES` | 附近友方实体 |
+| 值                  | 说明                          |
+|--------------------|-----------------------------|
+| `SELF`             | 词条持有者自身                     |
+| `TRIGGER_TARGET`   | 触发器上下文中的目标                  |
+| `TRIGGER_ATTACKER` | 触发器上下文中的攻击者                 |
+| `NEARBY_ENEMIES`   | 附近敌对实体（支持 radius 参数，默认 5.0） |
+| `NEARBY_ALLIES`    | 附近友方实体（支持 radius 参数）        |
+| `NEARBY_ALL`       | 附近所有实体（支持 radius 参数）        |
 
 ## 4. 词条实例数据结构
 
@@ -193,33 +195,4 @@ generation:
 5. 返回结果列表
 ```
 
-## 6. 词条 Lore 渲染
 
-词条信息会渲染到物品 Lore 中：
-
-```yaml
-# config/lore-format.yml
-affix_lore:
-  header: "&8&m─────────&r &6词条 &8&m─────────"
-  format: "&7[{rarity_color}{rarity_name}&7] {display_name} &8Lv.{level}"
-  description_prefix: "  &7"
-  footer: "&8&m──────────────────────"
-  
-  rarity_colors:
-    COMMON: "&f"
-    UNCOMMON: "&a"
-    RARE: "&9"
-    EPIC: "&5"
-    LEGENDARY: "&6"
-    MYTHIC: "&c"
-```
-
-渲染示例：
-```
-─────────── 词条 ───────────
-[&9稀有] 烈焰打击 Lv.3
-  攻击时有 20% 概率造成 50 点火焰伤害
-[&a普通] 生命偷取 Lv.1
-  攻击时恢复造成伤害的 5%
-────────────────────────────
-```

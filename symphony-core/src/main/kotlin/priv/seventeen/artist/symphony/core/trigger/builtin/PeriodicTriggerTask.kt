@@ -1,7 +1,11 @@
 package priv.seventeen.artist.symphony.core.trigger.builtin
 
+import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
+import priv.seventeen.artist.symphony.api.trigger.TriggerType
+import priv.seventeen.artist.symphony.core.affix.AffixManagerImpl
 import priv.seventeen.artist.symphony.core.trigger.CooldownManager
+import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 
 class PeriodicTriggerTask : BukkitRunnable() {
     private var tickCount = 0L
@@ -13,6 +17,14 @@ class PeriodicTriggerTask : BukkitRunnable() {
         if (tickCount % 100 == 0L) {
             CooldownManager.cleanup()
         }
-        // EntityRuntimeCache.cleanup() 由 RuntimeTickTask 统一处理
+
+        // 每 20 tick (1秒): ON_TIMER 触发器
+        if (tickCount % 20 == 0L) {
+            for (player in Bukkit.getOnlinePlayers()) {
+                TriggerDispatcher.dispatch(TriggerType.ON_TIMER, player) {
+                    set("tick", tickCount)
+                }
+            }
+        }
     }
 }

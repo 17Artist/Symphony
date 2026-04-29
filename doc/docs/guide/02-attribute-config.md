@@ -111,29 +111,29 @@ scripts/attributes/elements/
 
 ### 类级注解
 
-| 注解 | 参数类型 | 必填 | 说明 |
-|------|----------|------|------|
-| `@attribute` | String | **是** | 属性 ID，唯一标识 |
-| `@displayName` | String | 否 | 显示名称（未填则用 id） |
-| `@description` | String | 否 | 描述文本 |
-| `@category` | String | 否 | 分类（默认 `custom`） |
-| `@default` | Number | 否 | 默认值（默认 0.0） |
-| `@min` | Number | 否 | 最小约束（默认 `-Double.MAX_VALUE`） |
-| `@max` | Number | 否 | 最大约束（默认 `+Double.MAX_VALUE`） |
-| `@format` | String | 否 | `number` / `percent` / `integer` |
-| `@priority` | Number | 否 | 显示排序 |
-| `@vanillaBinding` | String | 否 | 绑定 Minecraft 原版属性 |
-| `@readonly` | Boolean/无 | 否 | 只读（派生属性） |
-| `@tag` | String | 否 | 单个标签，可重复使用 |
-| `@tags` | String… | 否 | 批量标签，等价于多个 `@tag` |
+| 注解                | 参数类型      | 必填    | 说明                               |
+|-------------------|-----------|-------|----------------------------------|
+| `@attribute`      | String    | **是** | 属性 ID，唯一标识                       |
+| `@displayName`    | String    | 否     | 显示名称（未填则用 id）                    |
+| `@description`    | String    | 否     | 描述文本                             |
+| `@category`       | String    | 否     | 分类（默认 `custom`）                  |
+| `@default`        | Number    | 否     | 默认值（默认 0.0）                      |
+| `@min`            | Number    | 否     | 最小约束（默认 `-Double.MAX_VALUE`）     |
+| `@max`            | Number    | 否     | 最大约束（默认 `+Double.MAX_VALUE`）     |
+| `@format`         | String    | 否     | `number` / `percent` / `integer` |
+| `@priority`       | Number    | 否     | 显示排序                             |
+| `@vanillaBinding` | String    | 否     | 绑定 Minecraft 原版属性                |
+| `@readonly`       | Boolean/无 | 否     | 只读（派生属性）                         |
+| `@tag`            | String    | 否     | 单个标签，可重复使用                       |
+| `@tags`           | String…   | 否     | 批量标签，等价于多个 `@tag`                |
 
 ### 方法级注解
 
-| 注解 | 位置 | 说明 |
-|------|------|------|
-| `@derive` | 类内方法 | 派生计算函数；入参 `args[0]` 为持有者 |
-| `@onChange` | 类内方法 | 值变更回调（规划中） |
-| `@formula` | 类内方法 | 自定义叠加公式（规划中） |
+| 注解          | 位置   | 说明                       |
+|-------------|------|--------------------------|
+| `@derive`   | 类内方法 | 派生计算函数；入参 `args[0]` 为持有者 |
+| `@onChange` | 类内方法 | 值变更回调（规划中）               |
+| `@formula`  | 类内方法 | 自定义叠加公式（规划中）             |
 
 未识别的注解会在启动时打印 `[WARN] 使用了未知类注解 @xxx`，便于发现拼写错误。
 
@@ -167,17 +167,3 @@ passive_attributes:
 
 引用不存在的属性 ID 时，系统静默忽略并在控制台警告。
 
-## 6. 迁移说明（旧脚本 → 注解）
-
-| 旧 map 字段 | 新注解 |
-|------------|--------|
-| `'id': 'x'` | `@attribute('x')` |
-| `'display_name': '名'` | `@displayName('名')` |
-| `'default_value': 1.0` | `@default(1.0)` |
-| `'min_value' / 'max_value'` | `@min / @max` |
-| `'vanilla_binding'` | `@vanillaBinding` |
-| `'readonly': true` | `@readonly` |
-| `'tags': [...]` | 多次 `@tag(...)` |
-| `'derive': -> {...}` | 方法 `@derive  calc = -> {...}` |
-
-旧的 `symphony.attribute.register({...})` / `registerAll([...])` API **已移除**。首次升级后，请删除旧的扁平脚本文件（`combat.aria` / `movement.aria` / …），目录重新走默认资源释放。

@@ -1,6 +1,7 @@
 package priv.seventeen.artist.symphony.api.affix
 
 import org.bukkit.inventory.ItemStack
+import java.util.*
 
 interface IAffixManager {
     fun registerAffix(affix: IAffix)
@@ -10,7 +11,7 @@ interface IAffixManager {
 
     fun getAffixes(item: ItemStack): List<AffixInstance>
     fun addAffix(item: ItemStack, instance: AffixInstance): Boolean
-    fun removeAffix(item: ItemStack, uuid: java.util.UUID): Boolean
+    fun removeAffix(item: ItemStack, uuid: UUID): Boolean
     fun clearAffixes(item: ItemStack)
 
     fun generateAffixes(poolId: String, rarity: AffixRarity, luck: Double): List<AffixInstance>

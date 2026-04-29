@@ -1,6 +1,7 @@
 package priv.seventeen.artist.symphony.plugin
 
 import org.bukkit.Bukkit
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
@@ -16,6 +17,7 @@ import priv.seventeen.artist.symphony.core.data.EntityRuntimeCache
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 import priv.seventeen.artist.symphony.api.trigger.TriggerType
+import priv.seventeen.artist.symphony.api.event.BuffExpireEvent
 
 class RuntimeTickTask : BukkitRunnable() {
     private var tickCount = 0L
@@ -50,6 +52,11 @@ class RuntimeTickTask : BukkitRunnable() {
                 // Buff 过期
                 val expired = data.runtime.activeBuffs.filter { it.isExpired() }
                 if (expired.isNotEmpty()) {
+                    for (buff in expired) {
+                        Bukkit.getPluginManager().callEvent(
+                            BuffExpireEvent(player, buff.id, buff.attribute, BuffExpireEvent.ExpireReason.TIMEOUT)
+                        )
+                    }
                     data.runtime.activeBuffs.removeAll(expired)
                     attributeDirty = true
                 }
@@ -67,12 +74,20 @@ class RuntimeTickTask : BukkitRunnable() {
                 // 法力恢复
                 val maxMana = AttributeCache.get(player.uniqueId, "max_mana") ?: 100.0
                 val manaRegen = AttributeCache.get(player.uniqueId, "mana_regen") ?: 0.0
+                val manaBeforeRegen = data.runtime.currentMana
                 data.runtime.currentMana = minOf(maxMana, data.runtime.currentMana + manaRegen)
+
+                // ON_MANA_FULL — 法力恢复到满时触发
+                if (manaBeforeRegen < maxMana && data.runtime.currentMana >= maxMana) {
+                    TriggerDispatcher.dispatch(TriggerType.ON_MANA_FULL, player) {
+                        set("maxMana", maxMana)
+                    }
+                }
 
                 // 生命恢复
                 val healthRegen = AttributeCache.get(player.uniqueId, "health_regen") ?: 0.0
-                if (healthRegen > 0 && player.health < (player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0)) {
-                    val maxHp = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+                if (healthRegen > 0 && player.health < (player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0)) {
+                    val maxHp = player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
                     player.health = minOf(player.health + healthRegen, maxHp)
                 }
 

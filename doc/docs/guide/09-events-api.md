@@ -8,53 +8,53 @@ Symphony 所有公开 API 与事件钩子。API 入口统一走 `SymphonyAPI.get
 
 每次 `EntityDamageByEntityEvent` 会依次发布三个 Symphony 事件，允许第三方插件在不同阶段介入：
 
-| # | 事件 | 时机 | 可修改 |
-|---|------|------|--------|
-| 1 | `SymphonyPreDamageEvent` | 暴击判定后、减伤前 | `baseDamage`、`isCritical` |
+| # | 事件                        | 时机                | 可修改                                |
+|---|---------------------------|-------------------|------------------------------------|
+| 1 | `SymphonyPreDamageEvent`  | 暴击判定后、减伤前         | `baseDamage`、`isCritical`          |
 | 2 | `SymphonyMitigationEvent` | 防御/穿透/格挡应用后、元素伤害前 | `finalPhysical`、`reductionPercent` |
-| 3 | `SymphonyDamageEvent` | 元素伤害合并后、实际施加前 | `finalDamage`、`elementDamages` |
+| 3 | `SymphonyDamageEvent`     | 元素伤害合并后、实际施加前     | `finalDamage`、`elementDamages`     |
 
 三者任一被取消都会中止伤害。
 
 ### 资源事件
 
-| 事件 | 可取消 | 可改 amount | 用途 |
-|------|--------|------------|------|
-| `SymphonyHealEvent` | ✓ | ✓ | 反治疗环境、回血倍率 buff |
-| `SymphonyManaConsumeEvent` | ✓ | ✓ | 反魔 debuff、零消耗法术 |
+| 事件                         | 可取消 | 可改 amount | 用途              |
+|----------------------------|-----|-----------|-----------------|
+| `SymphonyHealEvent`        | ✓   | ✓         | 反治疗环境、回血倍率 buff |
+| `SymphonyManaConsumeEvent` | ✓   | ✓         | 反魔 debuff、零消耗法术 |
 
 ### 词条生命周期
 
-| 事件 | 可取消 | 说明 |
-|------|--------|------|
-| `AffixEquipEvent` | ✗ | 词条因装备变化进入激活态 |
-| `AffixUnequipEvent` | ✗ | 词条因装备变化进入失活态 |
-| `AffixTriggerEvent` | ✓ | 词条触发器执行前 |
+| 事件                  | 可取消 | 说明           |
+|---------------------|-----|--------------|
+| `AffixEquipEvent`   | ✗   | 词条因装备变化进入激活态 |
+| `AffixUnequipEvent` | ✗   | 词条因装备变化进入失活态 |
+| `AffixTriggerEvent` | ✓   | 词条触发器执行前     |
 
 ### Buff 生命周期
 
-| 事件 | 可取消 | 可改 | 说明 |
-|------|--------|------|------|
-| `BuffApplyEvent` | ✓ | `value`、`durationMs` | Buff 加入前，允许调整 |
-| `BuffExpireEvent` | ✗ | — | 过期/移除/替换/下线 四种原因 |
+| 事件                | 可取消 | 可改                   | 说明               |
+|-------------------|-----|----------------------|------------------|
+| `BuffApplyEvent`  | ✓   | `value`、`durationMs` | Buff 加入前，允许调整    |
+| `BuffExpireEvent` | ✗   | —                    | 过期/移除/替换/下线 四种原因 |
 
 ### 触发器与状态层
 
-| 事件 | 可取消 | 说明 |
-|------|--------|------|
-| `TriggerDispatchEvent` | ✓ | 全局触发器派发前，可整批拦截 |
-| `StatusLayerChangeEvent` | ✗ | 状态层数增减（STACK / UNSTACK / EXPIRE / CLEAR） |
+| 事件                       | 可取消 | 说明                                       |
+|--------------------------|-----|------------------------------------------|
+| `TriggerDispatchEvent`   | ✓   | 全局触发器派发前，可整批拦截                           |
+| `StatusLayerChangeEvent` | ✗   | 状态层数增减（STACK / UNSTACK / EXPIRE / CLEAR） |
 
 ### 属性、成长、技能
 
-| 事件 | 可取消 | 说明 |
-|------|--------|------|
-| `AttributeUpdateEvent` | ✓ | 属性值变化时，附带 `source` |
-| `EnhanceEvent` | ✓ | 装备强化结束，附带 `EnhanceResult` |
-| `GemInsertEvent` | ✓ | 宝石镶嵌（`GemManager.insertGem(player, ...)` 重载） |
-| `LevelChangeEvent` | ✓ | 玩家等级变化 |
-| `RuneActivateEvent` | ✓ | 符文激活 |
-| `SkillCastEvent` | ✓ | 技能施放前 |
+| 事件                     | 可取消 | 说明                                           |
+|------------------------|-----|----------------------------------------------|
+| `AttributeUpdateEvent` | ✓   | 属性值变化时，附带 `source`                           |
+| `EnhanceEvent`         | ✓   | 装备强化结束，附带 `EnhanceResult`                    |
+| `GemInsertEvent`       | ✓   | 宝石镶嵌（`GemManager.insertGem(player, ...)` 重载） |
+| `LevelChangeEvent`     | ✓   | 玩家等级变化                                       |
+| `RuneActivateEvent`    | ✓   | 符文激活                                         |
+| `SkillCastEvent`       | ✓   | 技能施放前                                        |
 
 ## API 扩展点
 
@@ -158,13 +158,13 @@ for ((id, pair) in api.diff(before, after)) {
 
 ## 子 Manager 速查
 
-| Manager | 关键方法 |
-|---------|---------|
-| `IAttributeManager` | `registerAttribute` / `registerProvider` / `getValue` / `getValues` / `markDirty` / `recalculate` / `addListener` |
-| `IAffixManager` | `registerAffix` / `getAffixes` / `addAffix` / `generateAffixes` / `renderLore` / `registerActionHandler` |
-| `ITriggerManager` | `dispatch` / `registerConditionType` / `isOnCooldown` / `setCooldown` |
-| `ISkillProviderManager` | `registerProvider` / `castSkill` / `hasSkill` |
-| `IGrowthManager` | `getLevel` / `addExp` / `insertGem` / `enhance` / `activateRune` |
+| Manager                 | 关键方法                                                                                                              |
+|-------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `IAttributeManager`     | `registerAttribute` / `registerProvider` / `getValue` / `getValues` / `markDirty` / `recalculate` / `addListener` |
+| `IAffixManager`         | `registerAffix` / `getAffixes` / `addAffix` / `generateAffixes` / `renderLore` / `registerActionHandler`          |
+| `ITriggerManager`       | `dispatch` / `registerConditionType` / `isOnCooldown` / `setCooldown`                                             |
+| `ISkillProviderManager` | `registerProvider` / `castSkill` / `hasSkill`                                                                     |
+| `IGrowthManager`        | `getLevel` / `addExp` / `insertGem` / `enhance` / `activateRune`                                                  |
 
 完整签名见源码 `symphony-common/src/main/kotlin/priv/seventeen/artist/symphony/api/`。
 

@@ -23,7 +23,6 @@ interface SymphonyAPI {
     fun getTriggerManager(): ITriggerManager
     fun getSkillProviderManager(): ISkillProviderManager
     fun getGrowthManager(): IGrowthManager
-    fun getFormulaEngine(): IFormulaEngine
     fun getPlayerData(player: Player): IPlayerData
     
     // 便捷方法
@@ -49,7 +48,7 @@ interface IAttributeManager {
     fun unregisterAttribute(id: String)
     fun getAttribute(id: String): IAttribute?
     fun getAllAttributes(): Collection<IAttribute>
-    fun getAttributesByCategory(category: AttributeType): Collection<IAttribute>
+    fun getAttributesByCategory(category: String): Collection<IAttribute>
     
     // 属性来源
     fun registerProvider(provider: IAttributeProvider)
@@ -64,8 +63,8 @@ interface IAttributeManager {
     // 属性修改
     fun addModifier(entity: LivingEntity, modifier: AttributeModifier)
     fun removeModifier(entity: LivingEntity, source: String)
-    fun addBuff(entity: LivingEntity, buff: BuffData)
-    fun removeBuff(entity: LivingEntity, buffId: String)
+    fun addListener(listener: AttributeListener)
+    fun removeListener(listener: AttributeListener)
     
     // 重算
     fun markDirty(entity: LivingEntity)
@@ -113,6 +112,8 @@ interface ITriggerManager {
     
     // 条件注册
     fun registerCondition(type: String, factory: (Map<String, Any>) -> ITriggerCondition)
+    fun registerConditionType(type: String, impl: ITriggerCondition)
+    fun unregisterConditionType(type: String)
     
     // 手动触发
     fun dispatch(type: TriggerType, entity: LivingEntity, context: Map<String, Any>)
@@ -183,77 +184,73 @@ enum class EnhanceResult {
 
 ## 7. 事件系统
 
-所有事件继承 Bukkit Event，支持 Cancellable：
+所有事件继承 Bukkit Event，部分支持 Cancellable：
+
+### 7.1 伤害流水线（三段式）
 
 ```kotlin
-// 属性变更事件
-class AttributeUpdateEvent(
-    val entity: LivingEntity,
-    val attributeId: String,
-    val oldValue: Double,
-    val newValue: Double,
-    val source: String
-) : Event(), Cancellable
+// 阶段一：预伤害（可改 baseDamage / isCritical，可取消）
+class SymphonyPreDamageEvent(attacker, victim, var baseDamage, var isCritical, damageType) : Event(), Cancellable
 
-// 词条触发事件
-class AffixTriggerEvent(
-    val entity: LivingEntity,
-    val affix: AffixInstance,
-    val triggerType: TriggerType,
-    val context: ITriggerContext
-) : Event(), Cancellable
+// 阶段二：减伤（可改 finalPhysical / reductionPercent，可取消）
+class SymphonyMitigationEvent(attacker, victim, baseDamage, var finalPhysical, var reductionPercent, isCritical, blocked) : Event(), Cancellable
 
-// Symphony 伤害计算事件（在原版伤害事件之后）
-class SymphonyDamageEvent(
-    val attacker: LivingEntity,
-    val victim: LivingEntity,
-    val rawDamage: Double,
-    var finalDamage: Double,
-    val damageType: DamageType,
-    val isCritical: Boolean,
-    val elementDamages: MutableMap<String, Double>
-) : Event(), Cancellable
+// 阶段三：最终伤害（可改 finalDamage / elementDamages，可取消）
+class SymphonyDamageEvent(attacker, victim, rawDamage, var finalDamage, damageType, isCritical, elementDamages) : Event(), Cancellable
+```
 
-// 强化事件
-class EnhanceEvent(
-    val player: Player,
-    val item: ItemStack,
-    val oldLevel: Int,
-    val newLevel: Int,
-    val result: EnhanceResult
-) : Event(), Cancellable
+### 7.2 资源事件
 
-// 技能释放事件
-class SkillCastEvent(
-    val caster: LivingEntity,
-    val providerId: String,
-    val skillId: String,
-    val level: Int,
-    val context: SkillContext
-) : Event(), Cancellable
+```kotlin
+// 治疗事件（可取消，可改 amount）
+class SymphonyHealEvent(target, source, var amount, reason) : Event(), Cancellable
 
-// 等级变更事件
-class LevelChangeEvent(
-    val player: Player,
-    val oldLevel: Int,
-    val newLevel: Int
-) : Event(), Cancellable
+// 法力消耗事件（可取消，可改 amount）
+class SymphonyManaConsumeEvent(player, var amount, reason) : Event(), Cancellable
+```
 
-// 宝石镶嵌事件
-class GemInsertEvent(
-    val player: Player,
-    val item: ItemStack,
-    val slotIndex: Int,
-    val gemId: String,
-    val gemLevel: Int
-) : Event(), Cancellable
+### 7.3 词条生命周期
 
-// 符文激活事件
-class RuneActivateEvent(
-    val player: Player,
-    val runeId: String,
-    val level: Int
-) : Event(), Cancellable
+```kotlin
+// 词条装备激活（不可取消）
+class AffixEquipEvent(player, item, affixes) : Event()
+
+// 词条卸下（不可取消）
+class AffixUnequipEvent(player, item, affixes) : Event()
+
+// 词条触发（可取消）
+class AffixTriggerEvent(entity, affix, triggerType, context) : Event(), Cancellable
+```
+
+### 7.4 Buff 生命周期
+
+```kotlin
+// Buff 施加（可取消，可改 value / durationMs）
+class BuffApplyEvent(target, buffId, attributeId, var value, var durationMs, source) : Event(), Cancellable
+
+// Buff 过期（不可取消，含原因：TIMEOUT / MANUAL_REMOVE / REPLACED / PLAYER_QUIT）
+class BuffExpireEvent(target, buffId, attributeId, reason) : Event()
+```
+
+### 7.5 触发器与状态层
+
+```kotlin
+// 触发器分发（可取消整批）
+class TriggerDispatchEvent(type, entity, context) : Event(), Cancellable
+
+// 状态层变更（不可取消，含原因：STACK / UNSTACK / EXPIRE / CLEAR）
+class StatusLayerChangeEvent(entity, statusId, oldStacks, newStacks, reason) : Event()
+```
+
+### 7.6 属性 / 成长 / 技能
+
+```kotlin
+class AttributeUpdateEvent(entity, attributeId, oldValue, newValue, source) : Event(), Cancellable
+class EnhanceEvent(player, item, oldLevel, newLevel, result) : Event(), Cancellable
+class GemInsertEvent(player, item, slotIndex, gemId, gemLevel) : Event(), Cancellable
+class LevelChangeEvent(player, oldLevel, newLevel) : Event(), Cancellable
+class RuneActivateEvent(player, runeId, level) : Event(), Cancellable
+class SkillCastEvent(caster, providerId, skillId, level, context) : Event(), Cancellable
 ```
 
 ## 8. PlaceholderAPI 集成

@@ -1,9 +1,12 @@
 package priv.seventeen.artist.symphony.core.advanced.interaction
 
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -53,7 +56,7 @@ object InteractionNetwork {
         }
     }
 
-    private fun processInteraction(entityId: java.util.UUID, def: InteractionDefinition, entity: LivingEntity): Boolean {
+    private fun processInteraction(entityId: UUID, def: InteractionDefinition, entity: LivingEntity): Boolean {
         return when (def.type) {
             InteractionType.CONVERSION -> processConversion(entityId, def)
             InteractionType.OVERFLOW -> processOverflow(entityId, def)
@@ -65,7 +68,7 @@ object InteractionNetwork {
         }
     }
 
-    private fun processConversion(entityId: java.util.UUID, def: InteractionDefinition): Boolean {
+    private fun processConversion(entityId: UUID, def: InteractionDefinition): Boolean {
         val source = def.source ?: return false
         val target = def.target ?: return false
         val sourceValue = AttributeCache.get(entityId, source) ?: return false
@@ -81,7 +84,7 @@ object InteractionNetwork {
         return false
     }
 
-    private fun processOverflow(entityId: java.util.UUID, def: InteractionDefinition): Boolean {
+    private fun processOverflow(entityId: UUID, def: InteractionDefinition): Boolean {
         val source = def.source ?: return false
         val target = def.target ?: return false
         val sourceValue = AttributeCache.get(entityId, source) ?: return false
@@ -93,7 +96,7 @@ object InteractionNetwork {
         return true
     }
 
-    private fun processSynergy(entityId: java.util.UUID, def: InteractionDefinition): Boolean {
+    private fun processSynergy(entityId: UUID, def: InteractionDefinition): Boolean {
         if (def.attributes.size < 2) return false
         val allAbove = def.attributes.all { attrId ->
             (AttributeCache.get(entityId, attrId) ?: 0.0) >= def.threshold
@@ -111,7 +114,7 @@ object InteractionNetwork {
         return changed
     }
 
-    private fun processConflict(entityId: java.util.UUID, def: InteractionDefinition): Boolean {
+    private fun processConflict(entityId: UUID, def: InteractionDefinition): Boolean {
         val attrA = def.attributeA ?: return false
         val attrB = def.attributeB ?: return false
         val valueA = AttributeCache.get(entityId, attrA) ?: return false
@@ -125,14 +128,21 @@ object InteractionNetwork {
         return false
     }
 
-    private fun processAmplify(entityId: java.util.UUID, def: InteractionDefinition, entity: LivingEntity): Boolean {
+    private fun processAmplify(entityId: UUID, def: InteractionDefinition, entity: LivingEntity): Boolean {
         val target = def.target ?: return false
-        // 简化版：基于生命值百分比的条件增幅
-        val hp = entity.health
-        val maxHp = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
-        val hpPercent = hp / maxHp
-        // 默认条件：生命值低于阈值
-        if (hpPercent >= (def.threshold.takeIf { it in 0.01..1.0 } ?: 0.3)) return false
+
+        // 优先使用脚本条件
+        val conditionId = "interaction:${def.id}:condition"
+        val conditionMet = if (AriaCallbackManager.has(conditionId)) {
+            AriaCallbackManager.invokeCondition(conditionId, entity)
+        } else {
+            // fallback: 基于生命值百分比的默认条件
+            val hp = entity.health
+            val maxHp = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+            hp / maxHp < (def.threshold.takeIf { it in 0.01..1.0 } ?: 0.3)
+        }
+
+        if (!conditionMet) return false
         val current = AttributeCache.get(entityId, target) ?: return false
         val amplified = current * def.multiplier
         if (amplified != current) {
@@ -142,7 +152,7 @@ object InteractionNetwork {
         return false
     }
 
-    private fun processThreshold(entityId: java.util.UUID, def: InteractionDefinition, entity: LivingEntity): Boolean {
+    private fun processThreshold(entityId: UUID, def: InteractionDefinition, entity: LivingEntity): Boolean {
         val source = def.source ?: return false
         val value = AttributeCache.get(entityId, source) ?: return false
         val data = PlayerDataManager.getData(entityId) ?: return false
@@ -152,6 +162,11 @@ object InteractionNetwork {
 
         if (isActive && !wasActive) {
             data.runtime.activeThresholds.add(thresholdKey)
+            // 激活时执行 effect 回调
+            val effectId = "interaction:${def.id}:effect"
+            if (AriaCallbackManager.has(effectId)) {
+                AriaCallbackManager.invoke(effectId, entity, value)
+            }
             return true
         } else if (!isActive && wasActive) {
             data.runtime.activeThresholds.remove(thresholdKey)
@@ -160,7 +175,7 @@ object InteractionNetwork {
         return false
     }
 
-    private fun processDiminish(entityId: java.util.UUID, def: InteractionDefinition): Boolean {
+    private fun processDiminish(entityId: UUID, def: InteractionDefinition): Boolean {
         val source = def.source ?: return false
         val value = AttributeCache.get(entityId, source) ?: return false
         val attr = AttributeRegistry.get(source) ?: return false

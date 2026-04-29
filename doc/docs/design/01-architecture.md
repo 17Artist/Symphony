@@ -25,24 +25,35 @@ graph TB
 
 ## Provider 计算链
 
+完整 14 个 Provider 链（按优先级排序）：
+
+```
+Base(100) → Level(150) → MythicMob(150) → Equipment(200) → Gem(300) → Rune(400) → Enhance(500) → Set(550) → AffixPassive(600) → Resonance(650) → Talent(660) → Status(670) → Buff(700) → Environment(750)
+```
+
 ```mermaid
 flowchart LR
-    Base[BaseProvider<br/>等级成长]
-    Equip[EquipmentProvider<br/>装备 NBT]
-    Gem[GemProvider<br/>宝石加成]
-    Enh[EnhanceProvider<br/>强化加成]
-    Set[SetProvider<br/>套装效果]
-    Aff[AffixPassiveProvider<br/>词条被动]
-    Reson[ResonanceProvider<br/>共鸣加成]
-    Tal[TalentProvider<br/>天赋加成]
-    Stat[StatusProvider<br/>状态层]
-    Buf[BuffProvider<br/>临时 Buff]
-    Env[EnvironmentProvider<br/>环境修正]
-    MM[MythicMobAttributeProvider<br/>MM 怪物配置]
+    Base[BaseProvider<br/>100 等级成长]
+    Lvl[LevelProvider<br/>150 等级属性]
+    MM[MythicMobAttributeProvider<br/>150 MM 怪物配置]
+    Equip[EquipmentProvider<br/>200 装备 PDC]
+    Gem[GemProvider<br/>300 宝石加成]
+    Rune[RuneProvider<br/>400 符文被动]
+    Enh[EnhanceProvider<br/>500 强化加成]
+    Set[SetProvider<br/>550 套装效果]
+    Aff[AffixPassiveProvider<br/>600 词条被动]
+    Reson[ResonanceProvider<br/>650 共鸣加成]
+    Tal[TalentProvider<br/>660 天赋加成]
+    Stat[StatusProvider<br/>670 状态层]
+    Buf[BuffProvider<br/>700 临时 Buff]
+    Env[EnvironmentProvider<br/>750 环境修正]
 
     Base --> Calc[AttributeCalculator]
+    Lvl --> Calc
+    MM --> Calc
     Equip --> Calc
     Gem --> Calc
+    Rune --> Calc
     Enh --> Calc
     Set --> Calc
     Aff --> Calc
@@ -51,7 +62,6 @@ flowchart LR
     Stat --> Calc
     Buf --> Calc
     Env --> Calc
-    MM --> Calc
 
     Calc --> Cache[AttributeCache]
     Cache --> Vanilla[VanillaAttributeBridge<br/>同步原版属性]
@@ -202,7 +212,6 @@ api/
 │   │   ├── SymphonyEffectNS          # symphony.effect.*
 │   │   └── SymphonyTriggerNS         # symphony.trigger.*
 │   ├── FormulaEngine                 # 公式引擎（AriaCompiledRoutine 缓存池）
-│   └── ScriptAttributeProvider       # 脚本驱动的属性来源
 ├── storage/
 │   ├── PlayerDataManager             # 玩家数据管理（缓存 + 异步持久化）
 │   ├── provider/

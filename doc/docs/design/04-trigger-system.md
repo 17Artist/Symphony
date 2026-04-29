@@ -39,68 +39,68 @@ class TriggerType private constructor(val id: String) {
 
 ### 攻击/伤害类
 
-| 触发器 ID | 说明 | 上下文变量 |
-|-----------|------|-----------|
-| `ON_ATTACK` | 攻击实体时 | attacker, victim, damage, damageType, isCritical, weapon |
-| `ON_ATTACK_CRITICAL` | 暴击时 | attacker, victim, damage, critMultiplier |
-| `ON_KILL` | 击杀实体时 | killer, victim, damage |
-| `ON_DAMAGE` | 造成最终伤害时 | attacker, victim, finalDamage, rawDamage |
-| `ON_MELEE_ATTACK` | 近战攻击时 | attacker, victim, damage, weapon |
-| `ON_RANGED_ATTACK` | 远程攻击时 | attacker, victim, damage, projectile |
+| 触发器 ID               | 说明      | 上下文变量                                                    |
+|----------------------|---------|----------------------------------------------------------|
+| `ON_ATTACK`          | 攻击实体时   | attacker, victim, damage, damageType, isCritical, weapon |
+| `ON_ATTACK_CRITICAL` | 暴击时     | attacker, victim, damage, critMultiplier                 |
+| `ON_KILL`            | 击杀实体时   | killer, victim, damage                                   |
+| `ON_DAMAGE`          | 造成最终伤害时 | attacker, victim, finalDamage, rawDamage                 |
+| `ON_MELEE_ATTACK`    | 近战攻击时   | attacker, victim, damage, weapon                         |
+| `ON_RANGED_ATTACK`   | 远程攻击时   | attacker, victim, damage, projectile                     |
 
 ### 防御/受伤类
 
-| 触发器 ID | 说明 | 上下文变量 |
-|-----------|------|-----------|
-| `ON_DEFEND` | 被攻击时 | attacker, victim, damage, damageType |
-| `ON_DAMAGED` | 受到伤害后 | attacker, victim, finalDamage, currentHealth |
-| `ON_BLOCK` | 格挡成功时 | attacker, victim, blockedDamage |
-| `ON_DODGE` | 闪避成功时 | attacker, victim, dodgedDamage |
-| `ON_DEATH` | 死亡时 | victim, killer, damage |
-| `ON_LOW_HEALTH` | 生命值低于阈值时 | entity, currentHealth, maxHealth, threshold |
+| 触发器 ID          | 说明       | 上下文变量                                        |
+|-----------------|----------|----------------------------------------------|
+| `ON_DEFEND`     | 被攻击时     | attacker, victim, damage, damageType         |
+| `ON_DAMAGED`    | 受到伤害后    | attacker, victim, finalDamage, currentHealth |
+| `ON_BLOCK`      | 格挡成功时    | attacker, victim, blockedDamage              |
+| `ON_DODGE`      | 闪避成功时    | attacker, victim, dodgedDamage               |
+| `ON_DEATH`      | 死亡时      | victim, killer, damage                       |
+| `ON_LOW_HEALTH` | 生命值低于阈值时 | entity, currentHealth, maxHealth, threshold  |
 
 ### 移动/交互类
 
-| 触发器 ID | 说明 | 上下文变量 |
-|-----------|------|-----------|
-| `ON_MOVE` | 移动时 | entity, from, to, speed |
-| `ON_JUMP` | 跳跃时 | entity, location |
-| `ON_SNEAK` | 潜行切换时 | entity, isSneaking |
-| `ON_SPRINT` | 疾跑切换时 | entity, isSprinting |
-| `ON_INTERACT` | 交互时 | player, action, block, item |
-| `ON_RIGHT_CLICK` | 右键点击时 | player, item, block |
-| `ON_LEFT_CLICK` | 左键点击时 | player, item, block |
+| 触发器 ID           | 说明    | 上下文变量                       |
+|------------------|-------|-----------------------------|
+| `ON_MOVE`        | 移动时   | entity, from, to, speed     |
+| `ON_JUMP`        | 跳跃时   | entity, location            |
+| `ON_SNEAK`       | 潜行切换时 | entity, isSneaking          |
+| `ON_SPRINT`      | 疾跑切换时 | entity, isSprinting         |
+| `ON_INTERACT`    | 交互时   | player, action, block, item |
+| `ON_RIGHT_CLICK` | 右键点击时 | player, item, block         |
+| `ON_LEFT_CLICK`  | 左键点击时 | player, item, block         |
 
 ### 装备/物品类
 
-| 触发器 ID | 说明 | 上下文变量 |
-|-----------|------|-----------|
-| `ON_EQUIP` | 装备穿戴时 | player, item, slot |
-| `ON_UNEQUIP` | 装备卸下时 | player, item, slot |
-| `ON_HOLD` | 手持物品切换时 | player, item, previousItem |
-| `ON_CONSUME` | 消耗物品时 | player, item |
-| `ON_BREAK_ITEM` | 物品耐久耗尽时 | player, item |
+| 触发器 ID          | 说明      | 上下文变量                      |
+|-----------------|---------|----------------------------|
+| `ON_EQUIP`      | 装备穿戴时   | player, item, slot         |
+| `ON_UNEQUIP`    | 装备卸下时   | player, item, slot         |
+| `ON_HOLD`       | 手持物品切换时 | player, item, previousItem |
+| `ON_CONSUME`    | 消耗物品时   | player, item               |
+| `ON_BREAK_ITEM` | 物品耐久耗尽时 | player, item               |
 
 ### 周期/状态类
 
-| 触发器 ID | 说明 | 上下文变量 |
-|-----------|------|-----------|
-| `ON_TIMER` | 定时触发 | entity, interval, tickCount |
-| `ON_ENTER_COMBAT` | 进入战斗时 | entity |
-| `ON_LEAVE_COMBAT` | 脱离战斗时 | entity, combatDuration |
-| `ON_LEVEL_UP` | 升级时 | player, oldLevel, newLevel |
-| `ON_RESPAWN` | 重生时 | player |
-| `ON_JOIN` | 加入服务器时 | player |
-| `ON_QUIT` | 退出服务器时 | player |
+| 触发器 ID            | 说明     | 上下文变量                       |
+|-------------------|--------|-----------------------------|
+| `ON_TIMER`        | 定时触发   | entity, interval, tickCount |
+| `ON_ENTER_COMBAT` | 进入战斗时  | entity                      |
+| `ON_LEAVE_COMBAT` | 脱离战斗时  | entity, combatDuration      |
+| `ON_LEVEL_UP`     | 升级时    | player, oldLevel, newLevel  |
+| `ON_RESPAWN`      | 重生时    | player                      |
+| `ON_JOIN`         | 加入服务器时 | player                      |
+| `ON_QUIT`         | 退出服务器时 | player                      |
 
 ### 技能/法力类
 
-| 触发器 ID | 说明 | 上下文变量 |
-|-----------|------|-----------|
+| 触发器 ID          | 说明    | 上下文变量                         |
+|-----------------|-------|-------------------------------|
 | `ON_SKILL_CAST` | 释放技能时 | caster, skill, level, targets |
-| `ON_SKILL_HIT` | 技能命中时 | caster, victim, skill, damage |
-| `ON_MANA_USE` | 消耗法力时 | entity, amount, remaining |
-| `ON_MANA_FULL` | 法力充满时 | entity |
+| `ON_SKILL_HIT`  | 技能命中时 | caster, victim, skill, damage |
+| `ON_MANA_USE`   | 消耗法力时 | entity, amount, remaining     |
+| `ON_MANA_FULL`  | 法力充满时 | entity                        |
 
 ## 4. 触发器上下文
 
@@ -127,29 +127,29 @@ interface ITriggerContext {
 
 ### 5.1 内置条件
 
-| 条件类型 | 说明 | 参数 |
-|----------|------|------|
-| `CHANCE` | 概率判定 | value (0~100) |
-| `COOLDOWN` | 冷却时间 | value (毫秒) |
-| `HEALTH_ABOVE` | 生命值高于 | value (百分比 0~100) |
-| `HEALTH_BELOW` | 生命值低于 | value (百分比 0~100) |
-| `MANA_ABOVE` | 法力值高于 | value (百分比 0~100) |
-| `MANA_BELOW` | 法力值低于 | value (百分比 0~100) |
-| `HAS_PERMISSION` | 拥有权限 | value (权限节点) |
-| `IN_WORLD` | 在指定世界 | value (世界名) |
-| `IN_BIOME` | 在指定生物群系 | value (生物群系 ID) |
-| `IS_SNEAKING` | 正在潜行 | — |
-| `IS_SPRINTING` | 正在疾跑 | — |
-| `IS_FLYING` | 正在飞行 | — |
-| `HOLDING_TYPE` | 手持物品类型 | value (Material 名) |
-| `WEARING_SET` | 穿戴套装 | value (套装 ID) |
-| `HAS_AFFIX` | 拥有指定词条 | value (词条 ID) |
-| `ATTRIBUTE_ABOVE` | 属性值高于 | attribute, value |
-| `ATTRIBUTE_BELOW` | 属性值低于 | attribute, value |
-| `LEVEL_RANGE` | 等级范围 | min, max |
-| `DAMAGE_TYPE` | 伤害类型匹配 | value (physical/magic/fire...) |
-| `TARGET_TYPE` | 目标类型 | value (PLAYER/MOB/BOSS...) |
-| `SCRIPT` | Aria 脚本条件 | code (返回 boolean) |
+| 条件类型              | 说明        | 参数                             |
+|-------------------|-----------|--------------------------------|
+| `CHANCE`          | 概率判定      | value (0~100)                  |
+| `COOLDOWN`        | 冷却时间      | value (毫秒)                     |
+| `HEALTH_ABOVE`    | 生命值高于     | value (百分比 0~100)              |
+| `HEALTH_BELOW`    | 生命值低于     | value (百分比 0~100)              |
+| `MANA_ABOVE`      | 法力值高于     | value (百分比 0~100)              |
+| `MANA_BELOW`      | 法力值低于     | value (百分比 0~100)              |
+| `HAS_PERMISSION`  | 拥有权限      | value (权限节点)                   |
+| `IN_WORLD`        | 在指定世界     | value (世界名)                    |
+| `IN_BIOME`        | 在指定生物群系   | value (生物群系 ID)                |
+| `IS_SNEAKING`     | 正在潜行      | —                              |
+| `IS_SPRINTING`    | 正在疾跑      | —                              |
+| `IS_FLYING`       | 正在飞行      | —                              |
+| `HOLDING_TYPE`    | 手持物品类型    | value (Material 名)             |
+| `WEARING_SET`     | 穿戴套装      | value (套装 ID)                  |
+| `HAS_AFFIX`       | 拥有指定词条    | value (词条 ID)                  |
+| `ATTRIBUTE_ABOVE` | 属性值高于     | attribute, value               |
+| `ATTRIBUTE_BELOW` | 属性值低于     | attribute, value               |
+| `LEVEL_RANGE`     | 等级范围      | min, max                       |
+| `DAMAGE_TYPE`     | 伤害类型匹配    | value (physical/magic/fire...) |
+| `TARGET_TYPE`     | 目标类型      | value (PLAYER/MOB/BOSS...)     |
+| `SCRIPT`          | Aria 脚本条件 | code (返回 boolean)              |
 
 ### 5.2 条件组合
 

@@ -33,9 +33,9 @@ SymphonyScriptEngine（初始化）
 
 通过 `SymphonyBridge` + `NamespaceRegistrar` 注册到 `global.symphony`，在所有脚本中可见：
 
-### 2.1 symphony.attribute — 运行时查询 & 读取
+### 2.1 symphony.attribute — 属性查询与运行时操作
 
-> 属性 **定义** 不再通过命名空间注册，改用 [Aria 注解系统](#3-属性注解系统)。此处仅保留只读查询与运行时读取方法。
+> 属性 **定义** 不再通过命名空间注册，改用 [Aria 注解系统](#3-属性注解系统)。此处保留查询、运行时读写与修改方法。
 
 ```aria
 // 查询定义
@@ -48,51 +48,6 @@ val.byTag = symphony.attribute.listByTag('offensive')
 // 运行时读取（以实体为上下文）
 val.value = symphony.attribute.get(entity, 'physical_damage')
 val.raw = symphony.attribute.getRaw(entity, 'physical_damage')
-
-// 注销（极少使用）
-symphony.attribute.unregister('my_attr')
-```
-
-## 3. 属性注解系统
-
-属性通过 Aria 的注解系统声明，处理流程：
-
-```
-.aria 文件执行
-    ↓ 注解在解析阶段进入 AnnotationRegistry（engine 级共享）
-    ↓
-AttributeAnnotationProcessor.process()
-    ↓ findClassesByAnnotation("attribute") 列举所有属性类
-    ↓ 对每个类：扫描 getAll() 聚合同类兄弟注解
-    ↓ 构建 AttributeDefinition
-    ↓
-AttributeRegistry.register(def)
-```
-
-### 3.1 注解列表
-
-类级：`@attribute` `@displayName` `@description` `@category` `@default` `@min` `@max` `@format` `@priority` `@vanillaBinding` `@readonly` `@tag` `@tags`
-
-方法级（写在类体内的 `name = -> {}` 函数字段上）：`@derive` `@onChange` `@formula`
-
-详见 [guide/02-attribute-config.md](../guide/02-attribute-config.md#3-注解速查)。
-
-### 3.2 处理器容错
-
-- `@attribute` 缺少 ID 参数：WARN 并跳过该类；
-- 未识别的类/方法注解：WARN，继续处理已识别部分；
-- 同一 ID 重复声明：后加载者覆盖先加载者（由 `AttributeRegistry` 保证）；
-- `@derive / @onChange / @formula` 引用的函数通过 `FunctionValue` 以 `${className}#${methodName}` 字符串 ID 记录，供后续计算层解析。
-
-// ═══════════════════════════════════════
-// 运行时操作（在技能/词条/公式脚本中使用）
-// ═══════════════════════════════════════
-
-// 读取最终属性值
-val.atk = symphony.attribute.get(entity, 'physical_damage')
-
-// 读取原始计算值（用于派生属性内部引用）
-val.rawAtk = symphony.attribute.getRaw(holder, 'physical_damage')
 
 // 获取所有属性快照
 val.snapshot = symphony.attribute.snapshot(entity)
@@ -108,6 +63,9 @@ symphony.attribute.remove(entity, 'my_source')
 
 // 强制重算
 symphony.attribute.recalculate(entity)
+
+// 注销（极少使用）
+symphony.attribute.unregister('my_attr')
 ```
 
 ### 2.2 symphony.entity — 实体操作
@@ -218,8 +176,9 @@ val.level = symphony.growth.getLevel(player)
 symphony.growth.addExp(player, 1000, 'script')
 symphony.growth.setLevel(player, 50)
 
-// 宝石
+// 宝石（addGem 和 insertGem 等价）
 symphony.growth.addGem(item, 0, 'ruby', 3)
+symphony.growth.insertGem(item, 0, 'ruby', 3)
 symphony.growth.removeGem(item, 0)
 
 // 符文
@@ -228,13 +187,133 @@ symphony.growth.addFragments(player, 'berserker', 10)
 val.fragments = symphony.growth.getFragments(player, 'berserker')
 
 // 强化
+val.enhLevel = symphony.growth.getEnhanceLevel(item)
 val.result = symphony.growth.enhance(player, item)
 symphony.growth.setEnhanceLevel(item, 10)
 ```
 
-## 3. 公式引擎
+### 2.7 symphony.element — 元素系统
 
-### 3.1 设计
+```aria
+// 元素光环
+symphony.element.applyAura(entity, 'fire', 1.0)
+val.aura = symphony.element.getAura(entity, 'fire')
+symphony.element.removeAura(entity, 'fire')
+val.allAuras = symphony.element.getAllAuras(entity)
+
+// 元素反应
+val.reacted = symphony.element.tryReaction(attacker, target, 'fire')
+```
+
+### 2.8 symphony.status — 状态层系统
+
+```aria
+// 注册状态层
+symphony.status.register('bleed', '流血', 5, 8000, 'INDIVIDUAL')
+
+// 操作状态层
+symphony.status.addStacks(entity, 'bleed', 2, attacker)
+val.stacks = symphony.status.getStacks(entity, 'bleed')
+symphony.status.clearStacks(entity, 'bleed')
+symphony.status.setImmune(entity, 'bleed', 3000)
+
+// 查询
+val.all = symphony.status.list()
+```
+
+### 2.9 symphony.resonance — 词条共鸣
+
+```aria
+// 注册共鸣
+symphony.resonance.register('fire_mastery', '火焰精通', 'AFFIX_TAG_COUNT', 'fire', 3)
+
+// 查询
+val.active = symphony.resonance.getActive(player)
+symphony.resonance.check(player)
+val.all = symphony.resonance.list()
+```
+
+### 2.10 symphony.talent — 天赋门
+
+```aria
+// 注册天赋
+symphony.talent.register('berserker', '狂战本能', 'physical_damage', 50, '>=')
+
+// 查询
+val.unlocked = symphony.talent.isUnlocked(player, 'berserker')
+symphony.talent.check(player)
+val.status = symphony.talent.getStatus(player)
+val.all = symphony.talent.list()
+```
+
+### 2.11 symphony.interaction — 属性交互网络
+
+```aria
+// 注册交互
+symphony.interaction.register('crit_overflow', 'OVERFLOW', 'critical_chance', 'critical_damage', 0.75, 0.5, 1.0)
+
+// 管理
+symphony.interaction.remove('crit_overflow')
+val.all = symphony.interaction.list()
+```
+
+### 2.12 symphony.environment — 环境系统
+
+```aria
+// 注册环境修正器
+symphony.environment.register('deep_ocean', '深海之力', 'BIOME')
+
+// 查询
+val.active = symphony.environment.getActive(player)
+val.all = symphony.environment.list()
+```
+
+### 2.13 symphony.world — 世界信息
+
+```aria
+// 世界查询
+val.time = symphony.world.getTime(entity)
+val.raining = symphony.world.isRaining(entity)
+val.thundering = symphony.world.isThundering(entity)
+val.dimension = symphony.world.getDimension(entity)
+val.biome = symphony.world.getBiome(entity)
+val.outdoor = symphony.world.isOutdoor(entity)
+```
+
+## 3. 属性注解系统
+
+属性通过 Aria 的注解系统声明，处理流程：
+
+```
+.aria 文件执行
+    ↓ 注解在解析阶段进入 AnnotationRegistry（engine 级共享）
+    ↓
+AttributeAnnotationProcessor.process()
+    ↓ findClassesByAnnotation("attribute") 列举所有属性类
+    ↓ 对每个类：扫描 getAll() 聚合同类兄弟注解
+    ↓ 构建 AttributeDefinition
+    ↓
+AttributeRegistry.register(def)
+```
+
+### 3.1 注解列表
+
+类级：`@attribute` `@displayName` `@description` `@category` `@default` `@min` `@max` `@format` `@priority` `@vanillaBinding` `@readonly` `@tag` `@tags`
+
+方法级（写在类体内的 `name = -> {}` 函数字段上）：`@derive` `@onChange` `@formula`
+
+详见 [guide/02-attribute-config.md](../guide/02-attribute-config.md#3-注解速查)。
+
+### 3.2 处理器容错
+
+- `@attribute` 缺少 ID 参数：WARN 并跳过该类；
+- 未识别的类/方法注解：WARN，继续处理已识别部分；
+- 同一 ID 重复声明：后加载者覆盖先加载者（由 `AttributeRegistry` 保证）；
+- `@derive / @onChange / @formula` 引用的函数通过 `FunctionValue` 以 `${className}#${methodName}` 字符串 ID 记录，供后续计算层解析。
+
+## 4. 公式引擎
+
+### 4.1 设计
 
 所有数值计算公式通过 Aria 脚本定义，使用 `AriaCompiledRoutine` 预编译：
 
@@ -269,7 +348,7 @@ class FormulaEngine {
 }
 ```
 
-### 3.2 内置公式
+### 4.2 内置公式
 
 ```yaml
 # config/formulas.yml
@@ -321,9 +400,9 @@ formulas:
     return math.floor(atk * 2 + def * 1.5 + hp * 0.5 + critChance * 100 + critDmg * 50)
 ```
 
-## 4. 沙箱安全
+## 5. 沙箱安全
 
-### 4.1 沙箱配置
+### 5.1 沙箱配置
 
 ```kotlin
 // 属性定义沙箱（允许 symphony.attribute.register，禁止其他副作用）
@@ -367,7 +446,7 @@ val conditionSandbox = SandboxConfig.builder()
     .build()
 ```
 
-### 4.2 安全策略
+### 5.2 安全策略
 
 - 所有脚本在沙箱中执行，限制执行时间和调用深度
 - 禁止文件系统和网络访问
@@ -375,7 +454,7 @@ val conditionSandbox = SandboxConfig.builder()
 - 公式脚本只允许 math 和 type 命名空间
 - 脚本执行超时自动终止，记录警告日志
 
-## 5. 脚本文件组织
+## 6. 脚本文件组织
 
 ```
 plugins/Symphony/scripts/
@@ -404,7 +483,7 @@ plugins/Symphony/scripts/
     └── constants.aria
 ```
 
-## 6. 脚本热重载
+## 7. 脚本热重载
 
 ```kotlin
 // /symphony reload 命令触发

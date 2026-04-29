@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
+import java.util.*
 
 /**
  * 兜底 GUI：原生 Bukkit Inventory，54 格双层。
@@ -24,7 +25,7 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
 class BukkitInventoryGuiProvider : AttributeGuiProvider, Listener {
     override val id = "bukkit"
 
-    private val viewState = mutableMapOf<java.util.UUID, ViewState>()
+    private val viewState = mutableMapOf<UUID, ViewState>()
 
     private data class ViewState(val category: String, val page: Int)
 

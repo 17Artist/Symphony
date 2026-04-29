@@ -35,7 +35,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: '快速开始', link: '/guide/01-quick-start' },
-            { text: '属性配置（注解式）', link: '/guide/02-attribute-config' }
+            { text: '属性配置', link: '/guide/02-attribute-config' }
           ]
         },
         {

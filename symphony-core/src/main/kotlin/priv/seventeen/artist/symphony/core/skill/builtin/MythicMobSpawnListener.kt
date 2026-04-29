@@ -2,6 +2,7 @@ package priv.seventeen.artist.symphony.core.skill.builtin
 
 import io.lumine.mythic.bukkit.events.MythicMobDeathEvent
 import io.lumine.mythic.bukkit.events.MythicMobSpawnEvent
+import io.lumine.mythic.core.mobs.ActiveMob
 import org.bukkit.Bukkit
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.LivingEntity
@@ -98,7 +99,7 @@ object MythicMobSpawnListener : Listener {
         mobAffixes.remove(uuid)
     }
 
-    private fun extractSymphonySection(mob: io.lumine.mythic.core.mobs.ActiveMob): ConfigurationSection? {
+    private fun extractSymphonySection(mob: ActiveMob): ConfigurationSection? {
         val config = mob.type.config ?: return null
         val key = config.key
         val fc = getFileConfiguration(config) ?: return null

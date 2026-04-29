@@ -144,24 +144,29 @@ class CombatPower {
 
 ### 3.5 注解参数完整说明
 
-| 注解 | 参数 | 必填 | 说明 |
-|------|------|------|------|
-| `@attribute` | String | **是** | 唯一标识符，全局不可重复 |
-| `@displayName` | String | 否 | 显示名称（支持颜色代码） |
-| `@description` | String | 否 | 描述文本 |
-| `@category` | String | 否 | 分类标签（默认 `custom`） |
-| `@default` | Number | 否 | 默认值（默认 0.0） |
-| `@min` | Number | 否 | 最小值约束 |
-| `@max` | Number | 否 | 最大值约束 |
-| `@format` | String | 否 | 显示格式：`number` / `percent` / `integer` |
-| `@priority` | Number | 否 | 显示排序优先级，数值越小越靠前 |
-| `@vanillaBinding` | String | 否 | 绑定的原版属性 ID |
-| `@readonly` | Boolean/无 | 否 | 是否只读（仅由 `@derive` 计算） |
-| `@tag` | String | 否 | 单个标签，可重复 |
-| `@tags` | String[] | 否 | 批量标签 |
-| `@formula` (类内方法) | — | 否 | 自定义叠加公式（接入完成中） |
-| `@derive` (类内方法) | — | 否 | 派生计算函数 |
-| `@onChange` (类内方法) | — | 否 | 属性值变更回调（接入完成中） |
+| 注解                 | 参数        | 必填    | 说明                                    |
+|--------------------|-----------|-------|---------------------------------------|
+| `@attribute`       | String    | **是** | 唯一标识符，全局不可重复                          |
+| `@displayName`     | String    | 否     | 显示名称（支持颜色代码）                          |
+| `@description`     | String    | 否     | 描述文本                                  |
+| `@category`        | String    | 否     | 分类标签（默认 `custom`）                     |
+| `@default`         | Number    | 否     | 默认值（默认 0.0）                           |
+| `@min`             | Number    | 否     | 最小值约束                                 |
+| `@max`             | Number    | 否     | 最大值约束                                 |
+| `@format`          | String    | 否     | 显示格式：`number` / `percent` / `integer` |
+| `@priority`        | Number    | 否     | 显示排序优先级，数值越小越靠前                       |
+| `@vanillaBinding`  | String    | 否     | 绑定的原版属性 ID                            |
+| `@readonly`        | Boolean/无 | 否     | 是否只读（仅由 `@derive` 计算）                 |
+| `@tag`             | String    | 否     | 单个标签，可重复                              |
+| `@tags`            | String[]  | 否     | 批量标签                                  |
+| `@formula` (类内方法)  | —         | 否     | 自定义叠加公式（接入完成中）                        |
+| `@derive` (类内方法)   | —         | 否     | 派生计算函数                                |
+| `@onChange` (类内方法) | —         | 否     | 属性值变更回调（接入完成中）                        |
+| `@dependsOn`       | String... | 否     | 声明属性间静态依赖，用于局部脏标记传播                   |
+| `@when`            | String    | 否     | 条件门控，条件不满足时属性使用默认值                    |
+| `@defaultExpr`     | String    | 否     | 动态默认值表达式（Aria 脚本）                     |
+| `@minExpr`         | String    | 否     | 动态最小值表达式                              |
+| `@maxExpr`         | String    | 否     | 动态最大值表达式                              |
 
 ## 4. 默认属性包
 
@@ -181,35 +186,35 @@ plugins/Symphony/scripts/attributes/
 
 ### 战斗属性 (combat.aria)
 
-| ID | 名称 | 默认值 | 说明 |
-|----|------|--------|------|
-| `physical_damage` | 物理攻击力 | 1.0 | 绑定 `generic.attack_damage` |
-| `physical_defense` | 物理防御力 | 0.0 | 绑定 `generic.armor` |
-| `magic_damage` | 魔法攻击力 | 0.0 | — |
-| `magic_defense` | 魔法防御力 | 0.0 | — |
-| `attack_speed` | 攻击速度 | 1.0 | 绑定 `generic.attack_speed` |
-| `critical_chance` | 暴击率 | 0.05 | 0~1 |
-| `critical_damage` | 暴击伤害 | 1.5 | 倍率 |
-| `max_health` | 最大生命值 | 20.0 | 绑定 `generic.max_health` |
-| `health_regen` | 生命恢复 | 0.0 | 每秒 |
-| `max_mana` | 最大法力值 | 100.0 | — |
-| `mana_regen` | 法力恢复 | 1.0 | 每秒 |
-| `lifesteal` | 生命偷取 | 0.0 | 0~1 |
-| `damage_reduction` | 伤害减免 | 0.0 | 非线性公式 |
-| `penetration` | 穿透 | 0.0 | 0~1 |
-| `accuracy` | 命中率 | 1.0 | — |
-| `dodge` | 闪避率 | 0.0 | 0~0.9 |
-| `block_chance` | 格挡率 | 0.0 | 0~0.9 |
-| `block_power` | 格挡强度 | 0.5 | 0~1 |
-| `thorns` | 反伤 | 0.0 | 比例 |
+| ID                 | 名称    | 默认值   | 说明                         |
+|--------------------|-------|-------|----------------------------|
+| `physical_damage`  | 物理攻击力 | 1.0   | 绑定 `generic.attack_damage` |
+| `physical_defense` | 物理防御力 | 0.0   | 绑定 `generic.armor`         |
+| `magic_damage`     | 魔法攻击力 | 0.0   | —                          |
+| `magic_defense`    | 魔法防御力 | 0.0   | —                          |
+| `attack_speed`     | 攻击速度  | 1.0   | 绑定 `generic.attack_speed`  |
+| `critical_chance`  | 暴击率   | 0.05  | 0~1                        |
+| `critical_damage`  | 暴击伤害  | 1.5   | 倍率                         |
+| `max_health`       | 最大生命值 | 20.0  | 绑定 `generic.max_health`    |
+| `health_regen`     | 生命恢复  | 0.0   | 每秒                         |
+| `max_mana`         | 最大法力值 | 100.0 | —                          |
+| `mana_regen`       | 法力恢复  | 1.0   | 每秒                         |
+| `lifesteal`        | 生命偷取  | 0.0   | 0~1                        |
+| `damage_reduction` | 伤害减免  | 0.0   | 非线性公式                      |
+| `penetration`      | 穿透    | 0.0   | 0~1                        |
+| `accuracy`         | 命中率   | 1.0   | —                          |
+| `dodge`            | 闪避率   | 0.0   | 0~0.9                      |
+| `block_chance`     | 格挡率   | 0.0   | 0~0.9                      |
+| `block_power`      | 格挡强度  | 0.5   | 0~1                        |
+| `thorns`           | 反伤    | 0.0   | 比例                         |
 
 ### 移动属性 (movement.aria)
 
-| ID | 名称 | 默认值 | 绑定原版 |
-|----|------|--------|----------|
-| `movement_speed` | 移动速度 | 0.2 | `generic.movement_speed` |
-| `jump_height` | 跳跃高度 | 0.0 | — |
-| `fly_speed` | 飞行速度 | 0.1 | — |
+| ID                     | 名称   | 默认值 | 绑定原版                           |
+|------------------------|------|-----|--------------------------------|
+| `movement_speed`       | 移动速度 | 0.2 | `generic.movement_speed`       |
+| `jump_height`          | 跳跃高度 | 0.0 | —                              |
+| `fly_speed`            | 飞行速度 | 0.1 | —                              |
 | `knockback_resistance` | 击退抗性 | 0.0 | `generic.knockback_resistance` |
 
 ### 元素属性 (elements.aria)
@@ -219,27 +224,27 @@ plugins/Symphony/scripts/attributes/
 
 ### 资源属性 (resource.aria)
 
-| ID | 名称 | 默认值 |
-|----|------|--------|
-| `level` | 等级 | 1 |
-| `exp_bonus` | 经验加成 | 0.0 |
+| ID           | 名称   | 默认值 |
+|--------------|------|-----|
+| `level`      | 等级   | 1   |
+| `exp_bonus`  | 经验加成 | 0.0 |
 | `drop_bonus` | 掉落加成 | 0.0 |
-| `luck` | 幸运值 | 0.0 |
+| `luck`       | 幸运值  | 0.0 |
 
 ### 派生属性 (derived.aria)
 
-| ID | 名称 | 说明 |
-|----|------|------|
+| ID             | 名称  | 说明           |
+|----------------|-----|--------------|
 | `combat_power` | 战斗力 | 只读，由其他属性派生计算 |
 
 ## 5. 属性计算管线
 
 ### 5.1 两种属性类型
 
-| 类型 | 说明 | 计算方式 |
-|------|------|----------|
-| 普通属性 | 接受修改器叠加 | `formula(base, flatSum, percentSum, holder)` |
-| 派生属性 | 只读，由其他属性计算 | `derive(holder)` |
+| 类型   | 说明         | 计算方式                                         |
+|------|------------|----------------------------------------------|
+| 普通属性 | 接受修改器叠加    | `formula(base, flatSum, percentSum, holder)` |
+| 派生属性 | 只读，由其他属性计算 | `derive(holder)`                             |
 
 ### 5.2 普通属性计算流程
 
@@ -318,17 +323,22 @@ data class AttributeModifier(
 
 内置来源及优先级：
 
-| 优先级 | 来源 | 说明 |
-|--------|------|------|
-| 100 | `BaseProvider` | 等级成长基础值 |
-| 200 | `EquipmentProvider` | 装备 PDC 属性 |
-| 300 | `GemProvider` | 宝石属性 |
-| 400 | `RuneProvider` | 符文属性 |
-| 500 | `EnhanceProvider` | 强化倍率 |
-| 550 | `SetProvider` | 套装效果 |
-| 600 | `AffixProvider` | 词条被动属性 |
-| 700 | `BuffProvider` | 临时 Buff |
-| 800 | `ScriptProvider` | Aria 脚本动态修改 |
+| 优先级 | 来源                           | 说明                                      |
+|-----|------------------------------|-----------------------------------------|
+| 100 | `BaseProvider`               | 等级成长基础值                                 |
+| 150 | `LevelProvider`              | 等级属性成长（base + perLevel，支持 Aria formula） |
+| 150 | `MythicMobAttributeProvider` | MythicMobs 怪物属性注入                       |
+| 200 | `EquipmentProvider`          | 装备 PDC 属性                               |
+| 300 | `GemProvider`                | 宝石属性                                    |
+| 400 | `RuneProvider`               | 符文被动属性                                  |
+| 500 | `EnhanceProvider`            | 强化倍率                                    |
+| 550 | `SetProvider`                | 套装效果                                    |
+| 600 | `AffixPassiveProvider`       | 词条被动属性                                  |
+| 650 | `ResonanceProvider`          | 词条共鸣属性加成                                |
+| 660 | `TalentProvider`             | 天赋门被动属性                                 |
+| 670 | `StatusProvider`             | 状态层每层属性效果                               |
+| 700 | `BuffProvider`               | 临时 Buff                                 |
+| 750 | `EnvironmentProvider`        | 环境修正属性                                  |
 
 来源优先级只影响收集顺序，不影响最终计算结果（所有 FLAT 求和、所有 PERCENT 求和后统一计算）。
 

@@ -1,10 +1,12 @@
 package priv.seventeen.artist.symphony.core.affix.action
 
+import org.bukkit.entity.Player
 import priv.seventeen.artist.symphony.api.affix.AffixInstance
-import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.Operation
 import priv.seventeen.artist.symphony.api.trigger.ITriggerContext
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
+import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
+import priv.seventeen.artist.symphony.core.data.ActiveBuff
 
 class AttributePermanentActionHandler : ActionHandler {
     override fun execute(params: Map<String, Any>, context: ITriggerContext, affix: AffixInstance) {
@@ -12,9 +14,20 @@ class AttributePermanentActionHandler : ActionHandler {
         val opStr = resolveParam(params["operation"], affix.parameters).uppercase()
         val value = resolveDouble(params["value"], affix.parameters)
         val operation = if (opStr == "PERCENT") Operation.PERCENT else Operation.FLAT
+        val source = "affix_permanent:${affix.affixId}:${affix.uuid}"
 
-        // 永久修改通过标记 dirty 触发重算
-        // 实际的永久修改器存储在物品 PDC 中，这里只标记重算
-        AttributeCache.markDirty(context.entity.uniqueId)
+        val player = context.entity as? Player ?: return
+        val data = PlayerDataManager.getData(player.uniqueId) ?: return
+
+        // 写入永久 Buff（expireTime = -1 表示永久）
+        data.runtime.activeBuffs.add(ActiveBuff(
+            id = source,
+            attribute = attribute,
+            operation = operation,
+            value = value,
+            expireTime = -1L,
+            source = source
+        ))
+        AttributeCache.markDirty(player.uniqueId)
     }
 }

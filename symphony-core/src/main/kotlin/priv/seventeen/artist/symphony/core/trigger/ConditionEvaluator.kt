@@ -1,10 +1,15 @@
 package priv.seventeen.artist.symphony.core.trigger
 
+import org.bukkit.attribute.Attribute
+import org.bukkit.entity.Animals
+import org.bukkit.entity.Player
 import priv.seventeen.artist.blink.BlinkLog
+import priv.seventeen.artist.symphony.api.SymphonyAPI
 import priv.seventeen.artist.symphony.api.trigger.ITriggerContext
 import priv.seventeen.artist.symphony.core.affix.AffixManagerImpl
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import java.util.concurrent.ThreadLocalRandom
 
@@ -12,6 +17,18 @@ import java.util.concurrent.ThreadLocalRandom
  * 条件求值器 — 支持 AND/OR/NOT 组合，短路策略。
  */
 object ConditionEvaluator {
+
+    private val UNDEAD_TYPES = setOf(
+        "SKELETON", "ZOMBIE", "ZOMBIE_VILLAGER", "STRAY", "HUSK", "PHANTOM",
+        "DROWNED", "WITHER_SKELETON", "WITHER", "ZOMBIFIED_PIGLIN", "ZOGLIN",
+        "SKELETON_HORSE", "ZOMBIE_HORSE"
+    )
+    private val ARTHROPOD_TYPES = setOf(
+        "SPIDER", "CAVE_SPIDER", "BEE", "SILVERFISH", "ENDERMITE"
+    )
+    private val BOSS_TYPES = setOf(
+        "ENDER_DRAGON", "WITHER", "ELDER_GUARDIAN", "WARDEN"
+    )
 
     fun evaluate(
         conditions: List<Map<String, Any>>,
@@ -63,15 +80,15 @@ object ConditionEvaluator {
             "HEALTH_ABOVE" -> {
                 val threshold = resolveValue(condition["value"], params) / 100.0
                 val entity = context.entity
-                entity.health / (entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0) > threshold
+                entity.health / (entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0) > threshold
             }
             "HEALTH_BELOW" -> {
                 val threshold = resolveValue(condition["value"], params) / 100.0
                 val entity = context.entity
-                entity.health / (entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0) < threshold
+                entity.health / (entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0) < threshold
             }
-            "IS_SNEAKING" -> (context.entity as? org.bukkit.entity.Player)?.isSneaking ?: false
-            "IS_SPRINTING" -> (context.entity as? org.bukkit.entity.Player)?.isSprinting ?: false
+            "IS_SNEAKING" -> (context.entity as? Player)?.isSneaking ?: false
+            "IS_SPRINTING" -> (context.entity as? Player)?.isSprinting ?: false
             "MANA_ABOVE" -> {
                 val threshold = resolveValue(condition["value"], params) / 100.0
                 val data = PlayerDataManager.getData(context.entity.uniqueId)
@@ -88,7 +105,7 @@ object ConditionEvaluator {
             }
             "HAS_PERMISSION" -> {
                 val perm = condition["value"]?.toString() ?: return true
-                (context.entity as? org.bukkit.entity.Player)?.hasPermission(perm) ?: false
+                (context.entity as? Player)?.hasPermission(perm) ?: false
             }
             "IN_WORLD" -> {
                 val worldName = condition["value"]?.toString() ?: return true
@@ -98,10 +115,10 @@ object ConditionEvaluator {
                 val biomeName = condition["value"]?.toString()?.uppercase() ?: return true
                 context.entity.location.block.biome.name == biomeName
             }
-            "IS_FLYING" -> (context.entity as? org.bukkit.entity.Player)?.isFlying ?: false
+            "IS_FLYING" -> (context.entity as? Player)?.isFlying ?: false
             "HOLDING_TYPE" -> {
                 val material = condition["value"]?.toString()?.uppercase() ?: return true
-                (context.entity as? org.bukkit.entity.Player)?.inventory?.itemInMainHand?.type?.name == material
+                (context.entity as? Player)?.inventory?.itemInMainHand?.type?.name == material
             }
             "HAS_AFFIX" -> {
                 val affixId = condition["value"]?.toString() ?: return true
@@ -132,9 +149,33 @@ object ConditionEvaluator {
                 val expected = condition["value"]?.toString()?.uppercase() ?: return true
                 val target = context.target ?: return false
                 when (expected) {
-                    "PLAYER" -> target is org.bukkit.entity.Player
+                    "PLAYER" -> target is Player
                     "MOB" -> target is org.bukkit.entity.Mob
+                    "ANIMAL" -> target is Animals
+                    "UNDEAD" -> target.type.name in UNDEAD_TYPES
+                    "ARTHROPOD" -> target.type.name in ARTHROPOD_TYPES
+                    "BOSS" -> target.type.name in BOSS_TYPES
                     else -> target.type.name == expected
+                }
+            }
+            "WEARING_SET" -> {
+                val setId = condition["value"]?.toString() ?: return true
+                val player = context.entity as? Player ?: return false
+                val api = SymphonyAPI.getInstance() ?: return false
+                val sets = api.getGrowthManager().getActiveSets(player)
+                sets.containsKey(setId)
+            }
+            "SCRIPT" -> {
+                val code = (condition["code"] ?: condition["value"])?.toString() ?: return true
+                try {
+                    val callbackId = "condition_script:${code.hashCode()}"
+                    if (!AriaCallbackManager.has(callbackId)) {
+                        AriaCallbackManager.compile(callbackId, code)
+                    }
+                    AriaCallbackManager.invokeCondition(callbackId)
+                } catch (e: Exception) {
+                    BlinkLog.warn("SCRIPT 条件求值异常: ${e.message}")
+                    false
                 }
             }
             else -> {

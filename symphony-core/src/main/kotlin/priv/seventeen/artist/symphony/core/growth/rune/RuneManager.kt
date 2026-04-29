@@ -11,10 +11,27 @@ class RuneManager {
 
     fun activateRune(player: Player, runeId: String, level: Int): Boolean {
         val data = PlayerDataManager.getData(player.uniqueId) ?: return false
+        // 碎片数量校验
+        val definition = RuneRegistry.get(runeId)
+        if (definition != null) {
+            val required = definition.activation.fragmentsRequired[level] ?: 0
+            if (required > 0) {
+                val current = data.persistent.runeFragments[runeId] ?: 0
+                if (current < required) return false
+            }
+        }
         val event = RuneActivateEvent(player, runeId, level)
         Bukkit.getPluginManager().callEvent(event)
         if (event.isCancelled) return false
         data.persistent.runes[runeId] = RuneData(runeId, level, true)
+        // 扣除碎片
+        if (definition != null) {
+            val required = definition.activation.fragmentsRequired[level] ?: 0
+            if (required > 0) {
+                val current = data.persistent.runeFragments[runeId] ?: 0
+                data.persistent.runeFragments[runeId] = (current - required).coerceAtLeast(0)
+            }
+        }
         data.dirty = true
         AttributeCalculator.markDirty(player)
         return true

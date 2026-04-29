@@ -1,5 +1,6 @@
 package priv.seventeen.artist.symphony.core.skill.builtin
 
+import io.lumine.mythic.api.adapters.AbstractEntity
 import io.lumine.mythic.bukkit.BukkitAdapter
 import io.lumine.mythic.bukkit.MythicBukkit
 import org.bukkit.Bukkit
@@ -29,7 +30,23 @@ class MythicMobsBridge : ISkillProvider {
             val mm = MythicBukkit.inst()
             val skill = mm.skillManager.getSkill(skillId).orElse(null) ?: return false
             val casterEntity = context.caster as? LivingEntity ?: return false
-            mm.apiHelper.castSkill(casterEntity, skillId)
+            val casterAdapter = BukkitAdapter.adapt(casterEntity)
+            val power = level.toFloat().coerceAtLeast(1.0f)
+            // 收集目标：优先 targets 多目标列表，其次 target 单目标
+            val mmTargets = hashSetOf<AbstractEntity>()
+            context.targets?.forEach { t ->
+                if (t is LivingEntity) mmTargets.add(BukkitAdapter.adapt(t))
+            }
+            if (mmTargets.isEmpty()) {
+                val target = context.target
+                if (target != null) mmTargets.add(BukkitAdapter.adapt(target))
+            }
+            if (mmTargets.isNotEmpty()) {
+                val bukkitTargets = mmTargets.mapNotNull { it.bukkitEntity }.toHashSet()
+                mm.apiHelper.castSkill(casterEntity, skillId, casterEntity, casterEntity.location, bukkitTargets, null, power)
+            } else {
+                mm.apiHelper.castSkill(casterEntity, skillId)
+            }
             true
         } catch (e: Exception) {
             BlinkLog.warn("MythicMobs 技能执行失败 $skillId: ${e.message}")

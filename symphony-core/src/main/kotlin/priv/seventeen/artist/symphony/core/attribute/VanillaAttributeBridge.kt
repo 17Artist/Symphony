@@ -2,6 +2,7 @@ package priv.seventeen.artist.symphony.core.attribute
 
 import org.bukkit.entity.LivingEntity
 import priv.seventeen.artist.symphony.nms.NMSAdapterFactory
+import kotlin.math.abs
 
 /**
  * 原版属性同步桥接。
@@ -43,7 +44,7 @@ object VanillaAttributeBridge {
             val vanillaWithoutSymphony = bridge.getFinalValue(entity, binding)
             val diff = symphonyValue - vanillaWithoutSymphony
 
-            if (kotlin.math.abs(diff) > 0.0001) {
+            if (abs(diff) > 0.0001) {
                 bridge.setModifier(entity, binding, modKey, diff, 0)
             }
         }

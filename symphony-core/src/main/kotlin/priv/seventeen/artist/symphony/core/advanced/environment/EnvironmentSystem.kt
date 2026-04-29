@@ -5,6 +5,7 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.Operation
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import java.util.concurrent.ConcurrentHashMap
 
@@ -62,6 +63,13 @@ object EnvironmentSystem {
     }
 
     private fun evaluateCondition(entity: LivingEntity, mod: EnvironmentModifier): Boolean {
+        // 优先使用脚本条件
+        val callbackId = "environment:${mod.id}:condition"
+        if (AriaCallbackManager.has(callbackId)) {
+            return AriaCallbackManager.invokeCondition(callbackId, entity)
+        }
+
+        // fallback 到硬编码默认逻辑
         val world = entity.world
         val loc = entity.location
 

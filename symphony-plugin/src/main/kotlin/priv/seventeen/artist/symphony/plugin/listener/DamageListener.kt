@@ -1,6 +1,7 @@
 package priv.seventeen.artist.symphony.plugin.listener
 
 import org.bukkit.Bukkit
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
@@ -130,9 +131,32 @@ object DamageListener {
             set("isCritical", preEvent.isCritical)
         }
 
+        // 近战/远程攻击区分
+        val isRanged = event.damager is Projectile
+        if (isRanged) {
+            TriggerDispatcher.dispatch(TriggerType.ON_RANGED_ATTACK, attacker) {
+                target(victim)
+                set("damage", symphonyEvent.finalDamage)
+                set("projectile", event.damager.type.name)
+            }
+        } else {
+            TriggerDispatcher.dispatch(TriggerType.ON_MELEE_ATTACK, attacker) {
+                target(victim)
+                set("damage", symphonyEvent.finalDamage)
+                set("weapon", attacker.equipment?.itemInMainHand?.type?.name ?: "AIR")
+            }
+        }
+
         TriggerDispatcher.dispatch(TriggerType.ON_DEFEND, victim) {
             target(attacker)
             set("damage", symphonyEvent.finalDamage)
+        }
+
+        // ON_DAMAGED — 对受害者分发
+        TriggerDispatcher.dispatch(TriggerType.ON_DAMAGED, victim) {
+            target(attacker)
+            set("damage", symphonyEvent.finalDamage)
+            set("damageType", "physical")
         }
 
         if (preEvent.isCritical) {
@@ -140,6 +164,19 @@ object DamageListener {
                 target(victim)
                 set("damage", symphonyEvent.finalDamage)
                 set("critMultiplier", effectiveCritMul)
+            }
+        }
+
+        // ON_LOW_HEALTH — 伤害后检查受害者血量
+        if (victim is LivingEntity) {
+            val healthAfter = victim.health - symphonyEvent.finalDamage
+            val maxHp = victim.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+            if (healthAfter > 0 && healthAfter / maxHp <= 0.3) {
+                TriggerDispatcher.dispatch(TriggerType.ON_LOW_HEALTH, victim) {
+                    target(attacker)
+                    set("healthPercent", healthAfter / maxHp)
+                    set("healthRemaining", healthAfter)
+                }
             }
         }
 
