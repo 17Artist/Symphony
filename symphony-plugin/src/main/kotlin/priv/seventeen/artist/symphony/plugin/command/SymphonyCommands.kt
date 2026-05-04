@@ -115,19 +115,19 @@ object SymphonyCommands {
                     ctx.reply("§a重载完成 — 属性 §b${AttributeRegistry.ids().size}§a 个")
                 }
                 // ── player <sub> <player> ... ──
-                .command("player", "玩家操作", args = arrayOf("sub", "target", "?arg1", "?arg2", "?arg3", "?arg4"), permission = "symphony.admin") { ctx ->
+                .command("player", "玩家操作", args = arrayOf("p_sub", "player", "?p_action", "?p_arg1", "?p_arg2", "?p_arg3"), permission = "symphony.admin") { ctx ->
                     val sub = ctx.arg(0)
                     val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
                     val a1 = ctx.arg(2); val a2 = ctx.arg(3); val a3 = ctx.arg(4); val a4 = ctx.arg(5)
                     when (sub) {
                         "attr" -> when (a1) {
                             "get" -> {
-                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr get <玩家> <属性ID>")
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr <玩家> get <属性ID>")
                                 val value = AttributeCalculator.getValue(target, attrId)
                                 ctx.reply("§b${target.name} §f的 §e$attrId §f= §a${"%.2f".format(value)}")
                             }
                             "set" -> {
-                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr set <玩家> <属性ID> <值> [FLAT|PERCENT]")
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr <玩家> set <属性ID> <值> [FLAT|PERCENT]")
                                 val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
                                 val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
                                 val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
@@ -151,11 +151,11 @@ object SymphonyCommands {
                                     ctx.reply("  §7$display §f($id): §a${"%.2f".format(value)}")
                                 }
                             }
-                            else -> ctx.reply("§c用法: /sym player attr <get|set|list> <玩家> ...")
+                            else -> ctx.reply("§c用法: /sym player attr <玩家> <get|set|list> ...")
                         }
                         "buff" -> when (a1) {
                             "add" -> {
-                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player buff add <玩家> <属性ID> <值> [FLAT|PERCENT] [秒]")
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player buff <玩家> add <属性ID> <值> [FLAT|PERCENT]")
                                 val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
                                 val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
                                 val duration = ctx.arg(5).toLongOrNull() ?: -1L
@@ -191,7 +191,7 @@ object SymphonyCommands {
                                 AttributeCache.markDirty(target.uniqueId)
                                 ctx.reply("§a已清除 ${target.name} 的 $count 个 Buff")
                             }
-                            else -> ctx.reply("§c用法: /sym player buff <add|list|clear> <玩家> ...")
+                            else -> ctx.reply("§c用法: /sym player buff <玩家> <add|list|clear> ...")
                         }
                         "level" -> when (a1) {
                             "get" -> {
@@ -206,28 +206,28 @@ object SymphonyCommands {
                                 AttributeCalculator.markDirty(target)
                                 ctx.reply("§a已设置 ${target.name} 等级为 $level")
                             }
-                            else -> ctx.reply("§c用法: /sym player level <get|set> <玩家> [值]")
+                            else -> ctx.reply("§c用法: /sym player level <玩家> <get|set> [值]")
                         }
                         "rune" -> when (a1) {
                             "activate" -> {
-                                val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune activate <玩家> <符文ID> [等级]")
+                                val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune <玩家> activate <符文ID> [等级]")
                                 val level = a3.toIntOrNull() ?: 1
                                 SymphonyPlugin.growthManager.activateRune(target, runeId, level)
                                 ctx.reply("§a已激活符文 $runeId Lv.$level")
                             }
                             "fragment" -> {
-                                val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune fragment <玩家> <符文ID> [数量]")
+                                val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune <玩家> fragment <符文ID> [数量]")
                                 val amount = a3.toIntOrNull() ?: 1
                                 SymphonyPlugin.growthManager.addFragments(target, runeId, amount)
                                 ctx.reply("§a已给予 ${target.name} $amount 个 $runeId 碎片")
                             }
-                            else -> ctx.reply("§c用法: /sym player rune <activate|fragment> <玩家> <符文ID> ...")
+                            else -> ctx.reply("§c用法: /sym player rune <玩家> <activate|fragment> <符文ID> ...")
                         }
                         else -> ctx.reply("§c用法: /sym player <attr|buff|level|rune> <玩家> ...")
                     }
                 }
                 // ── item <sub> ... ──（操作执行者主手物品）
-                .command("item", "物品操作", args = arrayOf("sub", "?arg1", "?arg2", "?arg3", "?arg4", "?arg5"), permission = "symphony.admin") { ctx ->
+                .command("item", "物品操作", args = arrayOf("i_sub", "?i_action", "?i_arg1", "?i_arg2", "?i_arg3", "?i_arg4"), permission = "symphony.admin") { ctx ->
                     val sub = ctx.arg(0)
                     val target = ctx.player ?: return@command ctx.reply("§c仅玩家可用")
                     val a1 = ctx.arg(1); val a2 = ctx.arg(2); val a3 = ctx.arg(3); val a4 = ctx.arg(4); val a5 = ctx.arg(5)
@@ -421,10 +421,17 @@ object SymphonyCommands {
                     SymphonyPlugin.guiProvider.open(target)
                 }
                 // ── Tab 补全 ──
-                .tabComplete("sub") { listOf("attr", "buff", "level", "rune", "affix", "enhance", "gem", "set") }
-                .tabComplete("arg1") { listOf("get", "set", "list", "add", "remove", "clear", "activate", "fragment", "insert", "unlock", "generate", "mark", "unmark") }
-                .tabComplete("arg2") { AttributeRegistry.ids().toList() + SLOT_NAMES }
-                .tabComplete("arg4") { listOf("FLAT", "PERCENT") }
+                // player 命令补全
+                .tabComplete("p_sub") { listOf("attr", "buff", "level", "rune") }
+                .tabComplete("p_action") { listOf("get", "set", "list", "add", "clear", "activate", "fragment") }
+                .tabComplete("p_arg1") { AttributeRegistry.ids().toList() + RuneRegistry.ids().toList() }
+                .tabComplete("p_arg3") { listOf("FLAT", "PERCENT") }
+                // item 命令补全
+                .tabComplete("i_sub") { listOf("attr", "affix", "enhance", "gem", "set") }
+                .tabComplete("i_action") { listOf("get", "set", "list", "add", "remove", "clear", "generate", "insert", "unlock", "mark", "unmark") }
+                .tabComplete("i_arg1") { AttributeRegistry.ids().toList() + AffixManagerImpl.definitionIds().toList() + AffixManagerImpl.poolIds().toList() + SLOT_NAMES }
+                .tabComplete("i_arg3") { listOf("FLAT", "PERCENT") }
+                // explain 命令补全
                 .tabComplete("explain_attr") { AttributeRegistry.ids().toList() }
         )
     }

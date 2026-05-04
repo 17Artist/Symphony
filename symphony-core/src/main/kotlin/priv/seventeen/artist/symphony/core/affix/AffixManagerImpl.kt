@@ -43,6 +43,9 @@ class AffixManagerImpl : IAffixManager {
 
         fun collectItemAffixes(item: ItemStack): List<AffixInstance> = readAffixes(item)
 
+        fun definitionIds(): Set<String> = definitions.keys
+        fun poolIds(): Set<String> = pools.keys
+
         fun clearDefinitions() {
             definitions.clear()
             pools.clear()

@@ -118,18 +118,18 @@ class BukkitInventoryGuiProvider : AttributeGuiProvider, Listener {
         val player = e.whoClicked as? Player ?: return
         val state = viewState[player.uniqueId] ?: return
         val slot = e.rawSlot
-        when {
-            slot in 0..8 -> {
+        when (slot) {
+            in 0..8 -> {
                 val cats = categories()
                 val cat = cats.getOrNull(slot) ?: return
                 viewState[player.uniqueId] = ViewState(cat, 0)
                 player.openInventory(buildInventory(player))
             }
-            slot == 45 -> {
+            45 -> {
                 viewState[player.uniqueId] = state.copy(page = state.page - 1)
                 player.openInventory(buildInventory(player))
             }
-            slot == 53 -> {
+            53 -> {
                 viewState[player.uniqueId] = state.copy(page = state.page + 1)
                 player.openInventory(buildInventory(player))
             }

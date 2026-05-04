@@ -1,5 +1,5 @@
 plugins {
-    id("priv.seventeen.artist.blink") version "1.0.7"
+    id("priv.seventeen.artist.blink") version "1.1.2"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -25,7 +25,7 @@ dependencies {
     implementation(project(":symphony-common"))
     implementation(project(":symphony-core"))
     implementation(project(":symphony-nms"))
-    implementation("priv.seventeen.artist.blink:blink-common:1.0.7")
+    implementation("priv.seventeen.artist.blink:blink-common:1.1.2")
     compileOnly("com.google.code.gson:gson:2.10.1")
 }
 

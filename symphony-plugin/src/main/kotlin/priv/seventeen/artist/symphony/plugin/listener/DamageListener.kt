@@ -13,6 +13,7 @@ import priv.seventeen.artist.symphony.api.event.SymphonyDamageEvent
 import priv.seventeen.artist.symphony.api.event.SymphonyMitigationEvent
 import priv.seventeen.artist.symphony.api.event.SymphonyPreDamageEvent
 import priv.seventeen.artist.symphony.api.trigger.TriggerType
+import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
@@ -29,6 +30,27 @@ object DamageListener {
             attacker = (event.damager as Projectile).shooter as? LivingEntity
         }
         if (attacker == null) return
+
+        // 非玩家攻击者且无 Symphony 属性数据 → 跳过 Symphony 伤害管线，使用原版伤害
+        val attackerIsPlayer = attacker is Player
+        val attackerHasData = attackerIsPlayer || PlayerDataManager.getData(attacker.uniqueId) != null
+            || AttributeCache.get(attacker.uniqueId, "physical_damage") != null
+        if (!attackerHasData) {
+            // 仍然对玩家受害者触发防御触发器
+            if (victim is Player) {
+                TriggerDispatcher.dispatch(TriggerType.ON_DEFEND, victim) {
+                    target(attacker)
+                    set("damage", event.damage)
+                }
+                TriggerDispatcher.dispatch(TriggerType.ON_DAMAGED, victim) {
+                    target(attacker)
+                    set("damage", event.damage)
+                    set("damageType", "vanilla")
+                }
+                updateCombatState(victim)
+            }
+            return
+        }
 
         // 读取攻击者属性
         val physicalDamage = AttributeCalculator.getValue(attacker, "physical_damage")
