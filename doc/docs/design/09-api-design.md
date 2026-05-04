@@ -95,9 +95,6 @@ interface IAffixManager {
     // 随机生成
     fun generateAffixes(poolId: String, rarity: AffixRarity, luck: Double): List<AffixInstance>
     fun applyAffixes(item: ItemStack, affixes: List<AffixInstance>)
-    
-    // Lore 渲染
-    fun renderLore(item: ItemStack)
 }
 ```
 

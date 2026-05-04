@@ -192,35 +192,69 @@ script: |
 
 ### 4.3 MythicMobs 桥接提供者 (`mythicmobs`)
 
-自动检测 MythicMobs 插件，注册桥接提供者：
+自动检测 MythicMobs 插件，注册桥接提供者。MythicMobs 作为 `compileOnly` 依赖直接调用 API，不再使用反射：
 
 ```kotlin
-class MythicMobsSkillProvider : ISkillProvider {
+class MythicMobsBridge : ISkillProvider {
     override val id = "mythicmobs"
     override val displayName = "MythicMobs"
     
     override fun cast(skillId: String, level: Int, context: SkillContext): Boolean {
         val mm = MythicBukkit.inst()
-        val skill = mm.skillManager.getSkill(skillId).orElse(null) ?: return false
+        val casterEntity = BukkitAdapter.adapt(context.caster)
         
-        val caster = mm.skillManager.getCaster(context.caster as? Entity ?: return false)
-        val target = context.target?.let { 
-            AbstractEntity.of(it) 
-        }
+        // 收集目标：优先多目标列表，其次单目标
+        val targets = context.targets.ifEmpty {
+            listOfNotNull(context.target)
+        }.map { BukkitAdapter.adapt(it) }
         
-        val meta = SkillMetadataImpl(
-            SkillTrigger.API,
-            caster,
-            target?.let { EntityTarget(it) }
+        // power 映射为 level，支持 MM 技能等级缩放
+        return mm.apiHelper.castSkill(
+            casterEntity, skillId, 
+            level.toFloat(),  // power
+            targets
         )
-        
-        return skill.execute(meta)
     }
     
     override fun hasSkill(skillId: String): Boolean {
         return MythicBukkit.inst().skillManager.getSkill(skillId).isPresent
     }
 }
+```
+
+与旧版的区别：
+- 类名从 `MythicMobsSkillProvider` 改为 `MythicMobsBridge`
+- 使用 `mm.apiHelper.castSkill()` 替代手动构造 `SkillMetadataImpl`
+- 支持多目标（`context.targets` 列表）
+- `level` 映射为 MM 的 `power` 参数，支持技能等级缩放
+
+### 4.4 MythicMobs Mechanic 注册 (`MythicMobsMechanicRegistrar`)
+
+Symphony 向 MythicMobs 注册自定义 Mechanic，允许 MM 技能配置中直接调用 Symphony 的属性/伤害/治疗能力：
+
+```kotlin
+object MythicMobsMechanicRegistrar : Listener {
+    // 监听 MythicMechanicLoadEvent，按 mechanicName 注册 ITargetedEntitySkill 实现
+}
+```
+
+注册的 Mechanic：
+
+| Mechanic | 参数 | 说明 |
+|----------|------|------|
+| `symphony_damage{amount=10}` | `amount` | 对目标造成指定数值的伤害 |
+| `symphony_heal{amount=5}` | `amount` | 治疗目标指定数值 |
+| `symphony_buff{id=..;op=flat;value=10;duration=100}` | `id`, `op`, `value`, `duration` | 为目标添加临时属性 Buff |
+
+在 MythicMobs 技能配置中使用：
+
+```yaml
+# MythicMobs 技能配置
+MySkill:
+  Skills:
+    - symphony_damage{amount=50} @target
+    - symphony_heal{amount=20} @self
+    - symphony_buff{id=physical_damage;op=flat;value=10;duration=200} @self
 ```
 
 ## 5. 词条中的技能调用配置

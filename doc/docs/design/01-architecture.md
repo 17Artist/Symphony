@@ -264,11 +264,12 @@ api/
 ### 3.1 伤害计算流程
 
 ```
-EntityDamageByEntityEvent (Bukkit)
+EntityDamageEvent (Bukkit)
         ↓
 DamageListener (@AutoListener, priority=NORMAL)
         ↓
-┌─ 获取攻击者/受击者的 AttributeHolder
+┌─ 判断是否为 EntityDamageByEntityEvent（is 检查）
+├─ 获取攻击者/受击者的 AttributeHolder
 ├─ 读取攻击者属性：physical_damage, critical_chance, critical_damage, penetration, 元素伤害...
 ├─ 读取受击者属性：physical_defense, damage_reduction, dodge, block_chance, 元素抗性...
 ├─ 判定闪避 → 触发 ON_DODGE

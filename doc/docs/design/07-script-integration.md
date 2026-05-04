@@ -315,38 +315,27 @@ AttributeRegistry.register(def)
 
 ### 4.1 设计
 
-所有数值计算公式通过 Aria 脚本定义，使用 `AriaCompiledRoutine` 预编译：
+所有数值计算公式通过 Aria 脚本定义，使用 `AriaCompiledRoutine` 预编译。FormulaEngine 只负责编译和缓存，不内置沙箱配置（沙箱由调用方控制）：
 
 ```kotlin
 class FormulaEngine {
-    private val routineCache = ConcurrentHashMap<String, AriaCompiledRoutine>()
-    private val sandbox = SandboxConfig.builder()
-        .maxExecutionTime(1000)
-        .maxCallDepth(50)
-        .allowFileSystem(false)
-        .allowNetwork(false)
-        .allowJavaInterop(false)
-        .allowedNamespaces("math", "type")
-        .build()
+    private val compiled = ConcurrentHashMap<String, AriaCompiledRoutine>()
     
-    fun compile(name: String, code: String) {
-        routineCache[name] = Aria.compile(name, code)
+    fun register(name: String, code: String) {
+        compiled[name] = Aria.compile("formula:$name", code)
     }
     
-    fun evaluate(name: String, vararg args: Double): Double {
-        val routine = routineCache[name] ?: error("Formula '$name' not found")
-        val ctx = Aria.createContext()
-        ctx.setArgs(args.map { NumberValue(it) }.toTypedArray())
-        return Aria.eval(routine.program, ctx, sandbox).numberValue()
-    }
+    fun has(name: String): Boolean = compiled.containsKey(name)
     
-    fun reloadAll() {
-        routineCache.clear()
-        // 重新加载所有公式配置
-        loadFormulasFromConfig()
+    fun get(name: String): AriaCompiledRoutine? = compiled[name]
+    
+    fun clear() {
+        compiled.clear()
     }
 }
 ```
+
+调用方从 `get()` 取出 `AriaCompiledRoutine` 后自行创建 Context 并执行，灵活控制沙箱和变量注入。
 
 ### 4.2 内置公式
 
@@ -492,20 +481,23 @@ fun reloadScripts() {
     attributeRegistry.clear()
     
     // 2. 清除公式缓存
-    formulaEngine.reloadAll()
+    formulaEngine.clear()
     
     // 3. 清除技能脚本缓存
     ariaSkillProvider.reloadAll()
     
-    // 4. 清除模块缓存
+    // 4. 清除脚本引擎编译缓存
+    scriptEngine.shutdown()
+    
+    // 5. 清除模块缓存
     Aria.getEngine().moduleLoader.cache.clear()
     
-    // 5. 按顺序重新执行脚本
+    // 6. 按顺序重新执行脚本
     executeScripts("scripts/attributes/")   // 重新注册所有属性
     executeScripts("scripts/mechanics/")    // 重新注册战斗机制
     executeScripts("scripts/formulas/")     // 重新预编译公式
     
-    // 6. 标记所有在线玩家属性为 dirty，触发重算
+    // 7. 标记所有在线玩家属性为 dirty，触发重算
     Bukkit.getOnlinePlayers().forEach { 
         attributeCache.markDirty(it.uniqueId) 
     }

@@ -169,7 +169,7 @@ script: |
 
 ### 4.1 前提条件
 
-服务器需安装 MythicMobs 插件。Symphony 会自动检测并注册 `mythicmobs` 提供者。
+服务器需安装 MythicMobs 插件。Symphony 会自动检测并注册 `mythicmobs` 提供者。MythicMobs 作为 `compileOnly` 依赖直接调用 API，无需反射。
 
 ### 4.2 调用 MythicMobs 技能
 
@@ -186,7 +186,28 @@ triggers:
         level: 1
 ```
 
-MythicMobs 技能的 caster 和 target 会自动从触发器上下文中获取。
+MythicMobs 技能的 caster 和 target 会自动从触发器上下文中获取。`level` 会映射为 MM 的 `power` 参数，支持技能等级缩放。多目标场景下，`context.targets` 列表会全部传递给 MM。
+
+### 4.3 在 MythicMobs 中使用 Symphony Mechanic
+
+Symphony 向 MythicMobs 注册了自定义 Mechanic，可以在 MM 技能配置中直接调用 Symphony 的能力：
+
+| Mechanic | 参数 | 说明 |
+|----------|------|------|
+| `symphony_damage{amount=10}` | `amount` | 对目标造成指定数值的伤害 |
+| `symphony_heal{amount=5}` | `amount` | 治疗目标指定数值 |
+| `symphony_buff{id=..;op=flat;value=10;duration=100}` | `id`, `op`, `value`, `duration` | 为目标添加临时属性 Buff |
+
+示例 MythicMobs 技能配置：
+
+```yaml
+# plugins/MythicMobs/Skills/my_skills.yml
+SymphonyBurst:
+  Skills:
+    - symphony_damage{amount=50} @target
+    - symphony_heal{amount=20} @self
+    - symphony_buff{id=physical_damage;op=flat;value=10;duration=200} @self
+```
 
 ## 5. 注册自定义提供者
 

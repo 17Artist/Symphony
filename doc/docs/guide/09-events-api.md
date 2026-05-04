@@ -6,7 +6,7 @@ Symphony 所有公开 API 与事件钩子。API 入口统一走 `SymphonyAPI.get
 
 ### 伤害流水线（三段式）
 
-每次 `EntityDamageByEntityEvent` 会依次发布三个 Symphony 事件，允许第三方插件在不同阶段介入：
+每次 `EntityDamageEvent`（含 `EntityDamageByEntityEvent`）会依次发布三个 Symphony 事件，允许第三方插件在不同阶段介入：
 
 | # | 事件                        | 时机                | 可修改                                |
 |---|---------------------------|-------------------|------------------------------------|
@@ -161,7 +161,7 @@ for ((id, pair) in api.diff(before, after)) {
 | Manager                 | 关键方法                                                                                                              |
 |-------------------------|-------------------------------------------------------------------------------------------------------------------|
 | `IAttributeManager`     | `registerAttribute` / `registerProvider` / `getValue` / `getValues` / `markDirty` / `recalculate` / `addListener` |
-| `IAffixManager`         | `registerAffix` / `getAffixes` / `addAffix` / `generateAffixes` / `renderLore` / `registerActionHandler`          |
+| `IAffixManager`         | `registerAffix` / `getAffixes` / `addAffix` / `generateAffixes` / `registerActionHandler`          |
 | `ITriggerManager`       | `dispatch` / `registerConditionType` / `isOnCooldown` / `setCooldown`                                             |
 | `ISkillProviderManager` | `registerProvider` / `castSkill` / `hasSkill`                                                                     |
 | `IGrowthManager`        | `getLevel` / `addExp` / `insertGem` / `enhance` / `activateRune`                                                  |
@@ -192,7 +192,7 @@ BanditBoss:
           radius: 5
 ```
 
-- 解析时机：`MythicMobSpawnEvent` 触发，反射读配置 `Symphony` 段
+- 解析时机：`MythicMobSpawnEvent` 触发，通过 compileOnly API 直接读取配置 `Symphony` 段
 - 数据存活：怪物 UUID 一一对应；`MythicMobDeathEvent` 自动清理
 - 属性通路：`MythicMobAttributeProvider`（优先级 150，异步安全）
 - 词条通路：注入 `AffixManagerImpl.collectEntityAffixes`，走 `AffixPassiveProvider` 和触发器系统

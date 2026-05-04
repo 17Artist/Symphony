@@ -18,8 +18,7 @@ plugins/Symphony/
 ├── config.yml                # 全局配置
 ├── config/
 │   ├── level.yml             # 等级与经验公式
-│   ├── enhancement.yml       # 强化倍率表
-│   └── lore-format.yml       # 物品 Lore 模板
+│   └── enhancement.yml       # 强化倍率表
 ├── affixes/                  # 词条定义
 │   ├── fire_strike.yml
 │   └── ...

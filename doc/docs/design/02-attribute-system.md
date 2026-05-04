@@ -361,16 +361,27 @@ symphony.attribute.register({
 ```
 属性重算完毕
     ↓
+收集所有 Provider 实际贡献过的属性 ID（contributed 集合）
+    ↓
 遍历所有已注册属性
     ↓
 对每个有 vanilla_binding 的属性：
-    ├── 计算差值 = finalValue - vanillaBaseValue
-    ├── 通过 NMS Adapter 设置 AttributeModifier
-    │   ├── key = "symphony:<attribute_id>"
-    │   ├── amount = 差值
-    │   └── operation = ADD_NUMBER
-    └── 同步到客户端
+    ├── 若该属性不在 contributed 集合中：
+    │   └── 移除旧 Symphony modifier，不同步（避免覆盖原版默认值）
+    ├── 否则：
+    │   ├── 先移除 Symphony modifier
+    │   ├── 调用 NMS Adapter.getFinalValue() 获取原版最终值（含其他插件/装备的 modifier）
+    │   ├── 计算差值 = symphonyFinalValue - vanillaFinalValue
+    │   ├── 通过 NMS Adapter 设置 AttributeModifier
+    │   │   ├── key = "symphony:<attribute_id>"
+    │   │   ├── amount = 差值
+    │   │   └── operation = ADD_NUMBER
+    │   └── 同步到客户端
 ```
+
+关键设计决策：
+- 使用 `getFinalValue()` 而非 `getBaseValue()`，确保差值计算考虑了其他插件和原版装备的 modifier，避免攻击速度等属性被意外覆盖
+- 无 Provider 贡献的属性不同步到原版，防止 Symphony 的默认值覆盖原版属性（如未配置攻击速度词条时，不会干扰原版攻击速度）
 
 这意味着服务器管理员可以自由决定哪些属性同步到原版。比如自定义一个 `true_damage` 属性，不绑定任何原版属性，它就只存在于 Symphony 的计算体系中。
 
@@ -431,8 +442,8 @@ val.snapshot = symphony.attribute.snapshot(entity)
 符文属性 ──┤   → AttributeRegistry  ├── 技能脚本（symphony.attribute.get）
 强化倍率 ──┤     → 计算管线         ├── 原版桥接（vanilla_binding 同步）
 套装效果 ──┤     → 缓存             ├── PlaceholderAPI（%symphony_attribute_xxx%）
-词条被动 ──┤                        ├── Lore 渲染（物品属性显示）
-Buff ──────┤                        └── 派生属性（combat_power 等）
+词条被动 ──┤                        └── 派生属性（combat_power 等）
+Buff ──────┤
 脚本修改 ──┘
 ```
 
