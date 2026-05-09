@@ -74,7 +74,7 @@ object ConfigLoader {
                     @Suppress("UNCHECKED_CAST")
                     val tMap = triggerMap as Map<String, Any>
                     triggers.add(TriggerBinding(
-                        type = tMap["type"]?.toString() ?: return@forEach,
+                        type = tMap["type"]?.toString()?.uppercase() ?: return@forEach,
                         conditions = (tMap["conditions"] as? List<Map<String, Any>>) ?: emptyList(),
                         actions = (tMap["actions"] as? List<Map<String, Any>>) ?: emptyList()
                     ))

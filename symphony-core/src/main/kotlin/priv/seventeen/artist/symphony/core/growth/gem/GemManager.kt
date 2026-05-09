@@ -48,8 +48,19 @@ class GemManager {
     }
 
     fun unlockSlot(item: ItemStack, slotIndex: Int): Boolean {
-        val slots = getGemSlots(item).toMutableList()
-        val slot = slots.find { it.index == slotIndex } ?: return false
+        var slots = getGemSlots(item).toMutableList()
+        // 如果物品没有宝石槽数据，自动初始化默认槽位（3 个 locked 槽）
+        if (slots.isEmpty()) {
+            slots = (0..2).map { GemSlot(it, null, 0, true) }.toMutableList()
+        }
+        val slot = slots.find { it.index == slotIndex } ?: run {
+            // 索引超出现有范围，扩展到该索引
+            if (slotIndex < 0 || slotIndex > 5) return false
+            for (i in slots.size..slotIndex) {
+                slots.add(GemSlot(i, null, 0, true))
+            }
+            slots.find { it.index == slotIndex } ?: return false
+        }
         if (!slot.locked) return false
         slots[slots.indexOf(slot)] = slot.copy(locked = false)
         saveGemSlots(item, slots)

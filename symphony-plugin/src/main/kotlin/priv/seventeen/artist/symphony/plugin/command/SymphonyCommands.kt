@@ -18,7 +18,9 @@ import priv.seventeen.artist.symphony.core.advanced.talent.TalentManager
 import priv.seventeen.artist.symphony.core.affix.AffixManagerImpl
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
+import priv.seventeen.artist.symphony.core.attribute.AttributeProviderRegistry
 import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
+import priv.seventeen.artist.symphony.core.attribute.provider.GemProvider
 import priv.seventeen.artist.symphony.core.config.ConfigLoader
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
 import priv.seventeen.artist.symphony.core.growth.rune.RuneRegistry
@@ -103,22 +105,26 @@ object SymphonyCommands {
                     val aria = SymphonyPlugin.skillProviderManager.getProvider("aria") as? AriaSkillProvider
                     provider?.clear()
                     aria?.clear()
+                    val gemProvider = AttributeProviderRegistry.getAll().filterIsInstance<GemProvider>().firstOrNull()
                     ConfigLoader.loadAll(
                         bukkitPlugin.dataFolder,
                         SymphonyPlugin.apiImpl.affixManagerInstance,
                         provider ?: SymphonySkillProvider(),
                         SymphonyPlugin.growthManager.setManager,
-                        aria
+                        aria,
+                        SymphonyPlugin.growthManager.levelManager,
+                        SymphonyPlugin.growthManager.enhanceManager,
+                        gemProvider
                     )
 
                     Bukkit.getOnlinePlayers().forEach { AttributeCache.markDirty(it.uniqueId) }
                     ctx.reply("§a重载完成 — 属性 §b${AttributeRegistry.ids().size}§a 个")
                 }
                 // ── player <sub> <player> ... ──
-                .command("player", "玩家操作", args = arrayOf("p_sub", "player", "?p_action", "?p_arg1", "?p_arg2", "?p_arg3"), permission = "symphony.admin") { ctx ->
+                .command("player", "玩家操作", args = arrayOf("p_sub", "player", "?p_action", "?p_arg1", "?p_arg2", "?p_arg3", "?p_arg4"), permission = "symphony.admin") { ctx ->
                     val sub = ctx.arg(0)
                     val target = ctx.argPlayer(1) ?: return@command ctx.reply("§c未找到玩家")
-                    val a1 = ctx.arg(2); val a2 = ctx.arg(3); val a3 = ctx.arg(4); val a4 = ctx.arg(5)
+                    val a1 = ctx.arg(2); val a2 = ctx.arg(3); val a3 = ctx.arg(4); val a4 = ctx.arg(5); val a5 = ctx.arg(6)
                     when (sub) {
                         "attr" -> when (a1) {
                             "get" -> {
@@ -155,14 +161,17 @@ object SymphonyCommands {
                         }
                         "buff" -> when (a1) {
                             "add" -> {
-                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player buff <玩家> add <属性ID> <值> [FLAT|PERCENT]")
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player buff <玩家> add <属性ID> <值> [FLAT|PERCENT] [秒]")
                                 val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
                                 val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
-                                val duration = ctx.arg(5).toLongOrNull() ?: -1L
+                                val duration = a5.toLongOrNull() ?: -1L
                                 val expire = if (duration > 0) System.currentTimeMillis() + duration * 1000L else -1L
                                 val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
+                                val buffId = "cmd:buff:$attrId"
+                                // 移除同属性的旧命令 Buff（替换模式）
+                                data.runtime.activeBuffs.removeAll { it.id == buffId }
                                 data.runtime.activeBuffs.add(ActiveBuff(
-                                    id = "cmd:buff:$attrId:${UUID.randomUUID().toString().take(8)}",
+                                    id = buffId,
                                     attribute = attrId,
                                     operation = op,
                                     value = value,
