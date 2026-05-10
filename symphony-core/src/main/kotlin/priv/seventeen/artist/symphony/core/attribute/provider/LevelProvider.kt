@@ -2,6 +2,7 @@ package priv.seventeen.artist.symphony.core.attribute.provider
 
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.IAttributeProvider
 import priv.seventeen.artist.symphony.api.attribute.Operation
@@ -33,9 +34,14 @@ class LevelProvider(private val levelManager: LevelManager) : IAttributeProvider
                     if (!AriaCallbackManager.has(callbackId)) {
                         AriaCallbackManager.compile(callbackId, entry.formula)
                     }
-                    (AriaCallbackManager.invoke(callbackId, level) as? Number)?.toDouble()
-                        ?: (entry.base + entry.perLevel * (level - 1))
-                } catch (_: Exception) {
+                    val result = AriaCallbackManager.invoke(callbackId, level)
+                    val formulaValue = (result as? Number)?.toDouble()
+                    if (formulaValue == null) {
+                        BlinkLog.warn("等级成长公式 $attrId 未返回数字 (返回: $result)，使用线性公式")
+                        entry.base + entry.perLevel * (level - 1)
+                    } else formulaValue
+                } catch (e: Exception) {
+                    BlinkLog.warn("等级成长公式 $attrId 执行异常: ${e.message}")
                     entry.base + entry.perLevel * (level - 1)
                 }
             } else {

@@ -29,11 +29,21 @@ class AffixPassiveProvider : IAttributeProvider {
     }
 
     private fun resolveValue(raw: String, params: Map<String, Any>): Double {
+        // 快速路径：纯参数引用 "{param}"
+        if (raw.startsWith("{") && raw.endsWith("}") && raw.indexOf('{', 1) == -1) {
+            val key = raw.substring(1, raw.length - 1)
+            val value = params[key] ?: return 0.0
+            return when (value) {
+                is Number -> value.toDouble()
+                else -> value.toString().toDoubleOrNull() ?: 0.0
+            }
+        }
+        // 通用路径：多参数替换
         var str = raw
         val regex = Regex("\\{(\\w+)}")
         for (match in regex.findAll(raw)) {
             val key = match.groupValues[1]
-            val value = params[key]?.toString() ?: match.value
+            val value = params[key]?.toString() ?: return 0.0
             str = str.replace(match.value, value)
         }
         return str.toDoubleOrNull() ?: 0.0

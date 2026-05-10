@@ -162,6 +162,7 @@ object SymphonyCommands {
                         "buff" -> when (a1) {
                             "add" -> {
                                 val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player buff <玩家> add <属性ID> <值> [FLAT|PERCENT] [秒]")
+                                if (!AttributeRegistry.exists(attrId)) return@command ctx.reply("§c未知属性: $attrId")
                                 val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
                                 val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
                                 val duration = a5.toLongOrNull() ?: -1L
@@ -298,10 +299,12 @@ object SymphonyCommands {
                                     ?: return@command ctx.reply("§c未知词条: $affixId")
                                 val instance = AffixInstance(UUID.randomUUID(), affixId, level, def.getLevelParams(level))
                                 SymphonyPlugin.apiImpl.affixManagerInstance.addAffix(item, instance)
+                                AttributeCalculator.markDirty(target)
                                 ctx.reply("§a已添加词条 $affixId Lv.$level")
                             }
                             "clear" -> {
                                 SymphonyPlugin.apiImpl.affixManagerInstance.clearAffixes(item)
+                                AttributeCalculator.markDirty(target)
                                 ctx.reply("§a已清除主手所有词条")
                             }
                             "generate" -> {
@@ -310,6 +313,7 @@ object SymphonyCommands {
                                 val affixes = SymphonyPlugin.apiImpl.affixManagerInstance.generateAffixes(poolId, AffixRarity.RARE, luck)
                                 if (affixes.isEmpty()) return@command ctx.reply("§c生成失败，检查词条池 $poolId")
                                 SymphonyPlugin.apiImpl.affixManagerInstance.applyAffixes(item, affixes)
+                                AttributeCalculator.markDirty(target)
                                 ctx.reply("§a已生成 ${affixes.size} 个词条")
                             }
                             else -> ctx.reply("§c用法: /sym item affix <list|add|clear|generate> ...")
