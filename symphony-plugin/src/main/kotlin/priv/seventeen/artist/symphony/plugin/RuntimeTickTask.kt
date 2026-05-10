@@ -123,17 +123,20 @@ class RuntimeTickTask : BukkitRunnable() {
             // 属性重算 + 交互网络 + 原版同步
             if (AttributeCache.isDirty(player.uniqueId)) {
                 if (SymphonyPlugin.config.asyncRecalc) {
-                    AsyncRecalcScheduler.recalculateAsync(player)
+                    AsyncRecalcScheduler.recalculateAsync(player) {
+                        // 异步重算完成后在主线程执行
+                        if (SymphonyPlugin.config.interactionEnabled) {
+                            InteractionNetwork.process(player)
+                        }
+                        VanillaAttributeBridge.syncToVanilla(player)
+                    }
                 } else {
                     AttributeCalculator.recalculate(player)
+                    if (SymphonyPlugin.config.interactionEnabled) {
+                        InteractionNetwork.process(player)
+                    }
+                    VanillaAttributeBridge.syncToVanilla(player)
                 }
-
-                // 属性交互网络
-                if (SymphonyPlugin.config.interactionEnabled) {
-                    InteractionNetwork.process(player)
-                }
-
-                VanillaAttributeBridge.syncToVanilla(player)
             }
         }
 

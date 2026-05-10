@@ -48,10 +48,16 @@ object AsyncRecalcScheduler {
      * 异步触发重算；非启用 / 已在飞行中时回退同步。
      * @return true = 已派发到异步通路；false = 已同步执行
      */
-    fun recalculateAsync(entity: LivingEntity): Boolean {
+    fun recalculateAsync(entity: LivingEntity): Boolean = recalculateAsync(entity, null)
+
+    /**
+     * 异步触发重算，完成后在主线程执行 onComplete 回调。
+     */
+    fun recalculateAsync(entity: LivingEntity, onComplete: (() -> Unit)?): Boolean {
         val plg = plugin
         if (!enabled || plg == null) {
             AttributeCalculator.recalculate(entity)
+            onComplete?.invoke()
             return false
         }
         if (!inFlight.add(entity.uniqueId)) return false  // 已在排队
@@ -65,6 +71,7 @@ object AsyncRecalcScheduler {
                 Bukkit.getScheduler().runTask(plg, Runnable {
                     try {
                         AttributeCalculator.applyModifiers(entity, syncModifiers + asyncModifiers)
+                        onComplete?.invoke()
                     } finally {
                         inFlight.remove(entity.uniqueId)
                     }
