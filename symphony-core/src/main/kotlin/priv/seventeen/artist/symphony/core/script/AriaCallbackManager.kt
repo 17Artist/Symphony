@@ -63,7 +63,7 @@ object AriaCallbackManager {
         ctx.setArgs(wrappedArgs)
         return try {
             val result = routine.execute(ctx)
-            unwrapFromAria(result)
+            if (result is IValue<*>) result.jvmValue() else result
         } catch (e: Exception) {
             BlinkLog.warn("回调脚本执行失败 [$id]: ${e.message}")
             null
@@ -92,17 +92,4 @@ object AriaCallbackManager {
      * 获取已缓存的回调数量。
      */
     fun size(): Int = cache.size
-
-    // Aria IValue → Java/Kotlin 对象解包
-    private fun unwrapFromAria(v: Any?): Any? {
-        if (v == null) return null
-        // AriaCompiledRoutine.execute() 返回 IValue<?>
-        // 尝试提取内部值
-        return try {
-            val valueMethod = v.javaClass.getMethod("value")
-            valueMethod.invoke(v)
-        } catch (_: Exception) {
-            v
-        }
-    }
 }
