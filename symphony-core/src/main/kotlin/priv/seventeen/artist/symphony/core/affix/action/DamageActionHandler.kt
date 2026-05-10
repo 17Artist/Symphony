@@ -21,6 +21,8 @@ class DamageActionHandler : ActionHandler {
                     target.fireTicks = maxOf(target.fireTicks, 60)
                 }
             }
+            // 清除无敌帧，确保额外伤害不被 Bukkit noDamageTicks 吞掉
+            target.noDamageTicks = 0
             target.damage(amount, context.entity)
             // ON_SKILL_HIT — 技能伤害命中目标时触发
             if (isSkillDamage) {

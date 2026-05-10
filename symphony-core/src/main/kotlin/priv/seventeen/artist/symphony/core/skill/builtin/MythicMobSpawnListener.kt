@@ -12,7 +12,9 @@ import org.bukkit.event.Listener
 import org.bukkit.plugin.Plugin
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.affix.AffixInstance
+import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
+import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -94,7 +96,20 @@ object MythicMobSpawnListener : Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     fun onDeath(event: MythicMobDeathEvent) {
-        val uuid = (event.entity as? LivingEntity)?.uniqueId ?: return
+        val entity = event.entity as? LivingEntity ?: return
+        val uuid = entity.uniqueId
+
+        // 桥接 ON_KILL 触发器 — 确保玩家击杀 MM 怪物时词条触发
+        val killer = entity.killer
+        if (killer != null) {
+            TriggerDispatcher.dispatch(TriggerType.ON_KILL, killer) {
+                target(entity)
+                set("victim", entity.type.name)
+                set("mythicMob", true)
+                set("mobId", event.mob.type.internalName)
+            }
+        }
+
         MythicMobDataStore.remove(uuid)
         mobAffixes.remove(uuid)
     }

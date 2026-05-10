@@ -16,6 +16,7 @@ import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.advanced.element.ElementAuraSystem
+import priv.seventeen.artist.symphony.core.skill.builtin.MythicMobDataStore
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 import priv.seventeen.artist.symphony.plugin.SymphonyPlugin
@@ -36,6 +37,7 @@ object DamageListener {
         // 非玩家攻击者且无 Symphony 属性数据 → 跳过 Symphony 伤害管线，使用原版伤害
         val attackerIsPlayer = attacker is Player
         val attackerHasData = attackerIsPlayer || PlayerDataManager.getData(attacker.uniqueId) != null
+            || MythicMobDataStore.get(attacker.uniqueId) != null
             || AttributeCache.get(attacker.uniqueId, "physical_damage") != null
         if (!attackerHasData) {
             // 仍然对玩家受害者触发防御触发器
