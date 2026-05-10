@@ -15,6 +15,9 @@ import priv.seventeen.artist.symphony.core.skill.builtin.SymphonySkillProvider
 import priv.seventeen.artist.symphony.core.advanced.resonance.*
 import priv.seventeen.artist.symphony.core.advanced.interaction.*
 import priv.seventeen.artist.symphony.core.advanced.talent.*
+import priv.seventeen.artist.symphony.core.advanced.element.*
+import priv.seventeen.artist.symphony.core.advanced.status.*
+import priv.seventeen.artist.symphony.core.advanced.environment.*
 import java.io.File
 import java.util.UUID
 
@@ -372,18 +375,53 @@ object ConfigLoader {
     fun loadStatuses(dir: File) {
         if (!dir.exists()) { dir.mkdirs(); return }
         val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        var count = 0
         for (file in files) {
             try {
                 val config = YamlConfiguration.loadConfiguration(file)
                 val id = config.getString("id") ?: continue
-                // 预编译脚本回调
+
+                // 解析 per_stack_attributes
+                val perStackAttrs = mutableMapOf<String, StackAttribute>()
+                config.getConfigurationSection("per_stack_attributes")?.let { sec ->
+                    for (attrId in sec.getKeys(false)) {
+                        val sub = sec.getConfigurationSection(attrId) ?: continue
+                        perStackAttrs[attrId] = StackAttribute(
+                            operation = sub.getString("operation") ?: "FLAT",
+                            value = sub.getDouble("value", 0.0)
+                        )
+                    }
+                }
+
+                val decayMode = try {
+                    DecayMode.valueOf(config.getString("decay_mode")?.uppercase() ?: "INDIVIDUAL")
+                } catch (e: Exception) { DecayMode.INDIVIDUAL }
+
+                val def = StatusDefinition(
+                    id = id,
+                    displayName = config.getString("display_name") ?: id,
+                    icon = config.getString("icon") ?: "",
+                    maxStacks = config.getInt("max_stacks", 10),
+                    stackDuration = config.getLong("stack_duration", 8000),
+                    decayMode = decayMode,
+                    tickInterval = config.getLong("tick_interval", 1000),
+                    damageType = config.getString("damage_type") ?: "physical",
+                    perStackDamageRatio = config.getDouble("per_stack_damage_ratio", 0.05),
+                    perStackAttributes = perStackAttrs,
+                    immuneDuration = config.getLong("immune_duration", 3000)
+                )
+                StatusLayerSystem.register(def)
+                count++
+
+                // 编译脚本回调
                 config.getString("on_max_stacks")?.let { code ->
                     AriaCallbackManager.compile("status:$id:on_max_stacks", code)
                 }
             } catch (e: Exception) {
-                BlinkLog.warn("加载状态层脚本失败 ${file.name}: ${e.message}")
+                BlinkLog.warn("加载状态定义失败 ${file.name}: ${e.message}")
             }
         }
+        if (count > 0) BlinkLog.info("已加载 $count 个状态定义")
     }
 
     fun loadTalents(dir: File) {
@@ -494,29 +532,102 @@ object ConfigLoader {
     fun loadEnvironments(dir: File) {
         if (!dir.exists()) { dir.mkdirs(); return }
         val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        var count = 0
         for (file in files) {
             try {
                 val config = YamlConfiguration.loadConfiguration(file)
                 val id = config.getString("id") ?: continue
-                config.getString("condition")?.let { AriaCallbackManager.compile("environment:$id:condition", it) }
+                val type = try {
+                    EnvironmentType.valueOf(config.getString("type")?.uppercase() ?: "BIOME")
+                } catch (e: Exception) {
+                    BlinkLog.warn("环境 ${file.name} type 无效，跳过")
+                    continue
+                }
+
+                // 解析 attributes
+                val attrs = mutableMapOf<String, EnvAttributeEffect>()
+                config.getConfigurationSection("attributes")?.let { sec ->
+                    for (attrId in sec.getKeys(false)) {
+                        val sub = sec.getConfigurationSection(attrId) ?: continue
+                        attrs[attrId] = EnvAttributeEffect(
+                            operation = sub.getString("operation") ?: "FLAT",
+                            value = sub.getDouble("value", 0.0)
+                        )
+                    }
+                }
+
+                val modifier = EnvironmentModifier(
+                    id = id,
+                    displayName = config.getString("display_name") ?: id,
+                    type = type,
+                    attributes = attrs,
+                    description = config.getString("description") ?: ""
+                )
+                EnvironmentSystem.register(modifier)
+                count++
+
+                // 编译脚本条件
+                config.getString("condition")?.let {
+                    AriaCallbackManager.compile("environment:$id:condition", it)
+                }
             } catch (e: Exception) {
-                BlinkLog.warn("加载环境脚本失败 ${file.name}: ${e.message}")
+                BlinkLog.warn("加载环境定义失败 ${file.name}: ${e.message}")
             }
         }
+        if (count > 0) BlinkLog.info("已加载 $count 个环境定义")
     }
 
     fun loadReactions(dir: File) {
         if (!dir.exists()) { dir.mkdirs(); return }
         val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        var count = 0
         for (file in files) {
             try {
                 val config = YamlConfiguration.loadConfiguration(file)
                 val id = config.getString("id") ?: continue
-                config.getString("on_tick")?.let { AriaCallbackManager.compile("reaction:$id:on_tick", it) }
+                val type = try {
+                    ReactionType.valueOf(config.getString("type")?.uppercase() ?: "AMPLIFY")
+                } catch (e: Exception) {
+                    BlinkLog.warn("反应 ${file.name} type 无效，跳过")
+                    continue
+                }
+
+                // 解析 reverse
+                val reverseSec = config.getConfigurationSection("reverse")
+                val reverse = if (reverseSec != null) {
+                    ReactionReverse(
+                        id = reverseSec.getString("id") ?: "${id}_reverse",
+                        multiplier = reverseSec.getDouble("multiplier", 1.0)
+                    )
+                } else null
+
+                val def = ReactionDefinition(
+                    id = id,
+                    displayName = config.getString("display_name") ?: id,
+                    trigger = config.getString("trigger") ?: continue,
+                    aura = config.getString("aura") ?: continue,
+                    type = type,
+                    multiplier = config.getDouble("multiplier", 1.0),
+                    gaugeConsume = config.getDouble("gauge_consume", 0.5),
+                    particle = config.getString("particle"),
+                    sound = config.getString("sound"),
+                    radius = config.getDouble("radius", 0.0),
+                    ticks = config.getInt("ticks", 0),
+                    interval = config.getLong("interval", 1000),
+                    reverse = reverse
+                )
+                ReactionSystem.register(def)
+                count++
+
+                // 编译脚本回调
+                config.getString("on_tick")?.let {
+                    AriaCallbackManager.compile("reaction:$id:on_tick", it)
+                }
             } catch (e: Exception) {
-                BlinkLog.warn("加载反应脚本失败 ${file.name}: ${e.message}")
+                BlinkLog.warn("加载反应定义失败 ${file.name}: ${e.message}")
             }
         }
+        if (count > 0) BlinkLog.info("已加载 $count 个元素反应定义")
     }
 
     fun loadLevelConfig(configDir: File, levelManager: LevelManager) {

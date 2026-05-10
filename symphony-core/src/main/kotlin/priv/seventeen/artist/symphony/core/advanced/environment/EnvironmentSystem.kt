@@ -62,6 +62,21 @@ object EnvironmentSystem {
         return PlayerDataManager.getData(player.uniqueId)?.runtime?.activeEnvironmentModifiers ?: emptySet()
     }
 
+    /**
+     * 检查玩家环境是否发生变化（与上次记录的活跃修正器对比）。
+     * 返回 true 表示环境变化，需要重算属性。
+     */
+    fun hasEnvironmentChanged(player: Player): Boolean {
+        val previousActive = PlayerDataManager.getData(player.uniqueId)?.runtime?.activeEnvironmentModifiers ?: emptySet()
+        val currentActive = mutableSetOf<String>()
+        for (mod in modifiers.values) {
+            if (evaluateCondition(player, mod)) {
+                currentActive.add(mod.id)
+            }
+        }
+        return currentActive != previousActive
+    }
+
     private fun evaluateCondition(entity: LivingEntity, mod: EnvironmentModifier): Boolean {
         // 优先使用脚本条件
         val callbackId = "environment:${mod.id}:condition"

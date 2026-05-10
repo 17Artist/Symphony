@@ -9,6 +9,7 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.attribute.AsyncRecalcScheduler
 import priv.seventeen.artist.symphony.core.attribute.VanillaAttributeBridge
 import priv.seventeen.artist.symphony.core.advanced.element.ElementAuraSystem
+import priv.seventeen.artist.symphony.core.advanced.environment.EnvironmentSystem
 import priv.seventeen.artist.symphony.core.advanced.interaction.InteractionNetwork
 import priv.seventeen.artist.symphony.core.advanced.resonance.ResonanceManager
 import priv.seventeen.artist.symphony.core.advanced.status.StatusLayerSystem
@@ -104,6 +105,14 @@ class RuntimeTickTask : BukkitRunnable() {
                 // 天赋门检查
                 if (SymphonyPlugin.config.talentEnabled) {
                     TalentManager.checkTalents(player)
+                }
+
+                // 环境系统刷新 — 检查环境变化并标记 dirty
+                if (SymphonyPlugin.config.environmentEnabled) {
+                    val envChanged = EnvironmentSystem.hasEnvironmentChanged(player)
+                    if (envChanged) {
+                        AttributeCache.markDirty(player.uniqueId)
+                    }
                 }
             }
 

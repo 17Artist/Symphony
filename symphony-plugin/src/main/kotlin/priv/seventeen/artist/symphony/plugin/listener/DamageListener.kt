@@ -15,8 +15,10 @@ import priv.seventeen.artist.symphony.api.event.SymphonyPreDamageEvent
 import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
+import priv.seventeen.artist.symphony.core.advanced.element.ElementAuraSystem
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
+import priv.seventeen.artist.symphony.plugin.SymphonyPlugin
 import java.util.concurrent.ThreadLocalRandom
 
 object DamageListener {
@@ -133,6 +135,11 @@ object DamageListener {
                 if (elemFinal > 0) {
                     symphonyEvent.elementDamages[elem] = elemFinal
                     symphonyEvent.finalDamage += elemFinal
+                    // 自动附着元素到目标，触发元素反应
+                    if (SymphonyPlugin.config.elementEnabled) {
+                        val gauge = (elemFinal / 10.0).coerceIn(0.5, 4.0)
+                        ElementAuraSystem.applyAura(victim, elem, gauge, appliedBy = attacker.uniqueId)
+                    }
                 }
             }
         }
