@@ -24,6 +24,7 @@ import priv.seventeen.artist.symphony.core.attribute.provider.GemProvider
 import priv.seventeen.artist.symphony.core.config.ConfigLoader
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
 import priv.seventeen.artist.symphony.core.growth.rune.RuneRegistry
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.script.AttributeCallableRegistry
 import priv.seventeen.artist.symphony.core.skill.builtin.AriaSkillProvider
 import priv.seventeen.artist.symphony.core.skill.builtin.SymphonySkillProvider
@@ -81,6 +82,7 @@ object SymphonyCommands {
                     SymphonyPlugin.config.reload()
                     AttributeRegistry.clear()
                     AttributeCallableRegistry.clear()
+                    AriaCallbackManager.clear()
                     Aria.getEngine().annotationRegistry.clear()
                     ReactionSystem.clear()
                     StatusLayerSystem.clear()

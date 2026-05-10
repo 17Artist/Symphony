@@ -40,6 +40,31 @@ object AriaCallbackManager {
     }
 
     /**
+     * 编译表达式为回调脚本。自动注入命名参数并包装 return。
+     * 配置中可以直接写 "20 + level * 2"，代码自动转换为：
+     *   val.level = args[0]
+     *   return (20 + level * 2)
+     *
+     * @param id 唯一标识
+     * @param expression 表达式或完整脚本
+     * @param paramNames 参数名列表，按顺序对应 args[0], args[1], ...
+     */
+    fun compileExpression(id: String, expression: String, vararg paramNames: String): Boolean {
+        val body = expression.trim()
+        val bindings = paramNames.mapIndexed { index, name ->
+            "val.$name = args[$index]"
+        }.joinToString("\n")
+
+        // 如果已经有 return 语句，不再包装
+        val hasReturn = body.contains("return ")
+        val code = buildString {
+            if (bindings.isNotEmpty()) appendLine(bindings)
+            if (hasReturn) append(body) else append("return ($body)")
+        }
+        return compile(id, code)
+    }
+
+    /**
      * 检查指定 id 的回调是否已编译。
      */
     fun has(id: String): Boolean = cache.containsKey(id)

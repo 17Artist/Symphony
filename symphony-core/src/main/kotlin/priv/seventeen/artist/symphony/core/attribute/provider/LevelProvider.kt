@@ -28,11 +28,11 @@ class LevelProvider(private val levelManager: LevelManager) : IAttributeProvider
 
         return growth.mapNotNull { (attrId, entry) ->
             val value = if (entry.formula != null) {
-                // Aria 公式优先
+                // Aria 公式优先 — 自动注入 level 变量
                 try {
                     val callbackId = "growth_formula:$attrId"
                     if (!AriaCallbackManager.has(callbackId)) {
-                        AriaCallbackManager.compile(callbackId, entry.formula)
+                        AriaCallbackManager.compileExpression(callbackId, entry.formula, "level")
                     }
                     val result = AriaCallbackManager.invoke(callbackId, level)
                     val formulaValue = (result as? Number)?.toDouble()

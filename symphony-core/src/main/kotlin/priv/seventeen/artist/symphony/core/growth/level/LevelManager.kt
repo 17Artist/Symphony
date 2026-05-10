@@ -68,11 +68,16 @@ class LevelManager {
             try {
                 val callbackId = "exp_formula"
                 if (!AriaCallbackManager.has(callbackId)) {
-                    AriaCallbackManager.compile(callbackId, script)
+                    AriaCallbackManager.compileExpression(callbackId, script, "level")
                 }
                 val result = AriaCallbackManager.invoke(callbackId, level)
-                return (result as? Number)?.toLong() ?: (100 * Math.pow(level.toDouble(), 1.5) + level * 50).toLong()
-            } catch (_: Exception) {}
+                return (result as? Number)?.toLong() ?: run {
+                    BlinkLog.warn("经验公式未返回数字 (返回: $result)，使用默认公式")
+                    (100 * Math.pow(level.toDouble(), 1.5) + level * 50).toLong()
+                }
+            } catch (e: Exception) {
+                BlinkLog.warn("经验公式执行异常: ${e.message}")
+            }
         }
         return (100 * Math.pow(level.toDouble(), 1.5) + level * 50).toLong()
     }
