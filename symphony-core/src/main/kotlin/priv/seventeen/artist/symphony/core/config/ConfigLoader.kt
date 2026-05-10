@@ -13,6 +13,8 @@ import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.skill.builtin.AriaSkillProvider
 import priv.seventeen.artist.symphony.core.skill.builtin.SymphonySkillProvider
 import priv.seventeen.artist.symphony.core.advanced.resonance.*
+import priv.seventeen.artist.symphony.core.advanced.interaction.*
+import priv.seventeen.artist.symphony.core.advanced.talent.*
 import java.io.File
 import java.util.UUID
 
@@ -387,31 +389,106 @@ object ConfigLoader {
     fun loadTalents(dir: File) {
         if (!dir.exists()) { dir.mkdirs(); return }
         val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        var count = 0
         for (file in files) {
             try {
                 val config = YamlConfiguration.loadConfiguration(file)
                 val id = config.getString("id") ?: continue
+
+                // 解析 gate
+                val gateSec = config.getConfigurationSection("gate")
+                val conditions = mutableListOf<TalentGateCondition>()
+                gateSec?.getMapList("conditions")?.forEach { raw ->
+                    @Suppress("UNCHECKED_CAST")
+                    val m = raw as Map<String, Any>
+                    val attribute = m["attribute"]?.toString() ?: return@forEach
+                    val threshold = (m["threshold"] as? Number)?.toDouble() ?: 0.0
+                    val operator = m["operator"]?.toString() ?: ">="
+                    conditions.add(TalentGateCondition(attribute, threshold, operator))
+                }
+                val gate = TalentGate(
+                    type = gateSec?.getString("type") ?: "SINGLE",
+                    attribute = gateSec?.getString("attribute"),
+                    threshold = gateSec?.getDouble("threshold", 0.0) ?: 0.0,
+                    operator = gateSec?.getString("operator") ?: ">=",
+                    conditions = conditions
+                )
+
+                // 解析 passive_attributes
+                val passiveAttrs = mutableMapOf<String, PassiveAttr>()
+                config.getConfigurationSection("passive_attributes")?.let { sec ->
+                    for (attrId in sec.getKeys(false)) {
+                        val sub = sec.getConfigurationSection(attrId) ?: continue
+                        passiveAttrs[attrId] = PassiveAttr(
+                            operation = sub.getString("operation") ?: "FLAT",
+                            value = sub.getDouble("value", 0.0)
+                        )
+                    }
+                }
+
+                val def = TalentDefinition(
+                    id = id,
+                    displayName = config.getString("display_name") ?: id,
+                    description = config.getString("description") ?: "",
+                    icon = config.getString("icon") ?: "NETHER_STAR",
+                    gate = gate,
+                    passiveAttributes = passiveAttrs
+                )
+                TalentManager.register(def)
+                count++
+
+                // 编译脚本回调
                 config.getString("effect")?.let { AriaCallbackManager.compile("talent:$id:effect", it) }
                 config.getString("on_deactivate")?.let { AriaCallbackManager.compile("talent:$id:on_deactivate", it) }
             } catch (e: Exception) {
-                BlinkLog.warn("加载天赋脚本失败 ${file.name}: ${e.message}")
+                BlinkLog.warn("加载天赋定义失败 ${file.name}: ${e.message}")
             }
         }
+        if (count > 0) BlinkLog.info("已加载 $count 个天赋定义")
     }
 
     fun loadInteractions(dir: File) {
         if (!dir.exists()) { dir.mkdirs(); return }
         val files = dir.listFiles { f -> f.extension == "yml" } ?: return
+        var count = 0
         for (file in files) {
             try {
                 val config = YamlConfiguration.loadConfiguration(file)
                 val id = config.getString("id") ?: continue
+                val type = try {
+                    InteractionType.valueOf(config.getString("type")?.uppercase() ?: "CONVERSION")
+                } catch (e: Exception) {
+                    BlinkLog.warn("交互 ${file.name} type 无效，跳过")
+                    continue
+                }
+
+                val def = InteractionDefinition(
+                    id = id,
+                    type = type,
+                    source = config.getString("source"),
+                    target = config.getString("target"),
+                    attributes = config.getStringList("attributes"),
+                    threshold = config.getDouble("threshold", 0.0),
+                    thresholdA = config.getDouble("threshold_a", 0.0),
+                    ratio = config.getDouble("ratio", 0.0),
+                    bonus = config.getDouble("bonus", 0.0),
+                    penaltyB = config.getDouble("penalty_b", 0.0),
+                    multiplier = config.getDouble("multiplier", 1.0),
+                    description = config.getString("description") ?: "",
+                    attributeA = config.getString("attribute_a"),
+                    attributeB = config.getString("attribute_b")
+                )
+                InteractionNetwork.register(def)
+                count++
+
+                // 编译脚本回调
                 config.getString("condition")?.let { AriaCallbackManager.compile("interaction:$id:condition", it) }
                 config.getString("effect")?.let { AriaCallbackManager.compile("interaction:$id:effect", it) }
             } catch (e: Exception) {
-                BlinkLog.warn("加载交互脚本失败 ${file.name}: ${e.message}")
+                BlinkLog.warn("加载交互定义失败 ${file.name}: ${e.message}")
             }
         }
+        if (count > 0) BlinkLog.info("已加载 $count 个属性交互定义")
     }
 
     fun loadEnvironments(dir: File) {
