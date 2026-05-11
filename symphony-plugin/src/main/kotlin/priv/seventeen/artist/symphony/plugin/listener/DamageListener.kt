@@ -16,6 +16,7 @@ import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.advanced.element.ElementAuraSystem
+import priv.seventeen.artist.symphony.core.advanced.status.StatusDamageGuard
 import priv.seventeen.artist.symphony.core.skill.builtin.MythicMobDataStore
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
@@ -26,6 +27,9 @@ object DamageListener {
 
     @AutoListener(priority = EventPriority.NORMAL)
     fun onDamage(event: EntityDamageEvent) {
+        // 状态层 DOT/爆发伤害不进入 Symphony 攻击管线，避免触发 ON_ATTACK 词条循环叠层
+        if (!StatusDamageGuard.shouldHandle(event)) return
+
         if (event !is EntityDamageByEntityEvent) return
         val victim = event.entity as? LivingEntity ?: return
         var attacker = event.damager as? LivingEntity

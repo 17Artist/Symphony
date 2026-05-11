@@ -812,7 +812,18 @@ class SymphonyBridge {
         is Entity -> v
         is UUID -> Bukkit.getEntity(v)
         is String -> runCatching { Bukkit.getEntity(UUID.fromString(v)) }.getOrNull()
-        else -> null
+        else -> {
+            // Aria 引擎包装对象：尝试提取内部 Java 对象
+            val jvmValue = runCatching {
+                v.javaClass.getMethod("jvmValue").invoke(v)
+            }.getOrNull()
+            when (jvmValue) {
+                is Entity -> jvmValue
+                is UUID -> Bukkit.getEntity(jvmValue)
+                is String -> runCatching { Bukkit.getEntity(UUID.fromString(jvmValue)) }.getOrNull()
+                else -> null
+            }
+        }
     }
 
     private fun unwrapLocation(v: Any?): Location? = when (v) {

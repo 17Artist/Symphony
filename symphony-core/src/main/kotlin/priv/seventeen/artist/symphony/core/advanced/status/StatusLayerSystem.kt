@@ -167,7 +167,7 @@ object StatusLayerSystem {
                 if (attacker != null) {
                     val atk = AttributeCalculator.getValue(attacker, "physical_damage")
                     val damage = atk * def.perStackDamageRatio * stackData.stacks
-                    entity.damage(damage, attacker)
+                    StatusDamageGuard.damage(entity, damage, attacker)
                 }
             }
         }
@@ -191,7 +191,7 @@ object StatusLayerSystem {
             val attacker = appliedBy?.let { Bukkit.getEntity(it) as? LivingEntity }
             if (attacker != null) {
                 val atk = AttributeCalculator.getValue(attacker, "physical_damage")
-                entity.damage(atk * 2.0, attacker)
+                StatusDamageGuard.damage(entity, atk * 2.0, attacker)
             }
             entity.world.spawnParticle(Particle.DAMAGE_INDICATOR, entity.location.add(0.0, 1.0, 0.0), 30, 0.5, 0.5, 0.5)
         }
