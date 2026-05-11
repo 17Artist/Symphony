@@ -440,7 +440,11 @@ object ConfigLoader {
                     @Suppress("UNCHECKED_CAST")
                     val m = raw as Map<String, Any>
                     val attribute = m["attribute"]?.toString() ?: return@forEach
-                    val threshold = (m["threshold"] as? Number)?.toDouble() ?: 0.0
+                    val threshold = when (val t = m["threshold"]) {
+                        is Number -> t.toDouble()
+                        is String -> t.toDoubleOrNull() ?: 0.0
+                        else -> 0.0
+                    }
                     val operator = m["operator"]?.toString() ?: ">="
                     conditions.add(TalentGateCondition(attribute, threshold, operator))
                 }

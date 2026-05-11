@@ -109,8 +109,8 @@ object TalentManager {
 
     private fun evaluateGate(player: Player, gate: TalentGate): Boolean {
         return when (gate.type.uppercase()) {
-            "AND" -> gate.conditions.all { evaluateCondition(player, it) }
-            "OR" -> gate.conditions.any { evaluateCondition(player, it) }
+            "AND", "ALL" -> gate.conditions.isNotEmpty() && gate.conditions.all { evaluateCondition(player, it) }
+            "OR", "ANY" -> gate.conditions.isNotEmpty() && gate.conditions.any { evaluateCondition(player, it) }
             else -> {
                 val attr = gate.attribute ?: return false
                 val value = AttributeCalculator.getValue(player, attr)

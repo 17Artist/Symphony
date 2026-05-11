@@ -12,7 +12,7 @@ import priv.seventeen.artist.symphony.core.advanced.talent.TalentManager
 class TalentProvider : IAttributeProvider {
     override val id = "talent"
     override val priority = 660
-    override val isAsync = true
+    override val isAsync = false  // 读取 MutableSet<String>，不能异步
     override fun appliesTo(entity: LivingEntity): Boolean = entity is Player
 
     override fun provide(entity: LivingEntity): List<AttributeModifier> {
