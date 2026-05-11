@@ -5,4 +5,7 @@
 @format('integer')
 @priority(150)
 @readonly
+@derive fn derive(entity) {
+    return symphony.growth.getLevel(entity)
+}
 class Level {}

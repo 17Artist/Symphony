@@ -3,19 +3,19 @@ level:
   exp_formula: "math.floor(100 * math.pow(level, 1.5) + level * 50)"
   attribute_growth:
     max_health:
-      base: 20
+      base: 0
       per_level: 2.0
     physical_damage:
-      base: 1
+      base: 0
       per_level: 0.5
     physical_defense:
       base: 0
       per_level: 0.3
     max_mana:
-      base: 100
+      base: 0
       per_level: 5
     mana_regen:
-      base: 1
+      base: 0
       per_level: 0.1
   effects:
     sound: "entity.player.levelup"

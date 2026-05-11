@@ -43,6 +43,7 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
 import priv.seventeen.artist.symphony.core.data.RuneData
 import priv.seventeen.artist.symphony.core.growth.gem.GemManager
+import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.CooldownManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
@@ -739,6 +740,37 @@ class SymphonyBridge {
     // symphony.status.* — 状态层系统（补充）
     // ═══════════════════════════════════════
     fun statusRegister(id: Any?, displayName: Any?, maxStacks: Any?, stackDuration: Any?, decayMode: Any?) {
+        // 支持 Map 参数写法：symphony.status.register({id: "bleed", max_stacks: 10, ...})
+        if (id is Map<*, *>) {
+            val map = id
+            val statusId = map["id"]?.toString() ?: return
+            val def = StatusDefinition(
+                id = statusId,
+                displayName = map["display_name"]?.toString() ?: map["displayName"]?.toString() ?: statusId,
+                maxStacks = (map["max_stacks"] as? Number)?.toInt() ?: (map["maxStacks"] as? Number)?.toInt() ?: 10,
+                stackDuration = (map["stack_duration"] as? Number)?.toLong() ?: (map["stackDuration"] as? Number)?.toLong() ?: 8000,
+                decayMode = if ((map["decay_mode"] ?: map["decayMode"])?.toString()?.uppercase() == "REFRESH")
+                    DecayMode.REFRESH else DecayMode.INDIVIDUAL,
+                tickInterval = (map["tick_interval"] as? Number)?.toLong() ?: (map["tickInterval"] as? Number)?.toLong() ?: 1000,
+                damageType = map["damage_type"]?.toString() ?: map["damageType"]?.toString() ?: "physical",
+                perStackDamageRatio = (map["per_stack_damage_ratio"] as? Number)?.toDouble()
+                    ?: (map["perStackDamageRatio"] as? Number)?.toDouble() ?: 0.0
+            )
+            StatusLayerSystem.register(def)
+            // 注册 per_stack 回调
+            val perStackScript = map["per_stack"]?.toString() ?: map["perStack"]?.toString()
+            if (perStackScript != null) {
+                AriaCallbackManager.compile("status:$statusId:per_stack", perStackScript)
+            }
+            // 注册 on_max_stacks 回调
+            val onMaxScript = map["on_max_stacks"]?.toString() ?: map["onMaxStacks"]?.toString()
+            if (onMaxScript != null) {
+                AriaCallbackManager.compile("status:$statusId:on_max_stacks", onMaxScript)
+            }
+            return
+        }
+
+        // 旧 5 参数写法兼容
         StatusLayerSystem.register(
             StatusDefinition(
                 id = id?.toString() ?: return,

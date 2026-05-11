@@ -63,6 +63,10 @@ object TalentManager {
                 if (AriaCallbackManager.has(deactivateId)) {
                     AriaCallbackManager.invoke(deactivateId, player)
                 }
+                // 兜底清理：移除该天赋通过 effect 回调添加的永久 buff
+                val talentSource = "talent:${talent.id}"
+                data.runtime.activeBuffs.removeAll { it.source == talentSource }
+                data.persistent.savedBuffs.removeAll { it.source == talentSource }
             }
         }
 

@@ -131,8 +131,17 @@ object StatusLayerSystem {
     fun tick() {
         val now = System.currentTimeMillis()
 
+        // tick 在线玩家
         for (player in Bukkit.getOnlinePlayers()) {
             tickEntity(player, now)
+        }
+
+        // tick 非玩家实体（怪物等）— 从 EntityRuntimeCache 中找有状态层的实体
+        for (entry in EntityRuntimeCache.entries()) {
+            if (entry.value.statusStacks.isEmpty()) continue
+            val entity = Bukkit.getEntity(entry.key) as? LivingEntity ?: continue
+            if (entity is org.bukkit.entity.Player) continue // 玩家已在上面处理
+            tickEntity(entity, now)
         }
     }
 
@@ -161,11 +170,17 @@ object StatusLayerSystem {
                 continue
             }
 
-            // 持续伤害
-            if (def.perStackDamageRatio > 0 && stackData.appliedBy != null) {
+            // 持续伤害 — 优先使用 per_stack 回调
+            val perStackCallbackId = "status:$statusId:per_stack"
+            if (AriaCallbackManager.has(perStackCallbackId)) {
+                val attacker = stackData.appliedBy?.let { Bukkit.getEntity(it) as? LivingEntity }
+                AriaCallbackManager.invoke(perStackCallbackId, entity, stackData.stacks, attacker, statusId)
+            } else if (def.perStackDamageRatio > 0 && stackData.appliedBy != null) {
                 val attacker = Bukkit.getEntity(stackData.appliedBy) as? LivingEntity
                 if (attacker != null) {
-                    val atk = AttributeCalculator.getValue(attacker, "physical_damage")
+                    val atk = AttributeCalculator.getValue(attacker, def.damageType.let {
+                        if (it == "physical") "physical_damage" else "${it}_damage"
+                    })
                     val damage = atk * def.perStackDamageRatio * stackData.stacks
                     StatusDamageGuard.damage(entity, damage, attacker)
                 }

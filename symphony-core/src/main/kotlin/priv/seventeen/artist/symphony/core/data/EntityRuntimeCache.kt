@@ -15,6 +15,12 @@ object EntityRuntimeCache {
         cache.remove(entityId)
     }
 
+    /**
+     * 返回所有缓存条目（UUID → EntityRuntimeData）。
+     * 用于状态层 tick 非玩家实体。
+     */
+    fun entries(): Set<Map.Entry<UUID, EntityRuntimeData>> = cache.entries
+
     fun cleanup() {
         cache.keys.removeIf { uuid -> Bukkit.getEntity(uuid) == null }
     }
