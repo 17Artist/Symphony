@@ -404,7 +404,7 @@ object SymphonyCommands {
                                 SymphonyItemData.remove(slotItem, "set_id")
                                 target.updateInventory()
                                 AttributeCalculator.markDirty(target)
-                                ctx.reply("§a已取消标记 $slotName")
+                                ctx.reply("§a已取消套装标记")
                             }
                             else -> ctx.reply("§c用法: /sym item set <list|mark|unmark> ...")
                         }
