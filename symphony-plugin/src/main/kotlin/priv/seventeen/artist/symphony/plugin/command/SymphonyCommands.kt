@@ -376,18 +376,31 @@ object SymphonyCommands {
                                 }
                             }
                             "mark" -> {
-                                val slotName = a2.uppercase()
-                                val setId = a3.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item set mark <槽位> <套装ID>")
+                                // 支持两种格式：/sym item set mark <套装ID> 或 /sym item set mark <槽位> <套装ID>
+                                val setId: String
+                                val slotItem: ItemStack
+                                if (a3.isNotEmpty() && pickSlot(target, a2.uppercase()) != null) {
+                                    // 格式：mark <槽位> <套装ID>
+                                    slotItem = pickSlot(target, a2.uppercase())!!
+                                    setId = a3
+                                } else {
+                                    // 格式：mark <套装ID>（默认主手）
+                                    setId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item set mark <套装ID> 或 /sym item set mark <槽位> <套装ID>")
+                                    slotItem = item
+                                }
                                 if (SymphonyPlugin.growthManager.setManager.getDefinition(setId) == null) return@command ctx.reply("§c未知套装: $setId")
-                                val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
                                 SymphonyItemData.setString(slotItem, "set_id", setId)
                                 target.updateInventory()
                                 AttributeCalculator.markDirty(target)
-                                ctx.reply("§a已标记 $slotName 为套装 $setId")
+                                ctx.reply("§a已标记为套装 $setId")
                             }
                             "unmark" -> {
-                                val slotName = a2.uppercase()
-                                val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName")
+                                // 支持：/sym item set unmark 或 /sym item set unmark <槽位>
+                                val slotItem = if (a2.isNotEmpty()) {
+                                    pickSlot(target, a2.uppercase()) ?: return@command ctx.reply("§c无效装备槽: ${a2.uppercase()} (可选: ${SLOT_NAMES.joinToString()})")
+                                } else {
+                                    item
+                                }
                                 SymphonyItemData.remove(slotItem, "set_id")
                                 target.updateInventory()
                                 AttributeCalculator.markDirty(target)
