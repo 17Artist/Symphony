@@ -81,6 +81,17 @@ object ReactionSystem {
             PlayerDataManager.getData(attacker.uniqueId)?.let {
                 it.persistent.statistics.totalReactionsTriggered++
             }
+            // 元素反应文字反馈
+            val reactionColor = when (reaction.type) {
+                ReactionType.AMPLIFY -> "§6"
+                ReactionType.DEBUFF -> "§5"
+                ReactionType.DOT_AOE -> "§d"
+                ReactionType.CONTROL -> "§b"
+                ReactionType.SPREAD -> "§f"
+                else -> "§e"
+            }
+            attacker.sendMessage("${reactionColor}⚡ 元素反应: ${reaction.displayName}")
+            attacker.sendTitle("", "${reactionColor}${reaction.displayName}", 0, 25, 10)
         }
     }
 

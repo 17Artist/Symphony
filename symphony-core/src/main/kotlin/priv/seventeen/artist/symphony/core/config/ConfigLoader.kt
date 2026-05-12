@@ -574,7 +574,7 @@ object ConfigLoader {
 
                 // 编译脚本条件
                 config.getString("condition")?.let {
-                    AriaCallbackManager.compile("environment:$id:condition", it)
+                    AriaCallbackManager.compileExpression("environment:$id:condition", it, "entity")
                 }
             } catch (e: Exception) {
                 BlinkLog.warn("加载环境定义失败 ${file.name}: ${e.message}")

@@ -152,6 +152,24 @@ object DamageListener {
 
         event.damage = symphonyEvent.finalDamage
 
+        // ═══ 伤害反馈 ActionBar ═══
+        if (attacker is Player) {
+            val sb = StringBuilder()
+            val critMark = if (symphonyEvent.isCritical) " §6✦暴击" else ""
+            sb.append("§f⚔ §c${"%.1f".format(symphonyEvent.finalDamage - symphonyEvent.elementDamages.values.sum())}$critMark")
+            for ((elem, dmg) in symphonyEvent.elementDamages) {
+                if (dmg <= 0) continue
+                sb.append(" ${elementColor(elem)}+${"%.1f".format(dmg)} ${elementName(elem)}")
+            }
+            if (symphonyEvent.elementDamages.isNotEmpty()) {
+                sb.append(" §8| §e总 ${"%.1f".format(symphonyEvent.finalDamage)}")
+            }
+            attacker.spigot().sendMessage(
+                net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                net.md_5.bungee.api.chat.TextComponent(sb.toString())
+            )
+        }
+
         // 吸血
         if (lifesteal > 0 && attacker is LivingEntity) {
             val healAmount = symphonyEvent.finalDamage * lifesteal
@@ -253,5 +271,17 @@ object DamageListener {
             TriggerDispatcher.dispatch(TriggerType.ON_ENTER_COMBAT, entity) {}
         }
         data.runtime.lastCombatActionTime = now
+    }
+
+    private fun elementColor(elem: String): String = when (elem) {
+        "fire" -> "§c"; "ice" -> "§b"; "lightning" -> "§d"; "poison" -> "§a"
+        "holy" -> "§e"; "dark" -> "§8"; "water" -> "§9"; "wind" -> "§f"
+        else -> "§7"
+    }
+
+    private fun elementName(elem: String): String = when (elem) {
+        "fire" -> "火"; "ice" -> "冰"; "lightning" -> "雷"; "poison" -> "毒"
+        "holy" -> "圣"; "dark" -> "暗"; "water" -> "水"; "wind" -> "风"
+        else -> elem
     }
 }
