@@ -651,11 +651,18 @@ object ConfigLoader {
             config.getConfigurationSection("attribute_growth")?.let { sec ->
                 for (key in sec.getKeys(false)) {
                     val sub = sec.getConfigurationSection(key) ?: continue
+                    val formula = sub.getString("formula")
                     growth[key] = LevelManager.GrowthEntry(
                         base = sub.getDouble("base", 0.0),
                         perLevel = sub.getDouble("per_level", 0.0),
-                        formula = sub.getString("formula")
+                        formula = formula
                     )
+                    // 预编译 formula
+                    if (formula != null) {
+                        val ok = AriaCallbackManager.compileExpression("growth_formula:$key", formula, "level")
+                        if (ok) BlinkLog.info("  等级公式 $key 预编译成功")
+                        else BlinkLog.warn("  等级公式 $key 预编译失败: $formula")
+                    }
                 }
             }
             levelManager.attributeGrowth = growth

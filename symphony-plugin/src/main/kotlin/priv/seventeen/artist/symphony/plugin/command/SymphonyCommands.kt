@@ -439,7 +439,12 @@ object SymphonyCommands {
                                 if (flatSum != 0.0) add("§7+§f${"%.2f".format(flatSum)}")
                                 if (pctSum != 0.0) add("§7×§f${"%.1f%%".format(pctSum * 100)}")
                             }.joinToString(" §8· ")
-                            ctx.reply("§8  §7${pid.padEnd(12)} §8→ §f$parts §8(${list.size})")
+                            ctx.reply("§8  §e$pid §8→ §f$parts §8(${list.size})")
+                            // 显示每条来源明细
+                            for (c in list) {
+                                val opStr = if (c.operation == Operation.FLAT) "+" else "×"
+                                ctx.reply("§8    §7$opStr${"%.3f".format(c.value)} §8from §7${c.source}")
+                            }
                         }
                     }
                     ctx.reply("§8  §ffinal §e${"%.3f".format(explain.finalValue)}")
