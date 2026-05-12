@@ -10,6 +10,7 @@ import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.core.affix.AffixManagerImpl
 import priv.seventeen.artist.symphony.core.affix.AffixProcessor
 import priv.seventeen.artist.symphony.core.growth.rune.RuneRegistry
+import priv.seventeen.artist.symphony.core.growth.set.SetManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import java.util.UUID
 
@@ -54,6 +55,7 @@ object TriggerDispatcher {
         }
 
         dispatchRuneTriggers(triggerType, entity, context)
+        dispatchSetTriggers(triggerType, entity, context)
     }
 
     private fun dispatchRuneTriggers(
@@ -77,6 +79,38 @@ object TriggerDispatcher {
                 @Suppress("UNCHECKED_CAST")
                 val actions = (trigger["actions"] as? List<Map<String, Any>>) ?: continue
                 AffixProcessor.executeActions(actions, context, fakeAffix)
+            }
+        }
+    }
+
+    // ── 套装触发器分发 ──
+
+    var setManager: SetManager? = null
+
+    private fun dispatchSetTriggers(
+        triggerType: TriggerType,
+        entity: LivingEntity,
+        context: TriggerContext
+    ) {
+        if (entity !is Player) return
+        val sm = setManager ?: return
+        val activeSets = sm.detectSets(entity)
+        for ((setId, pieceCount) in activeSets) {
+            val bonuses = sm.getActiveBonuses(setId, pieceCount)
+            for (bonus in bonuses) {
+                val triggers = bonus.triggers.filter {
+                    it["type"]?.toString()?.uppercase() == triggerType.id
+                }
+                for (trigger in triggers) {
+                    @Suppress("UNCHECKED_CAST")
+                    val conditions = (trigger["conditions"] as? List<Map<String, Any>>) ?: emptyList()
+                    val params = mapOf<String, Any>("set_id" to setId, "pieces" to pieceCount)
+                    if (!ConditionEvaluator.evaluate(conditions, context, params)) continue
+                    @Suppress("UNCHECKED_CAST")
+                    val actions = (trigger["actions"] as? List<Map<String, Any>>) ?: continue
+                    val fakeAffix = AffixInstance(UUID.randomUUID(), "set:$setId", pieceCount, params)
+                    AffixProcessor.executeActions(actions, context, fakeAffix)
+                }
             }
         }
     }

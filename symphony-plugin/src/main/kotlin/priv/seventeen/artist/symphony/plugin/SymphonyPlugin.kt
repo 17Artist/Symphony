@@ -19,6 +19,7 @@ import priv.seventeen.artist.symphony.core.growth.GrowthManagerImpl
 import priv.seventeen.artist.symphony.core.script.FormulaEngine
 import priv.seventeen.artist.symphony.core.script.SymphonyScriptEngine
 import priv.seventeen.artist.symphony.core.skill.SkillDispatcher
+import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 import priv.seventeen.artist.symphony.core.skill.SkillProviderManagerImpl
 import priv.seventeen.artist.symphony.core.skill.builtin.AriaSkillProvider
 import priv.seventeen.artist.symphony.core.skill.builtin.MythicMobSpawnListener
@@ -87,6 +88,7 @@ object SymphonyPlugin {
 
         growthManager = GrowthManagerImpl()
         growthManager.enhanceManager.loadDefaults()
+        TriggerDispatcher.setManager = growthManager.setManager
 
         AttributeProviderRegistry.register(BaseProvider())
         AttributeProviderRegistry.register(LevelProvider(growthManager.levelManager))

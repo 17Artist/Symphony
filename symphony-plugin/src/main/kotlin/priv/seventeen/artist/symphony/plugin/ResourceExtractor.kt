@@ -13,7 +13,7 @@ object ResourceExtractor {
 
     private val directories = listOf(
         "affixes", "affix-pools", "skills", "sets", "resonances", "runes",
-        "talents", "statuses", "interactions", "environments", "reactions",
+        "talents", "statuses", "interactions", "environments", "reactions", "gems",
         "config",
         "scripts/attributes", "scripts/mechanics", "scripts/formulas",
         "scripts/skills", "scripts/conditions", "scripts/modules"

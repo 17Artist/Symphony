@@ -247,9 +247,11 @@ object ConfigLoader {
                         val pieces = key.toIntOrNull() ?: continue
                         val sub = sec.getConfigurationSection(key) ?: continue
                         val attrs = mutableMapOf<String, SetManager.AttributeBonus>()
-                        sub.getConfigurationSection("attributes")?.let { attrSec ->
-                            for (attrKey in attrSec.getKeys(false)) {
-                                val attrSub = attrSec.getConfigurationSection(attrKey) ?: continue
+                        val attrSec = sub.getConfigurationSection("attributes")
+                            ?: sub.getConfigurationSection("passive_attributes")
+                        attrSec?.let {
+                            for (attrKey in it.getKeys(false)) {
+                                val attrSub = it.getConfigurationSection(attrKey) ?: continue
                                 attrs[attrKey] = SetManager.AttributeBonus(
                                     operation = attrSub.getString("operation") ?: "FLAT",
                                     value = attrSub.getDouble("value", 0.0)
