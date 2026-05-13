@@ -32,12 +32,15 @@ class LevelProvider(private val levelManager: LevelManager) : IAttributeProvider
                 try {
                     val callbackId = "growth_formula:$attrId"
                     if (!AriaCallbackManager.has(callbackId)) {
-                        AriaCallbackManager.compileExpression(callbackId, entry.formula, "level")
+                        val ok = AriaCallbackManager.compileExpression(callbackId, entry.formula, "level")
+                        if (!ok) {
+                            BlinkLog.warn("等级成长公式 $attrId 编译失败: ${entry.formula}")
+                        }
                     }
                     val result = AriaCallbackManager.invoke(callbackId, level)
                     val formulaValue = (result as? Number)?.toDouble()
                     if (formulaValue == null) {
-                        BlinkLog.warn("等级成长公式 $attrId 未返回数字 (返回: $result)，使用线性公式")
+                        BlinkLog.warn("等级成长公式 $attrId 未返回数字 (返回类型: ${result?.javaClass?.name}, 值: $result, 原公式: ${entry.formula})，使用线性公式")
                         entry.base + entry.perLevel * (level - 1)
                     } else formulaValue
                 } catch (e: Exception) {

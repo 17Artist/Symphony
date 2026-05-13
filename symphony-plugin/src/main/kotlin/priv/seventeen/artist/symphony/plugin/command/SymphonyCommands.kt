@@ -71,6 +71,31 @@ object SymphonyCommands {
         }
     }
 
+    /**
+     * 把修改后的 ItemStack 回写到对应装备槽。
+     * Bukkit 的 equipment getter 返回副本，必须显式回写才能持久化 PDC 修改。
+     */
+    private fun writeBackSlot(player: Player, slot: String, item: ItemStack) {
+        val eq = player.equipment ?: return
+        when (slot) {
+            "MAIN", "MAIN_HAND", "HAND" -> eq.setItemInMainHand(item)
+            "OFF", "OFF_HAND" -> eq.setItemInOffHand(item)
+            "HELMET", "HEAD" -> eq.helmet = item
+            "CHEST", "CHESTPLATE" -> eq.chestplate = item
+            "LEGS", "LEGGINGS" -> eq.leggings = item
+            "BOOTS", "FEET" -> eq.boots = item
+        }
+        player.updateInventory()
+    }
+
+    /**
+     * 把主手物品的修改回写。等价于 writeBackSlot(player, "MAIN", item)。
+     */
+    private fun writeBackMainHand(player: Player, item: ItemStack) {
+        player.inventory.setItemInMainHand(item)
+        player.updateInventory()
+    }
+
     private val SLOT_NAMES = listOf("MAIN", "OFF", "HELMET", "CHEST", "LEGS", "BOOTS")
 
     fun register() {
@@ -224,8 +249,20 @@ object SymphonyCommands {
                             "activate" -> {
                                 val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune <玩家> activate <符文ID> [等级]")
                                 val level = a3.toIntOrNull() ?: 1
-                                SymphonyPlugin.growthManager.activateRune(target, runeId, level)
-                                ctx.reply("§a已激活符文 $runeId Lv.$level")
+                                // 检查符文是否存在
+                                val def = RuneRegistry.get(runeId)
+                                if (def == null) {
+                                    return@command ctx.reply("§c未知符文: $runeId （可用: ${RuneRegistry.ids().joinToString()}）")
+                                }
+                                // 检查碎片
+                                val required = def.activation.fragmentsRequired[level] ?: 0
+                                val current = SymphonyPlugin.growthManager.getFragments(target, runeId)
+                                if (required > 0 && current < required) {
+                                    return@command ctx.reply("§c碎片不足: 需要 $required, 当前 $current")
+                                }
+                                val ok = SymphonyPlugin.growthManager.activateRune(target, runeId, level)
+                                if (ok) ctx.reply("§a已激活符文 $runeId Lv.$level")
+                                else ctx.reply("§c激活失败（事件被取消或其他错误）")
                             }
                             "fragment" -> {
                                 val runeId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player rune <玩家> fragment <符文ID> [数量]")
@@ -349,18 +386,21 @@ object SymphonyCommands {
                                     val slots = SymphonyPlugin.growthManager.getGemSlots(slotItem)
                                     if (idx >= slots.size) return@command ctx.reply("§c槽位索引越界：该装备仅 ${slots.size} 个宝石槽")
                                     val ok = SymphonyPlugin.growthManager.gemManager.insertGem(target, slotItem, idx, gemId, level)
+                                    writeBackSlot(target, slotName, slotItem)
                                     AttributeCalculator.markDirty(target)
                                     ctx.reply(if (ok) "§a已镶嵌 $gemId Lv.$level 到 $slotName #$idx" else "§c镶嵌失败（槽位被锁/已占用）")
                                 }
                                 "remove" -> {
                                     val idx = a3.toIntOrNull() ?: return@command ctx.reply("§c用法: /sym item gem remove <槽位> <索引>")
                                     val ok = SymphonyPlugin.growthManager.removeGem(slotItem, idx)
+                                    writeBackSlot(target, slotName, slotItem)
                                     AttributeCalculator.markDirty(target)
                                     ctx.reply(if (ok) "§a已移除 $slotName #$idx 的宝石" else "§c移除失败（槽位为空）")
                                 }
                                 "unlock" -> {
                                     val idx = a3.toIntOrNull() ?: return@command ctx.reply("§c用法: /sym item gem unlock <槽位> <索引>")
                                     val ok = SymphonyPlugin.growthManager.unlockSlot(slotItem, idx)
+                                    writeBackSlot(target, slotName, slotItem)
                                     ctx.reply(if (ok) "§a已解锁 $slotName #$idx" else "§c解锁失败")
                                 }
                                 else -> ctx.reply("§c用法: /sym item gem <list|insert|remove|unlock> <槽位> ...")
@@ -379,30 +419,37 @@ object SymphonyCommands {
                                 // 支持两种格式：/sym item set mark <套装ID> 或 /sym item set mark <槽位> <套装ID>
                                 val setId: String
                                 val slotItem: ItemStack
+                                val slotNameForWriteBack: String
                                 if (a3.isNotEmpty() && pickSlot(target, a2.uppercase()) != null) {
                                     // 格式：mark <槽位> <套装ID>
-                                    slotItem = pickSlot(target, a2.uppercase())!!
+                                    slotNameForWriteBack = a2.uppercase()
+                                    slotItem = pickSlot(target, slotNameForWriteBack)!!
                                     setId = a3
                                 } else {
                                     // 格式：mark <套装ID>（默认主手）
                                     setId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym item set mark <套装ID> 或 /sym item set mark <槽位> <套装ID>")
                                     slotItem = item
+                                    slotNameForWriteBack = "MAIN"
                                 }
                                 if (SymphonyPlugin.growthManager.setManager.getDefinition(setId) == null) return@command ctx.reply("§c未知套装: $setId")
                                 SymphonyItemData.setString(slotItem, "set_id", setId)
-                                target.updateInventory()
+                                writeBackSlot(target, slotNameForWriteBack, slotItem)
                                 AttributeCalculator.markDirty(target)
                                 ctx.reply("§a已标记为套装 $setId")
                             }
                             "unmark" -> {
                                 // 支持：/sym item set unmark 或 /sym item set unmark <槽位>
-                                val slotItem = if (a2.isNotEmpty()) {
-                                    pickSlot(target, a2.uppercase()) ?: return@command ctx.reply("§c无效装备槽: ${a2.uppercase()} (可选: ${SLOT_NAMES.joinToString()})")
+                                val slotItem: ItemStack
+                                val slotNameForWriteBack: String
+                                if (a2.isNotEmpty()) {
+                                    slotNameForWriteBack = a2.uppercase()
+                                    slotItem = pickSlot(target, slotNameForWriteBack) ?: return@command ctx.reply("§c无效装备槽: $slotNameForWriteBack (可选: ${SLOT_NAMES.joinToString()})")
                                 } else {
-                                    item
+                                    slotItem = item
+                                    slotNameForWriteBack = "MAIN"
                                 }
                                 SymphonyItemData.remove(slotItem, "set_id")
-                                target.updateInventory()
+                                writeBackSlot(target, slotNameForWriteBack, slotItem)
                                 AttributeCalculator.markDirty(target)
                                 ctx.reply("§a已取消套装标记")
                             }
@@ -410,6 +457,11 @@ object SymphonyCommands {
                         }
                         else -> ctx.reply("§c用法: /sym item <attr|affix|enhance|gem|set> ...")
                     }
+                    // ═══ 关键：把主手物品的修改回写 ═══
+                    // Bukkit 的 inventory.getItemInMainHand() 返回副本，
+                    // 必须显式 setItemInMainHand 才能持久化 PDC 修改。
+                    target.inventory.setItemInMainHand(item)
+                    target.updateInventory()
                 }
                 // ── 通用命令 ──
                 .command("debug", "调试信息", args = arrayOf("?player"), permission = "symphony.admin") { ctx ->
