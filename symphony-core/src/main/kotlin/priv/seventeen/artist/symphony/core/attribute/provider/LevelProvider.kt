@@ -23,7 +23,8 @@ class LevelProvider(private val levelManager: LevelManager) : IAttributeProvider
         if (entity !is Player) return emptyList()
         val growth = levelManager.attributeGrowth
         if (growth.isEmpty()) return emptyList()
-        val data = PlayerDataManager.getData(entity.uniqueId) ?: return emptyList()
+        // 使用 getOrCreate 确保玩家数据存在（兼容刚加入的玩家）
+        val data = PlayerDataManager.getOrCreate(entity.uniqueId)
         val level = data.persistent.level
 
         return growth.mapNotNull { (attrId, entry) ->

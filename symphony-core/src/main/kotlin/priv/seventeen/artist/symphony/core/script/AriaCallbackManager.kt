@@ -41,24 +41,46 @@ object AriaCallbackManager {
 
     /**
      * 编译表达式为回调脚本。自动注入命名参数并包装 return。
-     * 配置中可以直接写 "20 + level * 2"，代码自动转换为：
-     *   val.level = args[0]
-     *   return (20 + level * 2)
+     *
+     * 单行表达式（无 return）：
+     *   输入: "20 + level * 2"
+     *   生成: val.level = args[0]
+     *         return (20 + level * 2)
+     *
+     * 多行脚本（有 return）：
+     *   输入: if (level >= 20) { return 20 + level * 2 } return 10 + level
+     *   生成: val.level = args[0]
+     *         <原文>
+     *
+     * 如果用户已经在脚本中自己绑定了参数（val.level = args[0] 或 var.level = args[0]），
+     * 不再重复注入，避免变量冲突。
+     *
+     * 同时兼容用户写法 `val level = args[0]`（漏写点），自动修正为 `val.level`。
      *
      * @param id 唯一标识
      * @param expression 表达式或完整脚本
      * @param paramNames 参数名列表，按顺序对应 args[0], args[1], ...
      */
     fun compileExpression(id: String, expression: String, vararg paramNames: String): Boolean {
-        val body = expression.trim()
-        val bindings = paramNames.mapIndexed { index, name ->
-            "val.$name = args[$index]"
+        var body = expression.trim()
+
+        // 修正用户可能的误写：val level = args[0] → val.level = args[0]
+        // Aria 要求点号语法
+        for (name in paramNames) {
+            body = body.replace(Regex("\\bval\\s+$name\\s*="), "val.$name =")
+            body = body.replace(Regex("\\bvar\\s+$name\\s*="), "val.$name =")
+        }
+
+        // 只为用户脚本中尚未绑定的参数注入绑定
+        val bindingsToAdd = paramNames.mapIndexedNotNull { index, name ->
+            val alreadyBound = body.contains(Regex("val\\.$name\\s*="))
+            if (alreadyBound) null else "val.$name = args[$index]"
         }.joinToString("\n")
 
         // 如果已经有 return 语句，不再包装
-        val hasReturn = body.contains("return ")
+        val hasReturn = body.contains(Regex("\\breturn\\b"))
         val code = buildString {
-            if (bindings.isNotEmpty()) appendLine(bindings)
+            if (bindingsToAdd.isNotEmpty()) appendLine(bindingsToAdd)
             if (hasReturn) append(body) else append("return ($body)")
         }
         return compile(id, code)
