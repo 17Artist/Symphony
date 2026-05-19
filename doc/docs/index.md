@@ -87,7 +87,7 @@ triggers:
         value: 2000
     actions:
       - type: STATUS_STACK
-        status_id: bleeding
+        status: bleeding
         stacks: 1
       - type: DAMAGE
         amount: "{damage}"

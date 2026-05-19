@@ -1,0 +1,9 @@
+# 力量与体力协同 — 两者同时高于阈值时互相增幅
+id: str_vit_synergy
+type: SYNERGY
+description: "物理攻击力 > 50 且 最大生命值 > 50 时，两者各 +10%"
+attributes:
+  - physical_damage
+  - max_health
+threshold: 50
+bonus: 0.1

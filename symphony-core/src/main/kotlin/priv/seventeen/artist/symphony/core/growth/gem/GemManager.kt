@@ -67,6 +67,15 @@ class GemManager {
         return true
     }
 
+    /**
+     * 为物品初始化指定数量的已解锁宝石槽。
+     * 会覆盖现有的 gem_slots 数据。
+     */
+    fun initSlots(item: ItemStack, count: Int) {
+        val slots = (0 until count.coerceIn(1, 6)).map { GemSlot(it, null, 0, false) }
+        saveGemSlots(item, slots)
+    }
+
     private fun saveGemSlots(item: ItemStack, slots: List<GemSlot>) {
         val data = slots.map { GemSlotData(it.index, it.gemId, it.gemLevel, it.locked) }
         SymphonyItemData.setString(item, "gem_slots", gson.toJson(data))

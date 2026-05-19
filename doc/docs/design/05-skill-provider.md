@@ -96,23 +96,18 @@ levels:
   1:
     damage: 30
     burn_duration: 2
-    radius: 3
   2:
     damage: 50
     burn_duration: 3
-    radius: 3.5
   3:
     damage: 75
     burn_duration: 4
-    radius: 4
   4:
     damage: 100
     burn_duration: 5
-    radius: 4.5
   5:
     damage: 150
     burn_duration: 6
-    radius: 5
 actions:
   - type: DAMAGE
     amount: "{damage}"
@@ -123,7 +118,6 @@ actions:
     duration: "{burn_duration}"
     amplifier: 0
     target: TRIGGER_TARGET
-    invert: true
   - type: PARTICLE
     particle: FLAME
     count: 30
@@ -257,6 +251,31 @@ MySkill:
     - symphony_buff{id=physical_damage;op=flat;value=10;duration=200} @self
 ```
 
+### 4.5 MythicMobs 怪物属性与虚拟词条
+
+MythicMobs 怪物可以在 mob 配置中声明 `Symphony:` 段，为非玩家实体附加属性和虚拟词条：
+
+```yaml
+# MythicMobs mob 配置
+BanditBoss:
+  Type: ZOMBIE
+  Health: 200
+  Symphony:
+    attributes:
+      physical_damage: 40
+      physical_defense: 20
+      critical_chance: 15%
+    affixes:
+      - bleed_on_hit
+      - { id: fire_aura, level: 2 }
+```
+
+工作原理：
+- `MythicMobSpawnListener` 监听 `MythicMobSpawnEvent`，解析 `Symphony:` 段
+- 属性通过 `MythicMobAttributeProvider`（优先级 150）提供给属性计算引擎
+- 虚拟词条存储在内存中（`MythicMobDataStore`），触发器分发时会收集这些词条
+- 怪物死亡时自动清理数据
+
 ## 5. 词条中的技能调用配置
 
 ```yaml
@@ -305,5 +324,5 @@ class MySkillProvider : ISkillProvider {
 }
 
 // 注册
-SymphonyAPI.getSkillProviderManager().register(MySkillProvider())
+SymphonyAPI.getInstance().getSkillProviderManager().registerProvider(MySkillProvider())
 ```

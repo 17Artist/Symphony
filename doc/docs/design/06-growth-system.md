@@ -6,7 +6,7 @@
 
 | 子系统  | 说明                 | 属性来源优先级 |
 |------|--------------------|---------|
-| 等级系统 | 经验升级，每级提供基础属性成长    | 100     |
+| 等级系统 | 经验升级，每级提供基础属性成长    | 150     |
 | 宝石系统 | 镶嵌到装备槽位，提供固定属性加成   | 300     |
 | 符文系统 | 收集碎片激活，提供被动效果和触发效果 | 400     |
 | 强化系统 | 强化装备提升基础属性倍率       | 500     |
@@ -49,22 +49,6 @@ level:
     mana_regen:
       base: 1
       per_level: 0.1
-  
-  # 经验来源配置
-  exp_sources:
-    mob_kill:
-      enabled: true
-      formula: |
-        val.mobLevel = args[0]
-        val.playerLevel = args[1]
-        val.baseExp = args[2]
-        val.diff = playerLevel - mobLevel
-        if (diff > 10) { return 0 }
-        return baseExp * math.max(0.1, 1 - diff * 0.05)
-    quest_reward:
-      enabled: true
-    command:
-      enabled: true
   
   # 升级特效
   effects:
@@ -117,6 +101,7 @@ class LevelManager {
 
 ```yaml
 # gems/ruby.yml
+# 注：以下 display_name/description/material/custom_model_data/lore 仅作展示参考，当前版本不被代码使用
 id: ruby
 display_name: "&c红宝石"
 description:
@@ -174,52 +159,29 @@ levels:
         operation: FLAT
         value: 0.2
     lore: "&c+40 物理攻击力 &e+12% 暴击率 +20% 暴击伤害"
-
-# 宝石合成
-synthesis:
-  enabled: true
-  count: 3                    # 3 个同级合成下一级
-  success_rate: 1.0
-  failure_action: "keep"      # keep（保留原石）| destroy（销毁）| downgrade（降级）
 ```
 
 ### 3.2 宝石槽
 
-装备上的宝石槽数据存储在 PDC 中：
+装备上的宝石槽数据存储在物品自定义数据 `gem_slots` 中：
 
 ```json
-{
-  "slots": [
-    { "index": 0, "gem_id": "ruby", "gem_level": 2 },
-    { "index": 1, "gem_id": null },
-    { "index": 2, "locked": true }
-  ]
-}
+[
+  { "index": 0, "gem_id": "ruby", "gem_level": 2, "locked": false },
+  { "index": 1, "gem_id": null, "gem_level": 0, "locked": false },
+  { "index": 2, "gem_id": null, "gem_level": 0, "locked": true }
+]
 ```
+
+初始化规则：
+- 首次解锁时自动创建 3 个锁定槽位（index 0-2）
+- 最多可扩展到 6 个槽位（index 0-5）
+- 可通过 `/sym item gem init <槽位> <数量>` 命令直接初始化指定数量的已解锁槽位
 
 宝石槽操作：
-- 镶嵌：将宝石物品放入空槽
-- 拆卸：取出已镶嵌的宝石（可配置是否消耗道具）
-- 解锁：使用解锁道具开启锁定槽位
-
-### 3.3 宝石合成（规划中）
-
-> ⚠️ 宝石合成功能当前处于规划阶段，尚未实现。以下为设计规范。
-
-```yaml
-# config/gem-synthesis.yml
-synthesis:
-  default_count: 3
-  default_success_rate: 1.0
-  
-  # 合成 UI
-  gui:
-    title: "&8宝石合成"
-    size: 27
-    input_slots: [10, 11, 12]
-    output_slot: 15
-    confirm_slot: 22
-```
+- 镶嵌：将宝石放入空的已解锁槽位
+- 拆卸：取出已镶嵌的宝石
+- 解锁：开启锁定槽位
 
 ## 4. 符文系统
 
@@ -233,9 +195,6 @@ description:
   - "&7生命值越低，攻击力越高"
 max_level: 3
 category: combat
-icon:
-  material: BLAZE_POWDER
-  custom_model_data: 3001
 
 # 激活条件
 activation:
@@ -293,26 +252,9 @@ triggers:
 ### 4.2 符文碎片
 
 符文碎片是激活符文的材料，可通过以下方式获取：
-- 击杀怪物掉落
-- 副本奖励
-- 任务奖励
-- 命令给予
-
-```yaml
-# config/rune-fragments.yml
-fragment_sources:
-  mob_kill:
-    enabled: true
-    base_chance: 0.05
-    luck_influence: 0.01
-    fragment_pool:
-      - rune: berserker
-        weight: 100
-      - rune: guardian
-        weight: 80
-      - rune: arcane
-        weight: 60
-```
+- 命令给予（`/sym player rune fragment <玩家> <符文ID> [数量]`）
+- API 调用（`RuneManager.addFragments(player, runeId, amount)`）
+- 其他插件通过 API 集成
 
 ## 5. 强化系统
 
@@ -384,61 +326,25 @@ enhancement:
       multiplier: 3.50
       success_rate: 0.03
       destroy_rate: 0.40
+  
+  # 保护道具（格式为 "MATERIAL" 或 "MATERIAL:CMD"）
+  protections:
+    prevent_destroy: "PAPER:4010"
+    prevent_downgrade: "PAPER:4011"
+    success_rate_bonus: "EMERALD:4012"
+  
   on_failure:
-    downgrade: true
     downgrade_levels: 1
-  
-  # 强化材料
-  materials:
-    basic_stone:
-      display_name: "&f强化石"
-      material: FLINT
-      custom_model_data: 4001
-      applicable_levels: [1, 10]
-    advanced_stone:
-      display_name: "&a高级强化石"
-      material: FLINT
-      custom_model_data: 4002
-      applicable_levels: [6, 15]
-  
-  # 保护道具
-  protection_items:
-    anti_destroy:
-      display_name: "&c防爆符"
-      material: PAPER
-      custom_model_data: 4010
-      effect: "prevent_destroy"
-    anti_downgrade:
-      display_name: "&e防降符"
-      material: PAPER
-      custom_model_data: 4011
-      effect: "prevent_downgrade"
-    luck_stone:
-      display_name: "&a幸运石"
-      material: EMERALD
-      custom_model_data: 4012
-      effect: "success_rate_bonus"
-      value: 0.10
-
-> 保护道具匹配支持 `"MATERIAL"` 或 `"MATERIAL:CMD"` 格式。例如 `"PAPER:4010"` 匹配 Material=PAPER 且 CustomModelData=4010。
-> 强化成功率计算公式：`effectiveRate = baseRate + successBonus + luck * 0.01`，其中 luck 为玩家 `luck` 属性值。
-  
-  # 成功率公式（可自定义）
-  success_rate_formula: |
-    val.baseRate = args[0]
-    val.luck = args[1]
-    val.bonusRate = args[2]
-    return math.min(1.0, baseRate + luck * 0.01 + bonusRate)
   
   # 特效
   effects:
-    success_sound: "entity.player.levelup"
-    success_particle: "VILLAGER_HAPPY"
-    failure_sound: "entity.villager.no"
-    failure_particle: "SMOKE_NORMAL"
-    destroy_sound: "entity.item.break"
-    destroy_particle: "EXPLOSION_NORMAL"
+    success_sound: entity.player.levelup
+    failure_sound: entity.villager.no
+    destroy_sound: entity.item.break
 ```
+
+> 保护道具匹配支持 `"MATERIAL"` 或 `"MATERIAL:CMD"` 格式。例如 `"PAPER:4010"` 匹配 Material=PAPER 且 CustomModelData=4010。
+> 强化成功率计算：`effectiveRate = baseRate + successBonus + luck * 0.01`，其中 `luck` 为玩家 `luck` 属性值，`successBonus` 由 `success_rate_bonus` 保护道具提供。
 
 ### 5.2 强化逻辑
 

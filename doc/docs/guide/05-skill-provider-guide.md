@@ -40,24 +40,18 @@ levels:
     slow_duration: 80
   3:
     damage: 100
-    radius: 6
     slow_duration: 100
-
-# 目标选择
-target_selector:
-  type: NEARBY_ENEMIES
-  radius: "{radius}"
 
 actions:
   - type: DAMAGE
     amount: "{damage}"
     damage_type: ice
-    target: ALL_TARGETS
+    target: NEARBY_ENEMIES
   - type: POTION
     effect: SLOW
     duration: "{slow_duration}"
     amplifier: 1
-    target: ALL_TARGETS
+    target: NEARBY_ENEMIES
   - type: PARTICLE
     particle: SNOWFLAKE
     count: 50
@@ -84,17 +78,16 @@ triggers:
         level: 2
 ```
 
-### 2.3 目标选择器
+### 2.3 目标类型
 
 | 类型               | 说明     | 参数               |
 |------------------|--------|------------------|
 | `TRIGGER_TARGET` | 触发器目标  | —                |
+| `TRIGGER_ATTACKER` | 触发器攻击者 | —              |
 | `SELF`           | 施法者自身  | —                |
 | `NEARBY_ENEMIES` | 附近敌对实体 | `radius`         |
 | `NEARBY_ALLIES`  | 附近友方实体 | `radius`         |
 | `NEARBY_ALL`     | 附近所有实体 | `radius`         |
-| `LINE_OF_SIGHT`  | 视线方向实体 | `range`, `width` |
-| `CONE`           | 锥形范围   | `range`, `angle` |
 
 ## 3. Aria 脚本技能
 
@@ -241,7 +234,7 @@ class MySkillProvider : ISkillProvider {
 }
 
 // 注册
-SymphonyAPI.getInstance().getSkillProviderManager().register(MySkillProvider())
+SymphonyAPI.getInstance().getSkillProviderManager().registerProvider(MySkillProvider())
 ```
 
 注册后即可在词条中使用：

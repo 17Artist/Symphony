@@ -35,91 +35,81 @@ Symphony 的 6 个划时代系统逐一解决这些问题。
 | `CONFLICT`   | 互斥衰减 — 两个属性同时存在时互相削弱          | 重甲防御 和 闪避率 同时存在时，闪避率 -30%         |
 | `AMPLIFY`    | 条件增幅 — 满足条件时属性获得额外倍率          | 生命值 < 30% 时，物理攻击力 ×1.5（狂战士）       |
 
-### 1.3 脚本定义
+### 1.3 YAML 配置
 
-```aria
-// scripts/attributes/interactions.aria
+交互定义统一走 `interactions/*.yml`，由 `ConfigLoader.loadInteractions` 装配到 `InteractionNetwork`。同一份文件可以声明多条关系，或者一个文件一条，按项目约定来就行。字段列表：
 
-// ── 溢出转化 ──
-symphony.interaction.register({
-    'id': 'crit_overflow',
-    'type': 'OVERFLOW',
-    'source': 'critical_chance',       // 源属性
-    'target': 'critical_damage',       // 目标属性
-    'threshold': 1.0,                  // 溢出阈值（100% 暴击率）
-    'ratio': 0.5,                      // 转化比例（1% 暴击率溢出 → 0.5% 暴击伤害）
-    'description': '暴击率超过 100% 时，溢出部分转化为暴击伤害'
-})
+| 字段            | 适用类型                                    | 说明                                    |
+|---------------|-----------------------------------------|---------------------------------------|
+| `id`          | 全部                                      | 唯一标识                                  |
+| `type`        | 全部                                      | 上表中的 7 种枚举之一                          |
+| `source`      | OVERFLOW / CONVERSION / THRESHOLD       | 源属性                                   |
+| `target`      | OVERFLOW / CONVERSION / AMPLIFY         | 目标属性                                  |
+| `threshold`   | OVERFLOW / THRESHOLD / SYNERGY          | 触发阈值                                  |
+| `ratio`       | OVERFLOW / CONVERSION                   | 转化比例                                  |
+| `bonus`       | SYNERGY                                 | 协同加成（百分比，0.10 = +10%）                 |
+| `attributes`  | SYNERGY                                 | 参与协同的属性列表                             |
+| `attribute_a` | CONFLICT                                | 触发方属性                                 |
+| `attribute_b` | CONFLICT                                | 被削弱属性                                 |
+| `threshold_a` | CONFLICT                                | 触发方阈值                                 |
+| `penalty_b`   | CONFLICT                                | 被削弱属性的削减比例                            |
+| `multiplier`  | AMPLIFY / CONVERSION / DIMINISH 等       | 效果倍率（语义视 type 而定）                    |
+| `description` | 全部                                      | 用于 UI 展示                              |
 
-// ── 持续转化 ──
-symphony.interaction.register({
-    'id': 'int_to_mana',
-    'type': 'CONVERSION',
-    'source': 'intelligence',
-    'target': 'max_mana',
-    'ratio': 5.0,                      // 每 1 点智力 → 5 点法力
-    'description': '每点智力提供 5 点最大法力'
-})
-
-// ── 阈值突变 ──
-symphony.interaction.register({
-    'id': 'attack_speed_double_strike',
-    'type': 'THRESHOLD',
-    'source': 'attack_speed',
-    'threshold': 2.0,
-    'effect': -> {
-        // 解锁效果：注册一个隐藏的触发器
-        val.entity = args[0]
-        symphony.trigger.registerDynamic(entity, {
-            'type': 'ON_ATTACK',
-            'conditions': [{ 'type': 'CHANCE', 'value': 30 }],
-            'actions': [{
-                'type': 'DAMAGE',
-                'amount': 'trigger_damage * 0.5',
-                'damage_type': 'physical',
-                'target': 'TRIGGER_TARGET'
-            }]
-        })
-    },
-    'description': '攻击速度 ≥ 2.0 时：30% 概率触发额外一击（50% 伤害）'
-})
-
-// ── 协同增幅 ──
-symphony.interaction.register({
-    'id': 'str_vit_synergy',
-    'type': 'SYNERGY',
-    'attributes': ['strength', 'vitality'],
-    'threshold': 50,                   // 两者都 > 50 时激活
-    'bonus': 0.10,                     // 各 +10%
-    'description': '力量和体力同时超过 50 时，两者各 +10%'
-})
-
-// ── 互斥衰减 ──
-symphony.interaction.register({
-    'id': 'heavy_armor_dodge_conflict',
-    'type': 'CONFLICT',
-    'attribute_a': 'physical_defense',
-    'attribute_b': 'dodge',
-    'threshold_a': 100,                // 防御 > 100 时触发
-    'penalty_b': 0.30,                // 闪避率 -30%
-    'description': '重甲防御超过 100 时，闪避率降低 30%'
-})
-
-// ── 条件增幅 ──
-symphony.interaction.register({
-    'id': 'berserker_rage',
-    'type': 'AMPLIFY',
-    'target': 'physical_damage',
-    'condition': -> {
-        val.entity = args[0]
-        val.hp = symphony.entity.getHealth(entity)
-        val.maxHp = symphony.attribute.get(entity, 'max_health')
-        return hp / maxHp < 0.3
-    },
-    'multiplier': 1.5,
-    'description': '生命值低于 30% 时，物理攻击力 ×1.5'
-})
+```yaml
+# interactions/crit_overflow.yml — 溢出转化
+id: crit_overflow
+type: OVERFLOW
+source: critical_chance
+target: critical_damage
+threshold: 1.0          # 100% 暴击率以上才溢出
+ratio: 0.5              # 1% 暴击率溢出 → 0.5% 暴击伤害
+description: "暴击率超过 100% 时，溢出部分转化为暴击伤害"
 ```
+
+```yaml
+# interactions/int_to_mana.yml — 持续转化
+id: int_to_mana
+type: CONVERSION
+source: intelligence
+target: max_mana
+ratio: 5.0              # 每 1 点智力 → 5 点法力
+description: "每点智力提供 5 点最大法力"
+```
+
+```yaml
+# interactions/str_vit_synergy.yml — 协同增幅
+id: str_vit_synergy
+type: SYNERGY
+attributes:
+  - strength
+  - vitality
+threshold: 50           # 两者同时 > 50 才激活
+bonus: 0.10             # 各 +10%
+description: "力量和体力同时超过 50 时，两者各 +10%"
+```
+
+```yaml
+# interactions/heavy_armor_dodge_conflict.yml — 互斥衰减
+id: heavy_armor_dodge_conflict
+type: CONFLICT
+attribute_a: physical_defense
+attribute_b: dodge
+threshold_a: 100        # 防御 > 100 时触发
+penalty_b: 0.30         # 闪避率 -30%
+description: "重甲防御超过 100 时，闪避率降低 30%"
+```
+
+```yaml
+# interactions/berserker_rage.yml — 条件增幅
+id: berserker_rage
+type: AMPLIFY
+target: physical_damage
+multiplier: 1.5
+description: "生命值低于 30% 时，物理攻击力 ×1.5"
+```
+
+THRESHOLD 和 AMPLIFY 如果需要条件判断或副作用，可以在 YAML 里追加 `condition` 或 `effect` 字段，内容是 Aria 代码片段，`ConfigLoader` 会把它编译到 `AriaCallbackManager`（key：`interaction:<id>:condition` / `interaction:<id>:effect`）。脚本里读 `args[0]` 拿到实体，保持和其他系统的回调约定一致。
 
 ### 1.4 计算管线集成
 
@@ -150,149 +140,143 @@ clamp + 缓存
 
 ### 2.2 元素附着（Elemental Aura）
 
-实体可以被「附着」元素状态，持续一定时间。附着有「量」的概念（类似原神的元素量）：
+实体可以被「附着」元素状态，持续一定时间。附着有「量」的概念（类似原神的元素量）。元素池、默认附着时长、最大附着数、衰减速率等参数由 `ElementSystem` 在内部维护，脚本和配置只需要调用附着 API：
 
 ```aria
-// scripts/mechanics/element_aura.aria
+// 给目标附着 1.0 量的火元素
+symphony.element.applyAura(target, 'fire', 1.0)
 
-// 注册元素附着系统
-symphony.element.registerAura({
-    'elements': ['fire', 'ice', 'lightning', 'poison', 'holy', 'dark', 'water', 'wind'],
-    'default_duration': 8000,          // 默认附着持续 8 秒
-    'default_gauge': 1.0,              // 默认元素量 1.0
-    'max_auras': 2,                    // 同时最多 2 种元素附着
-    'decay_rate': 0.125                // 每秒衰减 0.125 元素量
-})
+// 查询已有的元素附着
+val.aura = symphony.element.getAura(target, 'fire')
+
+// 主动消除某个元素附着
+symphony.element.removeAura(target, 'fire')
+
+// 列出目标身上的所有元素附着
+val.all = symphony.element.getAllAuras(target)
 ```
 
 ### 2.3 反应定义
 
+元素反应通过 `reactions/*.yml` 配置，由 `ConfigLoader.loadReactions` 装配到 `ReactionSystem`。`ReactionType` 枚举包含：`AMPLIFY`（倍率反应）、`DEBUFF`（减益反应）、`DOT_AOE`（持续范围伤害）、`CONTROL`（控制反应）、`SPREAD`（扩散反应）。字段说明：
+
+| 字段              | 说明                                       |
+|-----------------|------------------------------------------|
+| `id`            | 反应唯一标识                                   |
+| `display_name`  | 显示名                                      |
+| `trigger`       | 触发元素（主动命中的元素）                            |
+| `aura`          | 底层元素（目标身上已附着的元素），`*` 表示匹配任意              |
+| `type`          | 上述反应类型枚举                                 |
+| `multiplier`    | 效果倍率（视 type 语义）                          |
+| `gauge_consume` | 消耗的元素量（默认 0.5）                           |
+| `particle`      | 反应触发时的粒子效果                               |
+| `sound`         | 反应触发时的音效                                 |
+| `radius`        | 作用半径（DOT_AOE / SPREAD）                   |
+| `ticks`         | 持续跳数（DOT_AOE）                            |
+| `interval`      | 每跳间隔毫秒（DOT_AOE）                          |
+| `reverse`       | 反向反应配置块（`id` + `multiplier`），用于水→火底等对称写法 |
+| `on_tick`       | Aria 脚本，DOT_AOE 每跳执行                     |
+
+```yaml
+# reactions/vaporize.yml — 蒸发（火 + 水）倍率反应
+id: vaporize
+display_name: "蒸发"
+trigger: fire
+aura: water
+type: AMPLIFY
+multiplier: 2.0
+gauge_consume: 0.5
+particle: CLOUD
+sound: block.fire.extinguish
+reverse:
+  id: vaporize_reverse
+  multiplier: 1.5          # 反向（水触发火底）只有 1.5 倍
+```
+
+```yaml
+# reactions/melt.yml — 融化（火 + 冰）
+id: melt
+display_name: "融化"
+trigger: fire
+aura: ice
+type: AMPLIFY
+multiplier: 2.0
+reverse:
+  id: melt_reverse
+  multiplier: 1.5
+```
+
+```yaml
+# reactions/superconduct.yml — 超导（冰 + 雷）减防反应
+id: superconduct
+display_name: "超导"
+trigger: lightning
+aura: ice
+type: DEBUFF
+particle: ELECTRIC_SPARK
+sound: entity.lightning_bolt.impact
+```
+
+```yaml
+# reactions/electro_charged.yml — 感电（水 + 雷）持续 AOE
+id: electro_charged
+display_name: "感电"
+trigger: lightning
+aura: water
+type: DOT_AOE
+ticks: 6
+interval: 1000
+radius: 3.0
+on_tick: |
+  val.target = args[0]
+  val.damage = 20 + symphony.attribute.get(args[1], 'elemental_mastery') * 1.5
+  symphony.entity.damage(target, damage, 'lightning')
+```
+
+```yaml
+# reactions/frozen.yml — 冻结（水 + 冰）控制反应
+id: frozen
+display_name: "冻结"
+trigger: ice
+aura: water
+type: CONTROL
+particle: SNOWFLAKE
+```
+
+```yaml
+# reactions/swirl.yml — 扩散（风 + 任意）
+id: swirl
+display_name: "扩散"
+trigger: wind
+aura: "*"              # 匹配任意底层元素
+type: SPREAD
+radius: 5.0
+```
+
+在 Aria 脚本中想手动触发一次反应（比如技能或词条 Action 里），可以调用：
+
 ```aria
-// scripts/mechanics/reactions.aria
-
-// ── 蒸发（火 + 水）— 倍率反应 ──
-symphony.element.registerReaction({
-    'id': 'vaporize',
-    'display_name': '蒸发',
-    'trigger': 'fire',                 // 触发元素
-    'aura': 'water',                   // 底层元素
-    'type': 'AMPLIFY',                 // 倍率型反应
-    'multiplier': 2.0,                 // 触发攻击伤害 ×2.0
-    'gauge_consume': 0.5,              // 消耗 0.5 元素量
-    'reverse': {                       // 反向反应（水触发火底）
-        'id': 'vaporize_reverse',
-        'multiplier': 1.5              // 反向只有 1.5 倍
-    },
-    'particle': 'CLOUD',
-    'sound': 'block.fire.extinguish'
-})
-
-// ── 融化（火 + 冰）— 倍率反应 ──
-symphony.element.registerReaction({
-    'id': 'melt',
-    'display_name': '融化',
-    'trigger': 'fire',
-    'aura': 'ice',
-    'type': 'AMPLIFY',
-    'multiplier': 2.0,
-    'reverse': { 'id': 'melt_reverse', 'multiplier': 1.5 }
-})
-
-// ── 超导（冰 + 雷）— 减防反应 ──
-symphony.element.registerReaction({
-    'id': 'superconduct',
-    'display_name': '超导',
-    'trigger': 'lightning',
-    'aura': 'ice',
-    'type': 'DEBUFF',
-    'effect': -> {
-        val.target = args[0]
-        val.triggerLevel = args[1]     // 触发者的元素精通
-        // 降低目标物理防御 40%，持续 12 秒
-        symphony.attribute.buff(target, 'physical_defense', 'PERCENT', -0.4, 12000)
-        // 范围 AOE 伤害
-        val.nearby = symphony.entity.getNearbyHostile(target, 3.0)
-        val.damage = 50 + triggerLevel * 2
-        nearby.forEach(-> {
-            symphony.entity.damage(args[0], damage, 'lightning')
-        })
-    },
-    'particle': 'ELECTRIC_SPARK',
-    'sound': 'entity.lightning_bolt.impact'
-})
-
-// ── 感电（水 + 雷）— 持续 AOE ──
-symphony.element.registerReaction({
-    'id': 'electro_charged',
-    'display_name': '感电',
-    'trigger': 'lightning',
-    'aura': 'water',
-    'type': 'DOT_AOE',                 // 持续范围伤害
-    'ticks': 6,                        // 跳 6 次
-    'interval': 1000,                  // 每秒一跳
-    'damage_per_tick': -> {
-        val.triggerLevel = args[0]
-        return 20 + triggerLevel * 1.5
-    },
-    'radius': 3.0,
-    'transfers_aura': true             // 感电会把水元素传播给范围内敌人
-})
-
-// ── 冻结（水 + 冰）— 控制反应 ──
-symphony.element.registerReaction({
-    'id': 'frozen',
-    'display_name': '冻结',
-    'trigger': 'ice',
-    'aura': 'water',
-    'type': 'CONTROL',
-    'effect': -> {
-        val.target = args[0]
-        val.duration = 3000 + args[1] * 100  // 基础 3 秒 + 元素精通加成
-        symphony.entity.freeze(target, duration)
-        symphony.effect.particle(target, 'SNOWFLAKE', 30)
-    }
-})
-
-// ── 扩散（风 + 任意元素）— 传播反应 ──
-symphony.element.registerReaction({
-    'id': 'swirl',
-    'display_name': '扩散',
-    'trigger': 'wind',
-    'aura': '*',                       // 匹配任意元素
-    'type': 'SPREAD',
-    'radius': 5.0,
-    'effect': -> {
-        val.target = args[0]
-        val.auraElement = args[1]      // 被扩散的元素类型
-        val.triggerLevel = args[2]
-        // 将元素附着传播给范围内所有敌人
-        val.nearby = symphony.entity.getNearbyHostile(target, 5.0)
-        nearby.forEach(-> {
-            symphony.element.applyAura(args[0], auraElement, 0.5, 6000)
-            symphony.entity.damage(args[0], 30 + triggerLevel, auraElement)
-        })
-    }
-})
+// 主动尝试触发反应：返回反应 ID 或 none
+val.reactionId = symphony.element.tryReaction(target, 'fire', 1.0)
 ```
 
 ### 2.4 元素精通属性
 
-新增一个核心属性「元素精通」，影响所有元素反应的效果：
+新增一个核心属性「元素精通」，影响所有元素反应的效果。属性定义使用 `@attribute` 注解式脚本：
 
 ```aria
 // scripts/attributes/combat.aria 中追加
-symphony.attribute.register({
-    'id': 'elemental_mastery',
-    'display_name': '元素精通',
-    'description': '提升元素反应的伤害和效果',
-    'category': 'combat',
-    'default_value': 0.0,
-    'format': 'integer',
-    'priority': 25
-})
+@attribute('elemental_mastery')
+@displayName('元素精通')
+@description('提升元素反应的伤害和效果')
+@category('combat')
+@default(0.0)
+@format('integer')
+@priority(25)
+class ElementalMastery {}
 ```
 
-元素精通对反应的加成公式（脚本可配）：
+元素精通对反应的加成公式（脚本内常量，反应计算阶段由 `ReactionSystem` 使用）：
 
 ```aria
 // 倍率反应加成：元素精通 100 → +15% 反应倍率
@@ -310,28 +294,14 @@ val.transformBonus = -> {
 
 ### 2.5 与 Minecraft 环境联动
 
-```aria
-// scripts/mechanics/environment.aria
+元素附着可以和「动态环境属性」系统（见 §六）配合：在 `environments/*.yml` 里声明一条 `WEATHER` 或 `IN_WATER` 修正器时，再用一段 Aria 脚本（例如技能的 `on_tick` 或词条的 `ON_TICK` 触发器）周期性地给实体附着对应元素即可。示例思路：
 
-// 雨天：所有户外实体自动附着水元素
-symphony.environment.register({
-    'id': 'rain_water_aura',
-    'condition': -> {
-        val.entity = args[0]
-        val.world = symphony.entity.getWorld(entity)
-        return symphony.world.isRaining(world) && symphony.entity.isOutdoor(entity)
-    },
-    'effect': -> {
-        val.entity = args[0]
-        symphony.element.applyAura(entity, 'water', 0.3, 2000)
-    },
-    'interval': 40                     // 每 2 秒检查一次
-})
+- 雨天 + 户外 → 每 2 秒给实体附 0.3 水元素
+- 在水中 → 持续低量水元素附着
+- 雪地生物群系 → 低量冰元素附着
+- 靠近岩浆 → 低量火元素附着
 
-// 站在岩浆旁：附着火元素
-// 站在水中：附着水元素
-// 雪地生物群系：附着冰元素
-```
+附着逻辑由脚本调用 `symphony.element.applyAura(entity, element, gauge)` 完成，环境修正器负责在属性面上做加减法（火伤加成、冰抗降低等）。
 
 ## 三、词条共鸣系统（Affix Resonance System）
 
@@ -350,7 +320,6 @@ display_name: "&c&l火焰精通"
 description:
   - "&7集齐 3 个火系词条时激活"
   - "&c所有火焰伤害 +30%"
-  - "&c火焰反应倍率 +0.5"
 
 # 激活条件
 condition:
@@ -358,32 +327,15 @@ condition:
   tag: "fire"                        # 标签名
   count: 3                           # 需要 3 个
 
-# 共鸣效果
+# 共鸣效果（当前仅 attributes 会被 ConfigLoader 装配）
 effects:
   attributes:
     fire_damage:
       operation: PERCENT
       value: 0.30
-  reactions:
-    fire_amplify_bonus: 0.5          # 火焰倍率反应额外 +0.5
-  triggers:
-    - type: ON_ATTACK
-      conditions:
-        - type: CHANCE
-          value: 10
-      actions:
-        - type: SCRIPT
-          code: |
-            // 火焰精通特效：攻击时 10% 概率引爆目标身上的火元素
-            val.target = server.trigger_victim
-            val.aura = symphony.element.getAura(target, 'fire')
-            if (aura != none) {
-                val.damage = aura.gauge * 100
-                symphony.entity.damage(target, damage, 'fire')
-                symphony.element.removeAura(target, 'fire')
-                symphony.effect.particle(target, 'EXPLOSION_LARGE', 3)
-            }
 ```
+
+> 目前 `ConfigLoader.loadResonances` 只读取 `effects.attributes` 一项。若需要「共鸣激活时额外挂触发器/反应加成/质变机制」这类进阶联动，走词条 triggers 或 Aria 脚本回调去实现，避免在共鸣 YAML 里堆叠未被装配的字段。
 
 ### 3.3 共鸣条件类型
 
@@ -406,7 +358,6 @@ display_name: "&6&l元素和谐"
 description:
   - "&7同时拥有 3 种不同元素的词条时激活"
   - "&6元素精通 +100"
-  - "&6所有元素反应冷却 -50%"
 
 condition:
   type: MULTI_TAG
@@ -421,8 +372,6 @@ effects:
     elemental_mastery:
       operation: FLAT
       value: 100
-  special:
-    reaction_cooldown_reduction: 0.5
 ```
 
 ```yaml
@@ -431,25 +380,20 @@ id: berserker_set
 display_name: "&4&l狂战士之魂"
 description:
   - "&7同时拥有「嗜血」「狂怒」「不屈」三个词条"
-  - "&4生命值低于 50% 时攻击力翻倍"
-  - "&4击杀回复 20% 最大生命值"
+  - "&4物理伤害 +40%，生命值上限 +20%"
 
 condition:
   type: AFFIX_ID_SET
   affix_ids: ["bloodthirst", "fury", "unyielding"]
 
 effects:
-  interactions:
-    - type: AMPLIFY
-      target: physical_damage
-      condition: "health_below_50"
-      multiplier: 2.0
-  triggers:
-    - type: ON_KILL
-      actions:
-        - type: HEAL
-          amount: "max_health * 0.2"
-          target: SELF
+  attributes:
+    physical_damage:
+      operation: PERCENT
+      value: 0.40
+    max_health:
+      operation: PERCENT
+      value: 0.20
 ```
 
 ### 3.5 共鸣 UI 提示
@@ -474,88 +418,74 @@ effects:
 
 ### 4.2 天赋门定义
 
-```aria
-// scripts/attributes/talent_gates.aria
+天赋门走 `talents/*.yml`，由 `ConfigLoader.loadTalents` 装配到 `TalentManager`。字段：
 
-// ── 暴击率 50% 阈值：解锁「精准打击」 ──
-symphony.talent.register({
-    'id': 'precise_strike',
-    'display_name': '精准打击',
-    'description': '暴击率 ≥ 50% 时解锁：暴击必定无视 20% 防御',
-    'icon': 'DIAMOND_SWORD',
-    'gate': {
-        'attribute': 'critical_chance',
-        'threshold': 0.5,
-        'operator': '>='
-    },
-    'effect': -> {
-        // 暴击时自动附加穿透
-        val.entity = args[0]
-        symphony.trigger.registerDynamic(entity, {
-            'id': 'precise_strike_trigger',
-            'type': 'ON_ATTACK_CRITICAL',
-            'actions': [{
-                'type': 'ATTRIBUTE_BUFF',
-                'attribute': 'penetration',
-                'operation': 'FLAT',
-                'value': 0.2,
-                'duration': 100       // 极短 buff，只影响本次攻击
-            }]
-        })
-    },
-    'on_deactivate': -> {
-        val.entity = args[0]
-        symphony.trigger.removeDynamic(entity, 'precise_strike_trigger')
-    }
-})
+| 字段                   | 说明                                                                 |
+|----------------------|--------------------------------------------------------------------|
+| `id`                 | 唯一标识                                                               |
+| `display_name`       | 显示名                                                                |
+| `description`        | 描述                                                                 |
+| `icon`               | 图标 Material 名（默认 `NETHER_STAR`）                                    |
+| `gate`               | 解锁条件块：`type` = `SINGLE` 或 `AND`；SINGLE 用 `attribute`/`threshold`/`operator`；AND 用 `conditions: [...]` |
+| `passive_attributes` | 激活后挂的被动属性（和词条的 `passive_attributes` 结构一致）                          |
+| `effect`             | Aria 脚本，激活时执行一次（key：`talent:<id>:effect`）                          |
+| `on_deactivate`      | Aria 脚本，从激活转未激活时执行（key：`talent:<id>:on_deactivate`）                |
 
-// ── 生命值 1000 阈值：解锁「不动如山」 ──
-symphony.talent.register({
-    'id': 'immovable',
-    'display_name': '不动如山',
-    'description': '最大生命值 ≥ 1000 时解锁：受到的击退效果减少 80%，受到致命伤害时有 10% 概率保留 1 点生命',
-    'gate': {
-        'attribute': 'max_health',
-        'threshold': 1000,
-        'operator': '>='
-    },
-    'passive_attributes': {
-        'knockback_resistance': { 'operation': 'FLAT', 'value': 0.8 }
-    },
-    'effect': -> {
-        val.entity = args[0]
-        symphony.trigger.registerDynamic(entity, {
-            'id': 'immovable_cheat_death',
-            'type': 'ON_DEATH',
-            'conditions': [{ 'type': 'CHANCE', 'value': 10 }, { 'type': 'COOLDOWN', 'value': 60000 }],
-            'actions': [{
-                'type': 'SCRIPT',
-                'code': "symphony.entity.setHealth(server.trigger_victim, 1)\nsymphony.effect.title(server.trigger_victim, '&c&l不动如山', '&7死亡被抵消', 5, 20, 5)"
-            }]
-        })
-    }
-})
+```yaml
+# talents/precise_strike.yml — 暴击率 50% 阈值
+id: precise_strike
+display_name: "精准打击"
+description: "暴击率 ≥ 50% 时解锁：暴击无视 20% 防御"
+icon: DIAMOND_SWORD
+gate:
+  type: SINGLE
+  attribute: critical_chance
+  threshold: 0.5
+  operator: ">="
+passive_attributes:
+  penetration:
+    operation: FLAT
+    value: 0.20       # 解锁后常驻 20% 穿透
+```
 
-// ── 多属性组合门：力量 + 敏捷 双修 ──
-symphony.talent.register({
-    'id': 'battle_dancer',
-    'display_name': '战舞者',
-    'description': '力量 ≥ 40 且 敏捷 ≥ 40 时解锁：攻击速度加成同时提升物理伤害',
-    'gate': {
-        'type': 'AND',
-        'conditions': [
-            { 'attribute': 'strength', 'threshold': 40, 'operator': '>=' },
-            { 'attribute': 'dexterity', 'threshold': 40, 'operator': '>=' }
-        ]
-    },
-    'effect': -> {
-        // 攻击速度每超过 1.0 的部分，额外提供等量的物理伤害百分比加成
-        val.entity = args[0]
-        val.atkSpd = symphony.attribute.get(entity, 'attack_speed')
-        val.bonus = math.max(0, atkSpd - 1.0)
-        symphony.attribute.modify(entity, 'physical_damage', 'PERCENT', bonus, 'talent:battle_dancer')
-    }
-})
+```yaml
+# talents/immovable.yml — 最大生命 ≥ 1000
+id: immovable
+display_name: "不动如山"
+description: "最大生命值 ≥ 1000 时解锁：击退抗性 +80%"
+gate:
+  type: SINGLE
+  attribute: max_health
+  threshold: 1000
+  operator: ">="
+passive_attributes:
+  knockback_resistance:
+    operation: FLAT
+    value: 0.8
+effect: |
+  # 激活时的额外副作用（可选），比如播放一次音效或广播
+  val.entity = args[0]
+  symphony.entity.sendMessage(entity, '&6不动如山 已激活')
+```
+
+```yaml
+# talents/battle_dancer.yml — 多属性 AND 门
+id: battle_dancer
+display_name: "战舞者"
+description: "力量 ≥ 40 且 敏捷 ≥ 40 时解锁：物理伤害 +25%"
+gate:
+  type: AND
+  conditions:
+    - attribute: strength
+      threshold: 40
+      operator: ">="
+    - attribute: dexterity
+      threshold: 40
+      operator: ">="
+passive_attributes:
+  physical_damage:
+    operation: PERCENT
+    value: 0.25
 ```
 
 ### 4.3 天赋门 UI
@@ -574,20 +504,22 @@ symphony.talent.register({
 
 ### 4.4 与等级系统联动
 
-天赋门可以作为等级系统的「里程碑」，让升级不再只是数字增长：
+天赋门的解锁条件可以直接写 `level` 属性，让升级不再只是数字增长，而是解锁新机制的里程碑：
 
-```aria
-// 每 10 级解锁一个天赋槽位
-symphony.talent.register({
-    'id': 'level_10_slot',
-    'display_name': '初级天赋槽',
-    'gate': { 'attribute': 'level', 'threshold': 10, 'operator': '>=' },
-    'effect': -> {
-        // 解锁一个可选天赋槽位，玩家可以从候选列表中选择一个天赋
-        symphony.talent.unlockSlot(args[0], 'tier_1')
-    }
-})
+```yaml
+# talents/tier1_unlocked.yml
+id: tier1_unlocked
+display_name: "初级天赋槽解锁"
+description: "达到 10 级时，获得一个初级天赋槽位的访问权限"
+gate:
+  type: SINGLE
+  attribute: level
+  threshold: 10
+  operator: ">="
+# 具体槽位的管理由上层 GUI/插件读取该天赋的激活状态后决定
 ```
+
+天赋的"激活/未激活"状态可以通过 `symphony.talent.isUnlocked(entity, id)` 在脚本里查询，然后驱动自定义的天赋树 GUI 或命令菜单。
 
 ## 五、状态层系统（Status Layer System）
 
@@ -595,7 +527,11 @@ symphony.talent.register({
 
 参考 Lost Ark 异常状态叠层 + PoE2 的 Ailment 系统。引入「层数」概念 — 持续攻击叠加层数，达到阈值触发爆发效果。这让战斗从「一刀一个数字」变成了「持续施压 → 爆发收割」的节奏。
 
+> **递归伤害防护**：状态层 DOT（持续伤害）造成的伤害不会再次触发 Symphony 自定义伤害管线，避免无限递归。由 `StatusDamageGuard` 在 `DamageListener` 中实现。
+
 ### 5.2 状态层定义
+
+状态层支持两种定义入口：Aria 脚本调用 `symphony.status.register({...})`，或者放在 `statuses/*.yml` 由 `ConfigLoader.loadStatuses` 装配。下面示范脚本形式，字段名和 YAML 保持一致。
 
 ```aria
 // scripts/mechanics/status_layers.aria
@@ -608,41 +544,23 @@ symphony.status.register({
     'max_stacks': 10,
     'stack_duration': 8000,            // 每层持续 8 秒
     'decay_mode': 'INDIVIDUAL',        // 每层独立计时（vs REFRESH = 叠加时刷新所有层）
-    
-    // 每层效果
-    'per_stack': -> {
-        val.target = args[0]
-        val.stacks = args[1]
-        // 每层每秒造成攻击力 5% 的伤害
-        val.atk = symphony.attribute.get(server.trigger_attacker, 'physical_damage')
-        return atk * 0.05
-    },
     'tick_interval': 1000,             // 每秒结算一次
     'damage_type': 'physical',
-    
-    // 满层爆发
+    'per_stack_damage_ratio': 0.05,    // 每层每 tick 对攻击者攻击力的 5% 作为伤害
+
+    // 满层爆发（Aria 片段，执行时 args[0] = 目标，args[1] = 施加者）
     'on_max_stacks': -> {
         val.target = args[0]
         val.attacker = args[1]
         val.atk = symphony.attribute.get(attacker, 'physical_damage')
-        
-        // 爆发：消耗所有层数，造成大量伤害
+
+        // 爆发：造成大量伤害 + 清空层数
         symphony.entity.damage(target, atk * 2.0, 'physical')
         symphony.status.clearStacks(target, 'bleed')
-        
+
         // 特效
         symphony.effect.particle(target, 'DAMAGE_INDICATOR', 30)
         symphony.effect.sound(target, 'entity.player.attack.crit', 1.0, 0.5)
-        
-        // 爆发后 3 秒内无法再叠加流血
-        symphony.status.setImmune(target, 'bleed', 3000)
-    },
-    
-    // ActionBar 显示
-    'display': -> {
-        val.stacks = args[0]
-        val.max = args[1]
-        return '&c🩸 流血 ' + stacks + '/' + max
     }
 })
 
@@ -654,16 +572,18 @@ symphony.status.register({
     'max_stacks': 5,
     'stack_duration': 6000,
     'decay_mode': 'REFRESH',
-    
-    // 每层减速
-    'per_stack_attribute': {
+
+    // 每层减速（注意是 per_stack_attributes，复数）
+    'per_stack_attributes': {
         'movement_speed': { 'operation': 'PERCENT', 'value': -0.08 }  // 每层 -8% 移速
     },
-    
-    // 满层：冻结
+
+    // 满层：大额范围冰伤
     'on_max_stacks': -> {
         val.target = args[0]
-        symphony.entity.freeze(target, 3000)
+        val.attacker = args[1]
+        val.atk = symphony.attribute.get(attacker, 'ice_damage')
+        symphony.entity.damage(target, 80 + atk * 1.5, 'ice')
         symphony.status.clearStacks(target, 'frostbite')
         symphony.effect.particle(target, 'SNOWFLAKE', 50)
         symphony.effect.sound(target, 'block.glass.break', 1.0, 0.3)
@@ -678,24 +598,25 @@ symphony.status.register({
     'max_stacks': 8,
     'stack_duration': 5000,
     'decay_mode': 'INDIVIDUAL',
-    
-    // 满层：电磁脉冲
+
+    // 满层：电磁脉冲（AOE）
     'on_max_stacks': -> {
         val.target = args[0]
         val.attacker = args[1]
         val.em = symphony.attribute.get(attacker, 'elemental_mastery')
         val.damage = 80 + em * 1.5
-        
+
         // AOE 爆发
-        val.nearby = symphony.entity.getNearbyHostile(target, 4.0)
+        val.nearby = symphony.entity.getNearby(target, 4.0)
         nearby.forEach(-> {
             symphony.entity.damage(args[0], damage, 'lightning')
-            symphony.entity.stun(args[0], 1000)  // 眩晕 1 秒
         })
         symphony.status.clearStacks(target, 'electro_charge')
     }
 })
 ```
+
+> 「冻结 / 眩晕」这类硬控效果目前不在 Symphony 的 entity API 里，推荐通过 Bukkit 原生 `PotionEffect`（由外部脚本或插件实现）或后续 API 扩展来实现，`on_max_stacks` 里暂以伤害 + 特效作为占位方案。
 
 ### 5.3 叠层来源
 
@@ -733,99 +654,123 @@ actions:
 
 ### 6.2 环境修正器
 
-```aria
-// scripts/mechanics/environment_scaling.aria
+环境修正器通过 `environments/*.yml` 配置，由 `ConfigLoader.loadEnvironments` 装配到 `EnvironmentSystem`。每条修正器声明一个 `type` 和一组 `attributes` 作为属性修改器。`EnvironmentType` 枚举：
 
-// ── 生物群系修正 ──
-symphony.environment.registerModifier({
-    'id': 'nether_fire_boost',
-    'display_name': '地狱灼热',
-    'condition': -> {
-        val.entity = args[0]
-        return symphony.world.getDimension(entity) == 'the_nether'
-    },
-    'attributes': {
-        'fire_damage': { 'operation': 'PERCENT', 'value': 0.25 },
-        'fire_resistance': { 'operation': 'FLAT', 'value': -0.15 },
-        'ice_damage': { 'operation': 'PERCENT', 'value': -0.30 }
-    },
-    'description': '地狱维度：火焰伤害 +25%，火焰抗性 -15%，冰霜伤害 -30%'
-})
+| 类型           | 判定语义                              |
+|--------------|-----------------------------------|
+| `DIMENSION`  | 所在维度（主世界 / 下界 / 末地等）              |
+| `BIOME`      | 所在生物群系                            |
+| `TIME`       | 游戏时间段（昼夜区间）                       |
+| `WEATHER`    | 天气（雨 / 雷暴）                        |
+| `ALTITUDE`   | 高度区间                              |
+| `IN_WATER`   | 是否在水中                             |
 
-symphony.environment.registerModifier({
-    'id': 'ocean_water_boost',
-    'display_name': '深海之力',
-    'condition': -> {
-        val.entity = args[0]
-        return symphony.entity.isInWater(entity)
-    },
-    'attributes': {
-        'water_damage': { 'operation': 'PERCENT', 'value': 0.40 },
-        'lightning_damage': { 'operation': 'PERCENT', 'value': 0.20 },
-        'fire_damage': { 'operation': 'PERCENT', 'value': -0.50 },
-        'movement_speed': { 'operation': 'PERCENT', 'value': -0.20 }
-    }
-})
+每种类型有对应的声明式匹配字段（无需写脚本即可使用）。如果声明了可选的 `condition` Aria 表达式，将优先于声明式字段使用，由 `ConfigLoader` 编译为 `environment:<id>:condition`，签名为 `(entity) -> boolean`。
 
-// ── 时间修正 ──
-symphony.environment.registerModifier({
-    'id': 'night_shadow_boost',
-    'display_name': '暗夜之力',
-    'condition': -> {
-        val.entity = args[0]
-        val.world = symphony.entity.getWorld(entity)
-        val.time = symphony.world.getTime(world)
-        return time >= 13000 && time <= 23000  // 夜晚
-    },
-    'attributes': {
-        'dark_damage': { 'operation': 'PERCENT', 'value': 0.20 },
-        'dodge': { 'operation': 'FLAT', 'value': 0.05 },
-        'holy_damage': { 'operation': 'PERCENT', 'value': -0.15 }
-    }
-})
+通用字段：
 
-// ── 天气修正 ──
-symphony.environment.registerModifier({
-    'id': 'thunderstorm_lightning',
-    'display_name': '雷暴增幅',
-    'condition': -> {
-        val.entity = args[0]
-        val.world = symphony.entity.getWorld(entity)
-        return symphony.world.isThundering(world) && symphony.entity.isOutdoor(entity)
-    },
-    'attributes': {
-        'lightning_damage': { 'operation': 'PERCENT', 'value': 0.50 },
-        'lightning_resistance': { 'operation': 'FLAT', 'value': -0.10 }
-    }
-})
+| 字段             | 说明                                          |
+|----------------|---------------------------------------------|
+| `id`           | 唯一标识                                        |
+| `display_name` | 显示名                                         |
+| `type`         | 上述枚举之一                                      |
+| `attributes`   | 属性修改表，每个条目含 `operation`（FLAT/PERCENT）和 `value` |
+| `description`  | 描述文本                                        |
+| `condition`    | Aria 表达式（可选），优先级最高                          |
 
-// ── 对手类型修正 ──
-symphony.environment.registerCombatModifier({
-    'id': 'undead_slayer',
-    'display_name': '亡灵克星',
-    'condition': -> {
-        val.target = args[0]
-        return symphony.entity.isUndead(target)
-    },
-    'attacker_attributes': {
-        'holy_damage': { 'operation': 'PERCENT', 'value': 0.30 }
-    },
-    'description': '对亡灵目标：神圣伤害 +30%'
-})
+类型相关字段：
 
-// ── 高度修正 ──
-symphony.environment.registerModifier({
-    'id': 'high_altitude',
-    'display_name': '高空稀薄',
-    'condition': -> {
-        val.entity = args[0]
-        return symphony.entity.getY(entity) > 200
-    },
-    'attributes': {
-        'wind_damage': { 'operation': 'PERCENT', 'value': 0.20 },
-        'movement_speed': { 'operation': 'PERCENT', 'value': 0.10 }
-    }
-})
+| 字段                 | 适用类型           | 说明                                              |
+|--------------------|----------------|-------------------------------------------------|
+| `dimension`        | DIMENSION      | 维度名（NORMAL / NETHER / THE_END），不区分大小写            |
+| `biomes`           | BIOME          | 生物群系名列表（如 `[DESERT, BADLANDS]`），不区分大小写           |
+| `time_start`       | TIME           | 起始 tick（含），范围 0-23999                           |
+| `time_end`         | TIME           | 结束 tick（含），支持跨越 24000 边界（如 23000 → 1000）        |
+| `weather`          | WEATHER        | `CLEAR` / `RAIN` / `THUNDER` / `STORM`          |
+| `min_y` / `max_y`  | ALTITUDE       | Y 坐标区间（含端点），未设端点时不限制                            |
+| `require_outdoor`  | TIME / WEATHER | 是否要求实体在户外（默认 false）                             |
+
+```yaml
+# environments/nether_fire_boost.yml — 下界维度加成
+id: nether_fire_boost
+display_name: "地狱灼热"
+type: DIMENSION
+dimension: NETHER
+attributes:
+  fire_damage:
+    operation: PERCENT
+    value: 0.25
+  fire_resistance:
+    operation: FLAT
+    value: -0.15
+  ice_damage:
+    operation: PERCENT
+    value: -0.30
+description: "地狱维度：火焰伤害 +25%，火焰抗性 -15%，冰霜伤害 -30%"
+```
+
+```yaml
+# environments/ocean_water_boost.yml — 水中增幅
+id: ocean_water_boost
+display_name: "深海之力"
+type: IN_WATER
+attributes:
+  lightning_damage:
+    operation: PERCENT
+    value: 0.20
+  fire_damage:
+    operation: PERCENT
+    value: -0.50
+  movement_speed:
+    operation: PERCENT
+    value: -0.20
+```
+
+```yaml
+# environments/night_shadow_boost.yml — 夜间加成
+id: night_shadow_boost
+display_name: "暗夜之力"
+type: TIME
+time_start: 13000
+time_end: 23000
+attributes:
+  dark_damage:
+    operation: PERCENT
+    value: 0.20
+  dodge:
+    operation: FLAT
+    value: 0.05
+  holy_damage:
+    operation: PERCENT
+    value: -0.15
+```
+
+```yaml
+# environments/thunderstorm_lightning.yml — 雷暴加成
+id: thunderstorm_lightning
+display_name: "雷暴增幅"
+type: WEATHER
+weather: THUNDER
+require_outdoor: true
+attributes:
+  lightning_damage:
+    operation: PERCENT
+    value: 0.50
+  lightning_resistance:
+    operation: FLAT
+    value: -0.10
+```
+
+```yaml
+# environments/high_altitude.yml — 高空加成
+id: high_altitude
+display_name: "高空稀薄"
+type: ALTITUDE
+min_y: 200.0
+attributes:
+  movement_speed:
+    operation: PERCENT
+    value: 0.10
 ```
 
 ### 6.3 环境修正器的计算时机
@@ -842,19 +787,7 @@ EnvironmentProvider（优先级 750）：
     └── 条件为 false → 跳过
 ```
 
-### 6.4 战斗修正器
-
-战斗修正器（`registerCombatModifier`）与环境修正器不同，它在伤害计算时评估，而不是属性重算时：
-
-```
-伤害计算流程中：
-    ├── 获取攻击者属性
-    ├── 评估所有 CombatModifier 的 condition(target)
-    ├── 满足条件 → 临时应用 attacker_attributes 到本次伤害计算
-    └── 不修改缓存中的属性值（只影响本次攻击）
-```
-
-### 6.5 环境指示器
+### 6.4 环境指示器
 
 玩家进入特殊环境时，ActionBar 显示当前生效的环境修正：
 
@@ -903,35 +836,60 @@ EnvironmentProvider（优先级 750）：
 |--------------------------|----------------------------------------------------------------------|
 | `symphony.interaction.*` | 属性交互网络（register/remove/list）                                         |
 | `symphony.element.*`     | 元素系统（applyAura/getAura/removeAura/getAllAuras/tryReaction）           |
-| `symphony.resonance.*`   | 词条共鸣（register/getActive/check/list）                                  |
-| `symphony.talent.*`      | 天赋门（register/isUnlocked/check/getStatus/list）                        |
-| `symphony.status.*`      | 状态层（register/addStacks/getStacks/clearStacks/setImmune/list）         |
+| `symphony.resonance.*`   | 词条共鸣（register/getActive/check/list）                                       |
+| `symphony.talent.*`      | 天赋门（register/isUnlocked/check/getStatus/list）                             |
+| `symphony.status.*`      | 状态层（register/addStacks/getStacks/clearStacks/setImmune/list）              |
 | `symphony.environment.*` | 环境系统（register/getActive/list）                                        |
-| `symphony.world.*`       | 世界信息（getTime/isRaining/isThundering/getDimension/getBiome/isOutdoor） |
+| `symphony.trigger.*`     | 触发器分发（dispatch/isOnCooldown/getCooldown/setCooldown）                      |
 
-### 7.3 新增脚本目录
+### 7.3 配置与脚本目录结构
+
+所有 YAML 配置都是 `plugins/Symphony/` 下的顶级目录，和 `affixes/`、`skills/` 并列；Aria 脚本放在 `scripts/` 下按职责分组。
 
 ```
-plugins/Symphony/scripts/
-├── attributes/               # 属性定义（已有）
-├── mechanics/                # 战斗机制（已有，扩展）
-│   ├── damage.aria
-│   ├── element_aura.aria     # 元素附着系统 [新增]
-│   ├── reactions.aria        # 元素反应定义 [新增]
-│   ├── status_layers.aria    # 状态层定义 [新增]
-│   └── environment.aria      # 环境修正器 [新增]
+plugins/Symphony/
+├── affixes/                  # 词条定义
+├── affix-pools/              # 词条池
+├── skills/                   # 技能定义
+├── sets/                     # 套装
+├── runes/                    # 符文
+├── gems/                     # 宝石
 ├── interactions/             # 属性交互网络 [新增]
-│   └── default.aria
-├── resonances/               # 词条共鸣（YAML 配置）[新增]
+│   ├── crit_overflow.yml
+│   ├── int_to_mana.yml
+│   └── berserker_rage.yml
+├── resonances/               # 词条共鸣 [新增]
 │   ├── fire_mastery.yml
 │   ├── elemental_harmony.yml
 │   └── berserker_set.yml
 ├── talents/                  # 天赋门 [新增]
-│   └── default.aria
-├── formulas/
-├── skills/
-├── conditions/
-└── modules/
+│   ├── precise_strike.yml
+│   ├── immovable.yml
+│   └── battle_dancer.yml
+├── statuses/                 # 状态层 [新增]
+│   ├── bleed.yml
+│   ├── frostbite.yml
+│   └── electro_charge.yml
+├── reactions/                # 元素反应 [新增]
+│   ├── vaporize.yml
+│   ├── melt.yml
+│   ├── superconduct.yml
+│   ├── electro_charged.yml
+│   ├── frozen.yml
+│   └── swirl.yml
+├── environments/             # 环境修正器 [新增]
+│   ├── nether_fire_boost.yml
+│   ├── ocean_water_boost.yml
+│   ├── night_shadow_boost.yml
+│   └── thunderstorm_lightning.yml
+├── config/                   # 全局配置（level.yml / enhancement.yml 等）
+└── scripts/                  # Aria 脚本
+    ├── attributes/
+    ├── mechanics/
+    │   ├── damage.aria
+    │   └── status_layers.aria     # 也可以改写成 YAML 放到 statuses/
+    ├── formulas/
+    └── modules/                    # 按需 import，不自动加载
 ```
 
 ### 7.4 主配置里的开关
@@ -953,4 +911,4 @@ advanced:
 
 任一开关关掉后，该系统在启动时就不做 `registerDefaults()`，`tick()` 和相关 Provider 也就没有东西可以发。Symphony 会安静地退化成一个「只有属性引擎 + 词条 + 触发器 + 成长」的传统属性插件，不会报错，也不影响其他开着的系统。
 
-换一种关法：直接把 `scripts/mechanics/` 里对应脚本、或者 `resonances/` 目录清空，注册列表为空，等同于关闭。
+换一种关法：直接把对应的顶级目录（`interactions/`、`resonances/`、`talents/`、`statuses/`、`reactions/`、`environments/`）清空，注册列表为空，等同于关闭该系统。

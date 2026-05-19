@@ -99,7 +99,7 @@ class WindDamage {}
 
 ### 带联动回调的属性
 
-`@onChange` 标注值变更回调（接入完成后生效）：
+`@onChange` 标注值变更回调：
 
 ```aria
 // scripts/attributes/combat/max_health.aria 的扩展示例
@@ -174,12 +174,14 @@ val.finalMult = critMult + luckBonus
 return baseDmg * finalMult
 ```
 
-## 2. 技能脚本
+## 3. 技能脚本
+
+> 技能脚本通过 `skills/*.yml` 的 `script: |` 字段注册，不是独立的 `.aria` 文件。以下示例展示 `script:` 字段中的内容。
 
 ### 连锁闪电
 
 ```aria
-// skills/chain_lightning.aria
+// skills/chain_lightning.yml → script: |
 val.caster = server.caster
 val.target = server.target
 val.level = server.skill_level
@@ -283,12 +285,14 @@ symphony.effect.sound(caster, 'block.glass.place', 1.0, 0.5)
 symphony.effect.actionbar(caster, "&b&l冰霜护盾已激活! ({duration / 1000}秒)")
 ```
 
-## 3. 条件脚本
+## 4. 条件脚本
+
+> 条件脚本通过词条 YAML 中 `type: SCRIPT` + `code: |` 内联使用，不存在独立的 conditions 加载目录。
 
 ### Boss 战判定
 
 ```aria
-// conditions/is_boss_fight.aria
+// 词条条件中 type: SCRIPT, code: | 的内容
 // 检查目标是否为 Boss 级怪物
 
 val.target = server.trigger_victim
@@ -317,12 +321,12 @@ combo = combo + 1
 
 // 超过 3 秒重置
 val.lastHitKey = 'last_hit_' + symphony.entity.getName(player)
-val.now = symphony.util.currentTime()
+val.now = Java.type('java.lang.System').currentTimeMillis()
 
 return combo >= 3
 ```
 
-## 4. 公共模块
+## 5. 公共模块
 
 ### 工具函数
 
@@ -391,12 +395,12 @@ if (u.chance(30)) {
 ## 6. 最佳实践
 
 1. 属性脚本保持独立 — `scripts/attributes/` 下的脚本不应 `import` 其他脚本，它们是最底层的定义
-2. 公式脚本保持简短 — 公式（包括属性的 `formula`/`derive`）会被高频调用，避免复杂逻辑。所有公式和技能脚本会被 Aria JIT 编译缓存（`Aria.compile()`），相同代码只编译一次，后续执行直接使用编译产物
-3. 善用批量注册 — 有规律的属性（如元素系列）用循环注册，减少重复代码
-4. 派生属性用 `readonly: true` — 防止外部修改器干扰计算结果
+2. 公式脚本保持简短 — 公式（包括属性的 `@formula`/`@derive`）会被高频调用，避免复杂逻辑。所有公式和技能脚本会被 Aria JIT 编译缓存（`Aria.compile()`），相同代码只编译一次
+3. 一属性一文件 — 有规律的属性（如元素系列）用模板批量生成文件，不要运行期循环 register
+4. 派生属性用 `@readonly` — 防止外部修改器干扰计算结果
 5. 使用 `val` 声明不变的值 — 语义更清晰
 6. 善用模块系统 — 公共函数放在 `modules/` 目录，通过 `import` 复用
-7. 注意沙箱限制 — 脚本中不能直接访问 Java 类，只能通过 `symphony.*` 命名空间
-8. 避免无限循环 — 沙箱有执行时间限制，超时会被终止
+7. 注意沙箱限制 — 脚本在 Aria 引擎自带沙箱中执行，有执行时间限制
+8. 避免无限循环 — 超时会被终止
 9. 使用 `server.*` 访问上下文 — 触发器和技能的上下文变量通过 `server.*` 前缀访问
-10. 属性 `on_change` 回调中不要触发属性重算 — 避免循环依赖
+10. `@onChange` 回调中不要触发属性重算 — 避免循环依赖

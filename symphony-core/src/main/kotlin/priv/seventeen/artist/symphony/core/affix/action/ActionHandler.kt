@@ -27,7 +27,9 @@ fun resolveDouble(raw: Any?, affixParams: Map<String, Any>): Double {
 }
 
 fun resolveInt(raw: Any?, affixParams: Map<String, Any>): Int {
-    return resolveParam(raw, affixParams).toIntOrNull() ?: 0
+    val str = resolveParam(raw, affixParams)
+    // 先尝试整数解析；失败则走 Double → Int（兼容 NBT 序列化后 "3.0" 的情况）
+    return str.toIntOrNull() ?: str.toDoubleOrNull()?.toInt() ?: 0
 }
 
 /**

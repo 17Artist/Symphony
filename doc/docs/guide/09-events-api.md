@@ -161,10 +161,10 @@ for ((id, pair) in api.diff(before, after)) {
 | Manager                 | 关键方法                                                                                                              |
 |-------------------------|-------------------------------------------------------------------------------------------------------------------|
 | `IAttributeManager`     | `registerAttribute` / `registerProvider` / `getValue` / `getValues` / `markDirty` / `recalculate` / `addListener` |
-| `IAffixManager`         | `registerAffix` / `getAffixes` / `addAffix` / `generateAffixes` / `registerActionHandler`          |
+| `IAffixManager`         | `registerAffix` / `getAffixes` / `addAffix` / `removeAffix` / `clearAffixes` / `generateAffixes` / `registerPool` / `getPool` / `registerActionHandler` |
 | `ITriggerManager`       | `dispatch` / `registerConditionType` / `isOnCooldown` / `setCooldown`                                             |
 | `ISkillProviderManager` | `registerProvider` / `castSkill` / `hasSkill`                                                                     |
-| `IGrowthManager`        | `getLevel` / `addExp` / `insertGem` / `enhance` / `activateRune`                                                  |
+| `IGrowthManager`        | `getLevel` / `addExp` / `getExp` / `getRequiredExp` / `insertGem` / `removeGem` / `unlockSlot` / `enhance` / `activateRune` / `deactivateRune` / `addFragments` / `getFragments` / `getActiveSets` |
 
 完整签名见源码 `symphony-common/src/main/kotlin/priv/seventeen/artist/symphony/api/`。
 

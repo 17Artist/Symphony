@@ -4,12 +4,17 @@ import org.bukkit.Bukkit
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.entity.Player
+import priv.seventeen.artist.aria.Aria
+import priv.seventeen.artist.aria.callable.ICallable
+import priv.seventeen.artist.aria.callable.InvocationData
+import priv.seventeen.artist.aria.value.FunctionValue
+import priv.seventeen.artist.aria.value.IValue
+import priv.seventeen.artist.aria.value.NumberValue
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.event.LevelChangeEvent
 import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
-import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 
@@ -63,23 +68,68 @@ class LevelManager {
         return PlayerDataManager.getData(player.uniqueId)?.persistent?.exp ?: 0
     }
 
+    /** 经验公式编译缓存 — ICallable 模式 */
+    private var expFormulaCallable: ICallable? = null
+
     fun getRequiredExp(level: Int): Long {
         expFormulaScript?.let { script ->
             try {
-                val callbackId = "exp_formula"
-                if (!AriaCallbackManager.has(callbackId)) {
-                    AriaCallbackManager.compileExpression(callbackId, script, "level")
-                }
-                val result = AriaCallbackManager.invoke(callbackId, level)
-                return (result as? Number)?.toLong() ?: run {
-                    BlinkLog.warn("经验公式未返回数字 (返回: $result)，使用默认公式")
-                    (100 * Math.pow(level.toDouble(), 1.5) + level * 50).toLong()
-                }
+                val fn = expFormulaCallable ?: compileExpFormula(script).also { expFormulaCallable = it }
+                    ?: return defaultExpFormula(level)
+                val ctx = Aria.createContext()
+                val args = arrayOf<IValue<*>>(NumberValue(level.toDouble()))
+                val result = fn.invoke(InvocationData(ctx, null, args))
+                return result.numberValue().toLong()
             } catch (e: Exception) {
                 BlinkLog.warn("经验公式执行异常: ${e.message}")
             }
         }
+        return defaultExpFormula(level)
+    }
+
+    private fun defaultExpFormula(level: Int): Long {
         return (100 * Math.pow(level.toDouble(), 1.5) + level * 50).toLong()
+    }
+
+    private fun compileExpFormula(script: String): ICallable? {
+        var body = script.trim()
+        body = body.replace(Regex("\\bval\\s+level\\s*="), "val.level =")
+        body = body.replace(Regex("\\bvar\\s+level\\s*="), "val.level =")
+        val alreadyBound = body.contains(Regex("val\\.level\\s*="))
+        val hasReturn = body.contains(Regex("\\breturn\\b"))
+        val scriptBody = if (hasReturn) body else "return ($body)"
+
+        val code = buildString {
+            append("return -> {\n")
+            if (!alreadyBound) append("    val.level = args[0]\n")
+            append("    ")
+            append(scriptBody.replace("\n", "\n    "))
+            append("\n}")
+        }
+
+        return try {
+            val routine = Aria.compile("exp_formula", code)
+            val result = routine.execute(Aria.createContext())
+            if (result is FunctionValue) {
+                val callable = result.jvmValue()
+                if (callable is ICallable) callable
+                else {
+                    BlinkLog.warn("经验公式编译异常: FunctionValue.jvmValue() 返回 ${callable?.javaClass?.name}")
+                    null
+                }
+            } else {
+                BlinkLog.warn("经验公式编译异常: execute 返回 ${result?.javaClass?.name}，期望 FunctionValue\n  生成代码:\n$code")
+                null
+            }
+        } catch (e: Exception) {
+            BlinkLog.warn("经验公式编译失败: ${e.message}\n  生成代码:\n$code")
+            null
+        }
+    }
+
+    /** reload 时清除经验公式缓存 */
+    fun clearExpFormulaCache() {
+        expFormulaCallable = null
     }
 
     private fun onLevelUp(player: Player, oldLevel: Int, newLevel: Int) {

@@ -1,0 +1,8 @@
+# 暴击率溢出 — 超过 100% 的暴击率转化为暴击伤害
+id: crit_overflow
+type: OVERFLOW
+description: "暴击率超过 100% 时，每 1% 溢出转化为 0.5% 暴击伤害"
+source: critical_chance
+target: critical_damage
+threshold: 1.0
+ratio: 0.5

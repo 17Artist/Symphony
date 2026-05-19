@@ -185,8 +185,9 @@ StatusLayerSystem.register(StatusDefinition(
     id = "frostbite",
     displayName = "冻伤",
     maxStacks = 5,
-    decayInterval = 100,
-    // ...
+    stackDuration = 6000,
+    decayMode = DecayMode.INDIVIDUAL,
+    tickInterval = 1000
 ))
 ```
 

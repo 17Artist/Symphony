@@ -1,0 +1,23 @@
+# 精准打击 — 暴击率达到 50% 时解锁
+id: precise_strike
+display_name: "精准打击"
+description: "暴击率 ≥ 50% 时解锁：暴击无视 20% 防御"
+icon: DIAMOND_SWORD
+
+gate:
+  type: SINGLE
+  attribute: critical_chance
+  threshold: 0.5
+  operator: ">="
+
+passive_attributes:
+  penetration:
+    operation: FLAT
+    value: 0.2
+
+effect: |
+  val.entity = args[0]
+  symphony.effect.actionbar(entity, '&e&l精准打击 &7已激活')
+on_deactivate: |
+  val.entity = args[0]
+  symphony.effect.actionbar(entity, '&7精准打击 已失效')

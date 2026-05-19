@@ -87,42 +87,30 @@ symphony/
 ```
 api/
 ├── attribute/
-│   ├── IAttribute              # 属性定义接口
 │   ├── IAttributeProvider      # 属性来源接口
-│   ├── IAttributeHolder        # 属性持有者接口（实体/物品）
 │   ├── IAttributeManager       # 属性管理器接口
 │   ├── AttributeModifier       # 属性修改器数据类
-│   ├── AttributeType           # 属性类型枚举（COMBAT/MOVEMENT/ELEMENT/RESOURCE/CUSTOM）
 │   └── Operation               # 操作类型枚举（FLAT/PERCENT）
 ├── affix/
-│   ├── IAffix                  # 词条定义接口
-│   ├── IAffixInstance          # 词条实例接口
+│   ├── AffixInstance           # 词条实例数据类
 │   ├── IAffixManager           # 词条管理器接口
-│   ├── IAffixHolder            # 词条持有者接口
-│   ├── AffixRarity             # 词条稀有度枚举
-│   └── AffixAction             # 词条动作基类
+│   └── AffixRarity             # 词条稀有度枚举
 ├── trigger/
-│   ├── ITrigger                # 触发器定义接口
-│   ├── ITriggerContext         # 触发器上下文接口
 │   ├── ITriggerManager         # 触发器管理器接口
-│   ├── ITriggerCondition       # 触发条件接口
+│   ├── ICustomCondition        # 自定义条件接口
 │   └── TriggerType             # 触发器类型（可扩展的注册表模式）
 ├── skill/
 │   ├── ISkillProvider          # 技能提供者接口
 │   ├── ISkillProviderManager   # 提供者管理器接口
-│   ├── SkillContext            # 技能执行上下文
-│   └── SkillInfo               # 技能信息数据类
+│   └── SkillContext            # 技能执行上下文
 ├── growth/
-│   ├── IGemManager             # 宝石管理器接口
-│   ├── IRuneManager            # 符文管理器接口
-│   ├── IEnhanceManager         # 强化管理器接口
-│   ├── ILevelManager           # 等级管理器接口
-│   └── ISetManager             # 套装管理器接口
+│   ├── IGrowthManager          # 成长系统统一管理器接口
+│   ├── GemSlot                 # 宝石槽数据类
+│   └── EnhanceResult           # 强化结果枚举
 ├── entity/
-│   ├── IPlayerData             # 玩家数据接口
-│   └── IEntityData             # 实体数据接口
-└── event/
-    ├── AttributeUpdateEvent    # 属性变更事件
+│   └── IEntityMetadata         # 实体元数据接口
+├── event/
+│   ├── AttributeUpdateEvent    # 属性变更事件
     ├── AffixTriggerEvent       # 词条触发事件
     ├── SymphonyDamageEvent     # 伤害计算事件
     ├── EnhanceEvent            # 强化事件
@@ -189,8 +177,7 @@ api/
 │   │   └── ExpCalculator             # 经验计算（Aria 公式）
 │   ├── gem/
 │   │   ├── GemManager                # 宝石管理
-│   │   ├── GemSlotHandler            # 宝石槽操作
-│   │   └── GemSynthesis              # 宝石合成
+│   │   └── GemSlotHandler            # 宝石槽操作
 │   ├── rune/
 │   │   ├── RuneManager               # 符文管理
 │   │   └── RuneActivation            # 符文激活逻辑
@@ -202,15 +189,11 @@ api/
 │   │   └── SetDetector               # 套装检测（装备变更时重新检测）
 │   └── GrowthAttributeProvider       # 成长系统属性来源（统一提供等级/宝石/符文/强化/套装的属性）
 ├── script/
-│   ├── SymphonyScriptEngine          # Aria 引擎封装（初始化、命名空间注册、分级沙箱）
+│   ├── SymphonyScriptEngine          # Aria 引擎封装（初始化、命名空间注册）
 │   ├── AttributeRegistry             # 属性注册表（由脚本填充，reload 时重建）
-│   ├── AttributeScriptLoader         # 属性脚本加载器（扫描 scripts/attributes/）
-│   ├── namespace/                    # Aria 命名空间注册
-│   │   ├── SymphonyAttributeNS       # symphony.attribute.*（含 register/get/modify）
-│   │   ├── SymphonyEntityNS          # symphony.entity.*
-│   │   ├── SymphonyItemNS            # symphony.item.*
-│   │   ├── SymphonyEffectNS          # symphony.effect.*
-│   │   └── SymphonyTriggerNS         # symphony.trigger.*
+│   ├── namespace/
+│   │   ├── SymphonyBridge            # 所有 symphony.* 命名空间的实现方法
+│   │   └── NamespaceRegistrar        # bootstrap 脚本注入 global.symphony（13 个子命名空间）
 │   ├── FormulaEngine                 # 公式引擎（AriaCompiledRoutine 缓存池）
 ├── storage/
 │   ├── PlayerDataManager             # 玩家数据管理（缓存 + 异步持久化）
@@ -226,7 +209,7 @@ api/
 
 ### 2.3 symphony-nms（NMS 适配）
 
-版本隔离模块，通过接口抽象 NMS 操作。
+版本适配模块，支持 1.18.2 - 1.21.1。优先使用 Asteroid NMS 框架实现跨版本兼容，不可用时回退到 Bukkit API。
 
 ```
 ├── NMSAdapter                        # NMS 适配器接口
@@ -235,11 +218,9 @@ api/
 │   ├── getItemNBT()                  # 获取物品 NBT（低版本兼容）
 │   ├── setItemNBT()                  # 设置物品 NBT
 │   └── sendActionBar()               # 发送 ActionBar 消息
-├── NMSAdapterFactory                 # 根据服务器版本自动选择适配器
-├── v1_18_R2/                         # 1.18.2 实现
-├── v1_19_R3/                         # 1.19.4 实现
-├── v1_20_R3/                         # 1.20.4 实现
-└── v1_21_R1/                         # 1.21+ 实现
+├── NMSAdapterFactory                 # 初始化时自动选择适配器
+├── AsteroidNMSAdapter                # Asteroid 跨版本实现（优先）
+└── BukkitFallbackAdapter             # Bukkit API 回退实现
 ```
 
 ### 2.4 symphony-plugin（Blink 插件入口）
@@ -367,6 +348,7 @@ symphony-plugin
 | 操作 | 线程 | 说明 |
 |------|------|------|
 | 属性计算 | 主线程 | 涉及 Bukkit API，必须同步 |
+| 属性计算（async-recalc） | 异步线程池 | `performance.async-recalc: true` 时，`isAsync=true` 的 Provider 采集走异步，最终 apply 仍在主线程 |
 | 触发器分发 | 主线程 | 由 Bukkit 事件驱动 |
 | Aria 脚本执行 | 主线程 | 短脚本同步执行，沙箱限时 |
 | 数据加载/保存 | 异步线程 | BukkitScheduler.runTaskAsynchronously |

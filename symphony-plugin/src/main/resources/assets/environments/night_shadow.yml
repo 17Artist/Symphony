@@ -1,0 +1,17 @@
+# 暗夜之力 — 夜晚时段（13000-23000 tick）暗影属性增强
+id: night_shadow
+display_name: "暗夜之力"
+type: TIME
+time_start: 13000
+time_end: 23000
+attributes:
+  dark_damage:
+    operation: PERCENT
+    value: 0.20
+  dodge:
+    operation: FLAT
+    value: 0.05
+  holy_damage:
+    operation: PERCENT
+    value: -0.15
+description: "夜晚（13000-23000 tick）：暗影伤害 +20%，闪避 +5%，神圣伤害 -15%"

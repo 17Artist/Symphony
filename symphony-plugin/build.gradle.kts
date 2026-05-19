@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":symphony-nms"))
     implementation("priv.seventeen.artist.blink:blink-common:1.1.2")
     compileOnly("com.google.code.gson:gson:2.10.1")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 }
 
 tasks.shadowJar {

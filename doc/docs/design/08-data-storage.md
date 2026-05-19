@@ -343,22 +343,11 @@ data class ShieldData(
 | 技能       | 释放「附魔武器」→ 主手临时获得「雷电附魔」词条 30 秒                                        | 定时过期    |
 | Buff 技能  | 队友给你施加「祝福」→ 获得「神圣护佑」词条                                               | 定时过期    |
 | 任务/活动    | 进入副本 → 获得「副本增幅」词条                                                    | 离开副本时移除 |
-| API / 脚本 | `symphony.affix.addTemp(player, 'fire_strike', 3, 300000, 'PLAYER')` | 调用方控制   |
+| API / 脚本 | 通过 `PlayerDataManager` 内部 API 操作 | 调用方控制   |
 
 临时词条与物品词条享有完全相同的能力：触发器、被动属性、技能调用。区别只是它不在物品上，而是在玩家的 `runtime.tempAffixes` 列表中。
 
-```aria
-// 脚本中添加临时词条
-symphony.affix.addTemp(player, 'fire_strike', 3, 300000, 'PLAYER')
-// 参数：实体, 词条ID, 等级, 持续时间(ms), 附着位置
-
-// 移除临时词条
-symphony.affix.removeTemp(player, 'fire_strike')
-
-// 查询临时词条
-val.temps = symphony.affix.getTemps(player)
-val.has = symphony.affix.hasTemp(player, 'fire_strike')
-```
+> 注：临时词条操作当前未暴露到 Aria 脚本层，需通过 Kotlin API（`PlayerDataManager.getOrCreate(uuid).runtime.tempAffixes`）直接操作。
 
 ### 4.2 虚拟套装（VirtualSet）
 
@@ -370,7 +359,7 @@ val.has = symphony.affix.hasTemp(player, 'fire_strike')
 | 符文       | 激活「屠龙者符文」→ 视为穿戴 1 件屠龙者套装                                                | 永久（符文激活期间） |
 | 技能       | 「套装幻影」→ 临时获得指定套装的满件效果                                                   | 定时过期       |
 | 成就       | 完成「屠龙者」成就 → 永久获得 1 件虚拟套装件数                                              | 永久         |
-| API / 脚本 | `symphony.set.addVirtual(player, 'dragon_slayer', 2, 600000, 'source')` | 调用方控制      |
+| API / 脚本 | 通过 `PlayerDataManager` 内部 API 操作 | 调用方控制      |
 
 虚拟件数与实际装备件数叠加计算：
 
@@ -382,17 +371,7 @@ val.has = symphony.affix.hasTemp(player, 'fire_strike')
 总计：5 件 → 激活 2件/3件/4件 效果，差 1 件激活满套
 ```
 
-```aria
-// 脚本中操作虚拟套装
-symphony.set.addVirtual(player, 'dragon_slayer', 2, 600000, 'potion:dragon_elixir')
-// 参数：实体, 套装ID, 虚拟件数, 持续时间(ms), 来源标识
-
-symphony.set.removeVirtual(player, 'dragon_slayer', 'potion:dragon_elixir')
-
-// 查询
-val.total = symphony.set.getTotalPieces(player, 'dragon_slayer')  // 实际 + 虚拟
-val.virtual = symphony.set.getVirtualPieces(player, 'dragon_slayer')
-```
+> 注：虚拟套装操作当前未暴露到 Aria 脚本层，需通过 Kotlin API（`PlayerDataManager.getOrCreate(uuid).persistent.virtualSets`）直接操作。
 
 ### 4.3 状态层（StatusStack）
 
@@ -419,20 +398,9 @@ val.virtual = symphony.set.getVirtualPieces(player, 'dragon_slayer')
 
 ### 4.5 护盾（Shield）
 
-护盾是一种特殊的运行时数据，在受到伤害时优先消耗：
+护盾是一种特殊的运行时数据，在受到伤害时优先消耗。
 
-```aria
-// 添加护盾
-symphony.entity.addShield(player, 100, 10000, 'skill:frost_shield')
-// 参数：实体, 护盾量, 持续时间(ms), 来源
-
-// 元素护盾（只吸收对应元素伤害）
-symphony.entity.addElementShield(player, 80, 8000, 'ice', 'reaction:crystallize')
-
-// 查询
-val.totalShield = symphony.entity.getShield(player)
-val.shields = symphony.entity.getShields(player)  // 所有护盾列表
-```
+> 注：护盾操作当前未暴露到 Aria 脚本层。`ShieldData` 类存在于内部实现中，通过 `DamageListener` 在伤害管线中自动消耗。
 
 ### 4.6 战斗状态
 
@@ -778,8 +746,9 @@ class PlayerDataManager {
 
     private fun persistRuntimeData(data: SymphonyPlayerData) {
         val now = System.currentTimeMillis()
-        val buffThreshold = config.persistence.buffMinRemaining
-        val affixThreshold = config.persistence.tempAffixMinRemaining
+        // 当前实现中持久化阈值在 PlayerDataManager 中硬编码
+        val buffThreshold = 30_000L
+        val affixThreshold = 60_000L
 
         // 保存未过期 Buff
         data.persistent.savedBuffs.clear()
@@ -903,65 +872,15 @@ class RuntimeTickTask : BukkitRunnable() {
 }
 ```
 
-## 9. 数据操作的 Aria 脚本 API 汇总
+### 9. Aria 脚本 API
 
-```aria
-// ── Buff ──
-symphony.buff.add(entity, 'physical_damage', 'FLAT', 50, 10000, 'my_source')
-symphony.buff.remove(entity, 'my_source')
-symphony.buff.removeAll(entity)
-symphony.buff.list(entity)
-symphony.buff.has(entity, 'my_source')
+完整的 Aria 脚本 API 参见 [脚本集成文档](07-script-integration.md#2-symphony-aria-命名空间)。
 
-// ── 临时词条 ──
-symphony.affix.addTemp(entity, 'fire_strike', 3, 300000, 'PLAYER')
-symphony.affix.removeTemp(entity, 'fire_strike')
-symphony.affix.getTemps(entity)
-symphony.affix.hasTemp(entity, 'fire_strike')
+数据操作相关的常用 API：
 
-// ── 虚拟套装 ──
-symphony.set.addVirtual(entity, 'dragon_slayer', 2, 600000, 'potion:xxx')
-symphony.set.removeVirtual(entity, 'dragon_slayer', 'potion:xxx')
-symphony.set.getTotalPieces(entity, 'dragon_slayer')
-symphony.set.getVirtualPieces(entity, 'dragon_slayer')
-
-// ── 状态层 ──
-symphony.status.addStacks(entity, 'bleed', 1, attacker)
-symphony.status.getStacks(entity, 'bleed')
-symphony.status.clearStacks(entity, 'bleed')
-symphony.status.setImmune(entity, 'bleed', 3000)
-
-// ── 元素附着 ──
-symphony.element.applyAura(entity, 'fire', 1.0, 8000)
-symphony.element.getAura(entity, 'fire')
-symphony.element.removeAura(entity, 'fire')
-symphony.element.getAuras(entity)
-
-// ── 护盾 ──
-symphony.entity.addShield(entity, 100, 10000, 'source')
-symphony.entity.addElementShield(entity, 80, 8000, 'ice', 'source')
-symphony.entity.getShield(entity)
-symphony.entity.getShields(entity)
-
-// ── 冷却 ──
-symphony.cooldown.set(entity, 'key', 5000)
-symphony.cooldown.check(entity, 'key')
-symphony.cooldown.remaining(entity, 'key')
-symphony.cooldown.clear(entity, 'key')
-
-// ── 战斗状态 ──
-symphony.combat.isInCombat(entity)
-symphony.combat.getCombo(entity)
-symphony.combat.getDuration(entity)
-
-// ── 天赋 ──
-symphony.talent.isUnlocked(player, 'precise_strike')
-symphony.talent.getSelected(player, 'tier_1')
-symphony.talent.select(player, 'tier_1', 'precise_strike')
-
-// ── 属性点 ──
-symphony.points.getFree(player)
-symphony.points.getAllocated(player, 'strength')
-symphony.points.allocate(player, 'strength', 5)
-symphony.points.reset(player)
-```
+| 命名空间 | 常用方法 |
+|---------|---------|
+| `symphony.attribute` | `get / getRaw / buff / modify / remove / recalculate` |
+| `symphony.growth` | `getLevel / addExp / insertGem / enhance / activateRune` |
+| `symphony.status` | `addStacks / getStacks / clearStacks / hasStatus / setImmune` |
+| `symphony.trigger` | `isOnCooldown / setCooldown` |

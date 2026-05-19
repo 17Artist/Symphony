@@ -13,7 +13,7 @@ plugins/Symphony/scripts/attributes/
 ├── movement/              # 移动属性（4 个）
 ├── elements/              # 元素伤害/抗性（12 个）
 ├── resource/              # 资源属性（4 个：等级/经验加成/掉落/幸运）
-├── custom/                # 自定义示例（3 个）
+├── custom/                # 自定义示例（4 个）
 ├── special/               # 派生属性（combat_power）
 └── ...                    # 你自己的子目录，随便加
 ```
@@ -70,7 +70,7 @@ class Level {}
 
 ### 派生属性（`@derive`）
 
-派生属性的计算函数作为类内方法声明，用 `@derive` 标注。Processor 会把函数引用保存为 `deriveId`，运行时由 `AttributeCalculator` 调用（接入完成中）。
+派生属性的计算函数作为类内方法声明，用 `@derive` 标注。Processor 会把函数引用保存为 `deriveId`，运行时由 `AttributeCalculator` 在 `@readonly` 属性计算阶段自动调用。
 
 ```aria
 // scripts/attributes/special/combat_power.aria
@@ -124,6 +124,11 @@ scripts/attributes/elements/
 | `@priority`       | Number    | 否     | 显示排序                             |
 | `@vanillaBinding` | String    | 否     | 绑定 Minecraft 原版属性                |
 | `@readonly`       | Boolean/无 | 否     | 只读（派生属性）                         |
+| `@dependsOn`      | String…   | 否     | 声明静态依赖的其他属性 ID                  |
+| `@when`           | String    | 否     | 条件门控表达式，为 false 时属性不生效          |
+| `@defaultExpr`    | String    | 否     | 动态默认值表达式                         |
+| `@minExpr`        | String    | 否     | 动态最小值表达式                         |
+| `@maxExpr`        | String    | 否     | 动态最大值表达式                         |
 | `@tag`            | String    | 否     | 单个标签，可重复使用                       |
 | `@tags`           | String…   | 否     | 批量标签，等价于多个 `@tag`                |
 
@@ -132,8 +137,8 @@ scripts/attributes/elements/
 | 注解          | 位置   | 说明                       |
 |-------------|------|--------------------------|
 | `@derive`   | 类内方法 | 派生计算函数；入参 `args[0]` 为持有者 |
-| `@onChange` | 类内方法 | 值变更回调（规划中）               |
-| `@formula`  | 类内方法 | 自定义叠加公式（规划中）             |
+| `@onChange` | 类内方法 | 值变更回调                    |
+| `@formula`  | 类内方法 | 自定义聚合公式；入参为 `base, flatSum, percentSum, holder`，返回最终值 |
 
 未识别的注解会在启动时打印 `[WARN] 使用了未知类注解 @xxx`，便于发现拼写错误。
 
@@ -143,7 +148,7 @@ scripts/attributes/elements/
 - **movement/** — `movement_speed` `jump_height` `fly_speed` `knockback_resistance`
 - **elements/** — `fire/ice/lightning/poison/holy/dark` × `{_damage, _resistance}`
 - **resource/** — `level`（只读） `exp_bonus` `drop_bonus` `luck`
-- **custom/** — `combo_rate` `exp_multiplier` `cooldown_reduction`
+- **custom/** — `bleed` `combo_rate` `exp_multiplier` `cooldown_reduction`
 - **special/** — `combat_power`（派生只读）
 
 ## 5. 在词条/装备中使用属性

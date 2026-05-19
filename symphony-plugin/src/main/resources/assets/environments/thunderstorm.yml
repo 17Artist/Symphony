@@ -1,0 +1,14 @@
+# 雷暴增幅 — 户外雷暴时闪电伤害大幅提升
+id: thunderstorm_lightning
+display_name: "雷暴增幅"
+type: WEATHER
+weather: THUNDER
+require_outdoor: true
+attributes:
+  lightning_damage:
+    operation: PERCENT
+    value: 0.50
+  lightning_resistance:
+    operation: FLAT
+    value: -0.10
+description: "户外雷暴：闪电伤害 +50%，闪电抗性 -10%"

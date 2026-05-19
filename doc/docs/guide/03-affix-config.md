@@ -226,6 +226,21 @@ actions:
       val.target = server.trigger_target
       val.damage = server.trigger_damage
       symphony.entity.heal(server.trigger_entity, damage * 0.1)
+  
+  # 法力消耗/恢复
+  - type: MANA
+    value: -20                    # 负数为消耗，正数为恢复
+
+  # 状态层叠加
+  - type: STATUS_STACK
+    status: "bleed"
+    stacks: 1
+
+  # 永久属性修改
+  - type: ATTRIBUTE_PERMANENT
+    attribute: "physical_damage"
+    operation: FLAT
+    value: 5
 ```
 
 ## 4. 词条池配置

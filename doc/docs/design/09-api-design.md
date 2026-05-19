@@ -109,7 +109,7 @@ interface ITriggerManager {
     
     // 条件注册
     fun registerCondition(type: String, factory: (Map<String, Any>) -> ITriggerCondition)
-    fun registerConditionType(type: String, impl: ITriggerCondition)
+    fun registerConditionType(type: String, impl: ICustomCondition)
     fun unregisterConditionType(type: String)
     
     // 手动触发
@@ -154,10 +154,8 @@ interface IGrowthManager {
     fun insertGem(item: ItemStack, slotIndex: Int, gemId: String, gemLevel: Int): Boolean
     fun removeGem(item: ItemStack, slotIndex: Int): Boolean
     fun unlockSlot(item: ItemStack, slotIndex: Int): Boolean
-    fun synthesizeGems(gems: List<ItemStack>): ItemStack?
     
     // 符文
-    fun getRunes(player: Player): Map<String, RuneData>
     fun activateRune(player: Player, runeId: String, level: Int): Boolean
     fun deactivateRune(player: Player, runeId: String)
     fun addFragments(player: Player, runeId: String, amount: Int)
@@ -171,7 +169,6 @@ interface IGrowthManager {
     // 套装
     fun getSetId(item: ItemStack): String?
     fun getActiveSets(player: Player): Map<String, Int>
-    fun getSetBonuses(setId: String, pieceCount: Int): SetBonus?
 }
 
 enum class EnhanceResult {
@@ -253,13 +250,14 @@ class SkillCastEvent(caster, providerId, skillId, level, context) : Event(), Can
 ## 8. PlaceholderAPI 集成
 
 ```
-%symphony_attribute_<属性ID>%          — 属性值
-%symphony_attribute_<属性ID>_base%     — 属性基础值（不含修改器）
+%symphony_attribute_<属性ID>%          — 属性值（按 format 格式化）
+%symphony_attribute_<属性ID>_base%     — 属性默认值（@default 声明值）
+%symphony_attribute_<属性ID>_raw%      — 属性原始数值（6 位小数，不做 format）
 %symphony_level%                       — 等级
 %symphony_exp%                         — 当前经验
 %symphony_exp_required%                — 升级所需经验
 %symphony_exp_percent%                 — 经验百分比
-%symphony_exp_bar%                     — 经验进度条
+%symphony_exp_bar%                     — 经验进度条（█░ 10 格）
 %symphony_mana%                        — 当前法力
 %symphony_mana_max%                    — 最大法力
 %symphony_mana_percent%                — 法力百分比
@@ -271,7 +269,11 @@ class SkillCastEvent(caster, providerId, skillId, level, context) : Event(), Can
 %symphony_set_<套装ID>_pieces%         — 套装已穿戴件数
 %symphony_combat_power%                — 战斗力评分
 %symphony_stat_damage_dealt%           — 累计造成伤害
+%symphony_stat_damage_taken%           — 累计承受伤害
 %symphony_stat_kills%                  — 累计击杀数
+%symphony_stat_deaths%                 — 累计死亡数
+%symphony_stat_highest_combo%          — 最高连击数
+%symphony_stat_reactions%              — 累计触发反应数
 ```
 
 ## 9. 命令系统
@@ -310,6 +312,7 @@ class SkillCastEvent(caster, providerId, skillId, level, context) : Event(), Can
 /sym item gem insert <装备槽> <索引> <宝石ID> [等级]  — 镶嵌宝石
 /sym item gem remove <装备槽> <索引>                  — 移除宝石
 /sym item gem unlock <装备槽> <索引>                  — 解锁宝石槽
+/sym item gem init <装备槽> <数量1-6>                 — 初始化已解锁宝石槽
 /sym item set list                                  — 列出激活套装
 /sym item set mark <装备槽> <套装ID>                  — 标记套装件
 /sym item set unmark <装备槽>                        — 取消套装标记
@@ -319,9 +322,18 @@ class SkillCastEvent(caster, providerId, skillId, level, context) : Event(), Can
 
 ```
 /sym reload                                         — 重载配置
-/sym explain <属性ID> [玩家]                         — 属性计算流水线明细
-/sym debug [玩家]                                    — 运行时状态概览
-/sym menu                                           — 打开属性面板
+/sym explain <属性ID> [玩家]                         — 属性计算流水线明细（各 Provider 贡献、最终值）
+/sym debug [玩家]                                    — 运行时状态概览（等级、经验、战斗状态、Buff 数、临时词条数、注册属性数）
+/sym menu                                           — 打开属性面板（54 格 GUI，按分类浏览属性）
 ```
 
-slot 参数接受 `MAIN / OFF / HELMET / CHEST / LEGS / BOOTS`（或对应的 `HAND / OFF_HAND / HEAD / CHESTPLATE / LEGGINGS / FEET`），大小写不敏感。
+slot 参数接受以下别名（大小写不敏感）：
+
+| 槽位 | 接受的别名 |
+|------|-----------|
+| 主手 | `MAIN`, `MAIN_HAND`, `HAND` |
+| 副手 | `OFF`, `OFF_HAND` |
+| 头盔 | `HELMET`, `HEAD` |
+| 胸甲 | `CHEST`, `CHESTPLATE` |
+| 护腿 | `LEGS`, `LEGGINGS` |
+| 靴子 | `BOOTS`, `FEET` |

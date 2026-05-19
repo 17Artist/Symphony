@@ -1,0 +1,10 @@
+# 高空稀薄 — Y 坐标 > 200 时移动速度提升
+id: high_altitude
+display_name: "高空稀薄"
+type: ALTITUDE
+min_y: 200.0
+attributes:
+  movement_speed:
+    operation: PERCENT
+    value: 0.10
+description: "高空（Y > 200）：移动速度 +10%"

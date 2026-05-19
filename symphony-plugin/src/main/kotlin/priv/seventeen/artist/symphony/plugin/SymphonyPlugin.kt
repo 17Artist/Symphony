@@ -37,6 +37,7 @@ import priv.seventeen.artist.symphony.nms.NMSAdapterFactory
 import priv.seventeen.artist.symphony.plugin.command.SymphonyCommands
 import priv.seventeen.artist.symphony.plugin.gui.AttributeGuiProvider
 import priv.seventeen.artist.symphony.plugin.gui.BukkitInventoryGuiProvider
+import priv.seventeen.artist.symphony.plugin.placeholder.SymphonyExpansion
 import java.io.File
 
 object SymphonyPlugin {
@@ -143,6 +144,15 @@ object SymphonyPlugin {
 
         guiProvider = BukkitInventoryGuiProvider().also {
             bukkitPlugin.server.pluginManager.registerEvents(it, bukkitPlugin)
+        }
+
+        // PlaceholderAPI 前置检测后注册
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            if (SymphonyExpansion().register()) {
+                BlinkLog.info("已注册 §bPlaceholderAPI §f扩展")
+            } else {
+                BlinkLog.warn("§bPlaceholderAPI §f扩展注册失败")
+            }
         }
 
         BlinkLog.success("§bSymphony §f已启用 — 已加载 §b${AttributeRegistry.ids().size} §f个属性")

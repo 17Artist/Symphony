@@ -1,0 +1,16 @@
+# 不动如山 — 最大生命值达到 1000 时解锁
+id: immovable
+display_name: "不动如山"
+description: "最大生命值 ≥ 1000 时解锁：击退抗性 +80%"
+icon: SHIELD
+
+gate:
+  type: SINGLE
+  attribute: max_health
+  threshold: 1000
+  operator: ">="
+
+passive_attributes:
+  knockback_resistance:
+    operation: FLAT
+    value: 0.8

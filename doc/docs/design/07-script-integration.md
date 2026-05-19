@@ -23,11 +23,9 @@ SymphonyScriptEngine（初始化）
    └── AttributeAnnotationProcessor.process()
 2. scripts/formulas/*.aria         ← 公式（依赖属性 ID）
 3. scripts/mechanics/*.aria        ← 战斗机制（依赖属性 + 公式）
-4. scripts/skills/*.aria           ← 技能脚本（依赖以上所有）
-5. scripts/modules/*.aria          ← 公共模块（按需 import）
 ```
 
-属性脚本单个文件只声明一个属性，互相独立，顺序无关。加载顺序仅在跨目录类型（attributes/formulas/…）之间有意义。
+`scripts/modules/*.aria` 不会自动加载，通过 Aria 的 `import` 语句按需引入。技能脚本通过 `skills/*.yml` 的 `script: |` 字段注册。
 
 ## 2. Symphony Aria 命名空间
 
@@ -89,9 +87,7 @@ symphony.entity.setMana(player, 50)
 symphony.entity.costMana(player, 20)
 
 // 附近实体
-val.nearby = symphony.entity.getNearby(location, 5.0)
-val.nearbyPlayers = symphony.entity.getNearbyPlayers(location, 10.0)
-val.nearbyHostile = symphony.entity.getNearbyHostile(entity, 8.0)
+val.nearby = symphony.entity.getNearby(entity, 5.0)
 
 // 药水效果
 symphony.entity.addPotion(target, 'SPEED', 200, 1)
@@ -112,9 +108,10 @@ symphony.entity.setVelocity(entity, 0, 1, 0)
 val.item = symphony.item.getMainHand(player)
 val.offhand = symphony.item.getOffHand(player)
 
-// 获取装备
-val.helmet = symphony.item.getEquipment(player, 'HEAD')
-val.chest = symphony.item.getEquipment(player, 'CHEST')
+// 获取装备（返回包含所有槽位的 Map）
+val.equip = symphony.item.getEquipment(player)
+val.helmet = equip.helmet
+val.chest = equip.chestplate
 
 // 物品属性
 val.attrs = symphony.item.getAttributes(item)
@@ -133,11 +130,11 @@ val.rarity = symphony.item.getRarity(item)
 ```aria
 // 粒子效果
 symphony.effect.particle(location, 'FLAME', 20, 0.5, 0.5, 0.5)
-symphony.effect.particleAt(entity, 'HEART', 5)
+symphony.effect.particleAt(x, y, z, world, 'HEART', 5)
 
 // 音效
 symphony.effect.sound(location, 'entity.blaze.shoot', 1.0, 1.2)
-symphony.effect.soundAt(entity, 'entity.player.levelup', 1.0, 1.0)
+symphony.effect.soundAt(x, y, z, world, 'entity.player.levelup', 1.0, 1.0)
 
 // 几何粒子
 symphony.effect.line(from, to, 'REDSTONE', 15)
@@ -155,10 +152,7 @@ symphony.effect.message(player, '&a你获得了一个新词条!')
 
 ```aria
 // 手动触发自定义触发器
-symphony.trigger.dispatch('ON_CUSTOM', player, {
-    'customData': 'value',
-    'damage': 100
-})
+symphony.trigger.dispatch('ON_CUSTOM', player)
 
 // 检查冷却
 val.onCooldown = symphony.trigger.isOnCooldown(player, 'fire_strike')
@@ -339,138 +333,60 @@ class FormulaEngine {
 
 ### 4.2 内置公式
 
-```yaml
-# config/formulas.yml
-formulas:
-  # 伤害计算
-  physical_damage_calc: |
-    val.atk = args[0]
-    val.def = args[1]
-    val.pen = args[2]
-    val.effectiveDef = def * (1 - pen)
-    return math.max(1, atk - effectiveDef)
-  
-  # 防御减伤率
-  defense_reduction: |
-    val.defense = args[0]
-    val.attackerLevel = args[1]
-    return defense / (defense + 100 + attackerLevel * 5)
-  
-  # 暴击伤害
-  critical_damage_calc: |
-    val.baseDamage = args[0]
-    val.critMultiplier = args[1]
-    return baseDamage * critMultiplier
-  
-  # 元素伤害
-  element_damage_calc: |
-    val.elementDmg = args[0]
-    val.elementRes = args[1]
-    return elementDmg * math.max(0, 1 - elementRes)
-  
-  # 闪避判定
-  dodge_calc: |
-    val.dodgeRate = args[0]
-    val.accuracy = args[1]
-    return math.max(0, dodgeRate - (accuracy - 1))
-  
-  # 升级经验
-  level_exp: |
-    val.level = args[0]
-    return math.floor(100 * math.pow(level, 1.5) + level * 50)
-  
-  # 战斗力评分
-  combat_power: |
-    val.atk = args[0]
-    val.def = args[1]
-    val.hp = args[2]
-    val.critChance = args[3]
-    val.critDmg = args[4]
-    return math.floor(atk * 2 + def * 1.5 + hp * 0.5 + critChance * 100 + critDmg * 50)
+公式通过 `scripts/formulas/*.aria` 文件定义，按文件名注册（`physical_damage.aria` → 公式名 `physical_damage`）。启动时由 `SymphonyScriptEngine` 扫描该目录，将每个文件的源代码交给 `FormulaEngine.register(name, code)` 预编译。
+
+简短示例：
+
+```aria
+// scripts/formulas/physical_damage.aria
+val.atk = args[0]
+val.def = args[1]
+val.pen = args[2]
+val.effectiveDef = def * (1 - pen)
+return math.max(1, atk - effectiveDef)
 ```
 
 ## 5. 沙箱安全
 
-### 5.1 沙箱配置
-
-```kotlin
-// 属性定义沙箱（允许 symphony.attribute.register，禁止其他副作用）
-val attributeSandbox = SandboxConfig.builder()
-    .maxExecutionTime(5000)
-    .maxCallDepth(100)
-    .allowFileSystem(false)
-    .allowNetwork(false)
-    .allowJavaInterop(false)
-    .allowedNamespaces("math", "type", "symphony.attribute", "console")
-    .build()
-
-// 公式沙箱（最严格，纯计算）
-val formulaSandbox = SandboxConfig.builder()
-    .maxExecutionTime(1000)
-    .maxCallDepth(50)
-    .allowFileSystem(false)
-    .allowNetwork(false)
-    .allowJavaInterop(false)
-    .allowedNamespaces("math", "type")
-    .build()
-
-// 技能脚本沙箱（允许 symphony 全命名空间）
-val skillSandbox = SandboxConfig.builder()
-    .maxExecutionTime(5000)
-    .maxCallDepth(100)
-    .allowFileSystem(false)
-    .allowNetwork(false)
-    .allowJavaInterop(false)
-    .allowedNamespaces("math", "type", "console", "symphony", "json", "string")
-    .build()
-
-// 条件脚本沙箱
-val conditionSandbox = SandboxConfig.builder()
-    .maxExecutionTime(500)
-    .maxCallDepth(20)
-    .allowFileSystem(false)
-    .allowNetwork(false)
-    .allowJavaInterop(false)
-    .allowedNamespaces("math", "type", "symphony")
-    .build()
-```
-
-### 5.2 安全策略
-
-- 所有脚本在沙箱中执行，限制执行时间和调用深度
-- 禁止文件系统和网络访问
-- 禁止直接 Java 互操作（只能通过 symphony.* 命名空间）
-- 公式脚本只允许 math 和 type 命名空间
-- 脚本执行超时自动终止，记录警告日志
+脚本在 Aria 引擎自带的沙箱中执行，Symphony 不额外包装沙箱配置层。执行时间、调用深度、命名空间白名单等安全策略由 Aria 统一管理，Symphony 仅通过注册 `symphony.*` 命名空间暴露可用能力。
 
 ## 6. 脚本文件组织
 
+**自动加载**（启动 / `reload` 时扫描并执行）：
+
 ```
 plugins/Symphony/scripts/
-├── attributes/               # 属性定义脚本（最先加载，定义所有属性）
-│   ├── combat.aria           #   战斗属性
-│   ├── movement.aria         #   移动属性
-│   ├── elements.aria         #   元素属性（批量注册）
-│   ├── resource.aria         #   资源属性
-│   ├── derived.aria          #   派生属性（战斗力等）
-│   └── custom-example.aria   #   自定义示例
-├── mechanics/                # 战斗机制脚本（伤害计算、闪避判定等）
-│   ├── damage.aria           #   伤害计算流程
-│   ├── defense.aria          #   防御/减伤计算
-│   └── combat.aria           #   战斗状态管理
-├── formulas/                 # 公式脚本（预编译，高频调用）
-│   ├── exp.aria              #   经验曲线
-│   └── enhance.aria          #   强化概率
-├── skills/                   # 技能脚本
-│   ├── chain_lightning.aria
-│   ├── meteor_strike.aria
-│   └── healing_wave.aria
-├── conditions/               # 自定义条件脚本
-│   └── is_boss_fight.aria
-└── modules/                  # 公共模块（可被其他脚本 import）
+├── attributes/               # 属性定义脚本（最先加载，递归扫描子目录）
+│   ├── combat/              # 战斗属性（一属性一文件）
+│   │   ├── physical_damage.aria
+│   │   ├── max_health.aria
+│   │   └── ...
+│   ├── movement/
+│   ├── elements/
+│   ├── resource/
+│   ├── custom/
+│   └── special/
+├── formulas/                 # 公式脚本（按文件名注册到 FormulaEngine）
+│   ├── exp.aria
+│   └── enhance.aria
+└── mechanics/                # 战斗机制脚本（伤害计算、闪避判定等）
+    ├── damage.aria
+    └── combat.aria
+```
+
+**按需加载**（不会被自动扫描，通过 Aria 的 `import` 语句由其他脚本引入）：
+
+```
+plugins/Symphony/scripts/
+└── modules/                  # 公共模块
     ├── utils.aria
     └── constants.aria
 ```
+
+**非脚本目录**（脚本以内联字段形式存在，由 YAML 加载器间接注册）：
+
+- `skills/*.yml` — 技能定义中的 `script: |` 字段被提取后注册为技能脚本；
+- 词条 YAML（`affixes/*.yml` 等）— 条件脚本通过 `type: SCRIPT` + `code: |` 内联声明，由词条加载器解析。
 
 ## 7. 脚本热重载
 

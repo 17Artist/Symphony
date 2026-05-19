@@ -346,9 +346,11 @@ object ConfigLoader {
                         val attrs = mutableMapOf<String, RunePassiveAttribute>()
                         for (attrKey in lvlSec.getKeys(false)) {
                             val sub = lvlSec.getConfigurationSection(attrKey) ?: continue
+                            val rawValue = sub.get("value")
+                            val (parsedOp, parsedValue) = parseRuneValue(rawValue, sub.getString("operation") ?: "FLAT")
                             attrs[attrKey] = RunePassiveAttribute(
-                                operation = sub.getString("operation") ?: "FLAT",
-                                value = sub.getDouble("value", 0.0)
+                                operation = parsedOp,
+                                value = parsedValue
                             )
                         }
                         passives[lvl] = attrs
@@ -372,6 +374,33 @@ object ConfigLoader {
             }
         }
         if (count > 0) BlinkLog.info("已加载 $count 个符文定义")
+    }
+
+    /**
+     * 解析符文 value 字段，兼容多种写法：
+     * - value: 10       → (FLAT, 10.0)
+     * - value: "10"     → (FLAT, 10.0)
+     * - value: "10%"    → (PERCENT, 10.0)
+     * - value: 10.5     → (FLAT, 10.5)
+     * - value: "10.5%"  → (PERCENT, 10.5)
+     *
+     * 如果配置中已显式指定 operation，则 operation 优先；
+     * 仅当 value 以 % 结尾时自动推断为 PERCENT。
+     */
+    private fun parseRuneValue(rawValue: Any?, declaredOp: String): Pair<String, Double> {
+        if (rawValue == null) return declaredOp to 0.0
+        // 数字类型直接用
+        if (rawValue is Number) return declaredOp to rawValue.toDouble()
+        val str = rawValue.toString().trim()
+        if (str.isEmpty()) return declaredOp to 0.0
+        // "10%" 或 "10.5%" — 自动推断 PERCENT
+        if (str.endsWith("%")) {
+            val num = str.dropLast(1).trim().toDoubleOrNull() ?: 0.0
+            return "PERCENT" to num
+        }
+        // "10" 或 "10.5" — 字符串形式的数字
+        val num = str.toDoubleOrNull() ?: 0.0
+        return declaredOp to num
     }
 
     fun loadStatuses(dir: File) {
@@ -567,7 +596,15 @@ object ConfigLoader {
                     displayName = config.getString("display_name") ?: id,
                     type = type,
                     attributes = attrs,
-                    description = config.getString("description") ?: ""
+                    description = config.getString("description") ?: "",
+                    dimension = config.getString("dimension"),
+                    biomes = config.getStringList("biomes"),
+                    timeStart = config.getLong("time_start", -1),
+                    timeEnd = config.getLong("time_end", -1),
+                    weather = config.getString("weather"),
+                    minY = if (config.contains("min_y")) config.getDouble("min_y") else Double.NEGATIVE_INFINITY,
+                    maxY = if (config.contains("max_y")) config.getDouble("max_y") else Double.POSITIVE_INFINITY,
+                    requireOutdoor = config.getBoolean("require_outdoor", false)
                 )
                 EnvironmentSystem.register(modifier)
                 count++
@@ -657,11 +694,9 @@ object ConfigLoader {
                         perLevel = sub.getDouble("per_level", 0.0),
                         formula = formula
                     )
-                    // 预编译 formula
+                    // formula 由 LevelProvider 在首次 provide 时延迟编译（lambda 包装模式）
                     if (formula != null) {
-                        val ok = AriaCallbackManager.compileExpression("growth_formula:$key", formula, "level")
-                        if (ok) BlinkLog.info("  等级公式 $key 预编译成功")
-                        else BlinkLog.warn("  等级公式 $key 预编译失败: $formula")
+                        BlinkLog.info("  等级公式 $key 已配置 (延迟编译)")
                     }
                 }
             }

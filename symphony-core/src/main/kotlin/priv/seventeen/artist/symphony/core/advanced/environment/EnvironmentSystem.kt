@@ -1,6 +1,5 @@
 package priv.seventeen.artist.symphony.core.advanced.environment
 
-import org.bukkit.World
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
@@ -84,42 +83,51 @@ object EnvironmentSystem {
             return AriaCallbackManager.invokeCondition(callbackId, entity)
         }
 
-        // fallback 到硬编码默认逻辑
+        // 通用类型匹配
         val world = entity.world
         val loc = entity.location
 
         return when (mod.type) {
             EnvironmentType.DIMENSION -> {
-                when (mod.id) {
-                    "nether_fire_boost" -> world.environment == World.Environment.NETHER
-                    "end_void" -> world.environment == World.Environment.THE_END
-                    else -> false
-                }
+                val target = mod.dimension?.uppercase() ?: return false
+                world.environment.name.equals(target, ignoreCase = true)
+            }
+            EnvironmentType.BIOME -> {
+                if (mod.biomes.isEmpty()) return false
+                val biomeName = loc.block.biome.name
+                mod.biomes.any { it.equals(biomeName, ignoreCase = true) }
             }
             EnvironmentType.IN_WATER -> entity.isInWater
             EnvironmentType.WEATHER -> {
-                when (mod.id) {
-                    "thunderstorm_lightning" -> world.isThundering && isOutdoor(entity)
-                    "rain_water" -> world.hasStorm() && isOutdoor(entity)
+                val outdoorOk = !mod.requireOutdoor || isOutdoor(entity)
+                if (!outdoorOk) return false
+                when (mod.weather?.uppercase()) {
+                    "THUNDER" -> world.isThundering
+                    "RAIN" -> world.hasStorm() && !world.isThundering
+                    "STORM" -> world.hasStorm()
+                    "CLEAR" -> !world.hasStorm()
                     else -> false
                 }
             }
             EnvironmentType.TIME -> {
+                val outdoorOk = !mod.requireOutdoor || isOutdoor(entity)
+                if (!outdoorOk) return false
+                if (mod.timeStart < 0 || mod.timeEnd < 0) return false
                 val time = world.time
-                when (mod.id) {
-                    "night_shadow_boost" -> time in 13000..23000
-                    "day_holy_boost" -> time in 0..12000
-                    else -> false
+                if (mod.timeStart <= mod.timeEnd) {
+                    time in mod.timeStart..mod.timeEnd
+                } else {
+                    // 跨越 24000 边界（如 23000 → 1000）
+                    time >= mod.timeStart || time <= mod.timeEnd
                 }
             }
             EnvironmentType.ALTITUDE -> {
-                when (mod.id) {
-                    "high_altitude" -> loc.y > 200
-                    "deep_underground" -> loc.y < 0
-                    else -> false
+                if (mod.minY == Double.NEGATIVE_INFINITY && mod.maxY == Double.POSITIVE_INFINITY) {
+                    return false
                 }
+                loc.y in mod.minY..mod.maxY
             }
-            else -> false
+            EnvironmentType.COMBAT_TARGET -> false
         }
     }
 
@@ -129,36 +137,67 @@ object EnvironmentSystem {
     }
 
     fun registerDefaults() {
-        register(EnvironmentModifier("nether_fire_boost", "地狱灼热", EnvironmentType.DIMENSION,
-            mapOf(
+        register(EnvironmentModifier(
+            id = "nether_fire_boost",
+            displayName = "地狱灼热",
+            type = EnvironmentType.DIMENSION,
+            dimension = "NETHER",
+            attributes = mapOf(
                 "fire_damage" to EnvAttributeEffect("PERCENT", 0.25),
                 "fire_resistance" to EnvAttributeEffect("FLAT", -0.15),
                 "ice_damage" to EnvAttributeEffect("PERCENT", -0.30)
-            ), "地狱维度：火焰伤害 +25%，火焰抗性 -15%，冰霜伤害 -30%"))
+            ),
+            description = "地狱维度：火焰伤害 +25%，火焰抗性 -15%，冰霜伤害 -30%"
+        ))
 
-        register(EnvironmentModifier("ocean_water_boost", "深海之力", EnvironmentType.IN_WATER,
-            mapOf(
+        register(EnvironmentModifier(
+            id = "ocean_water_boost",
+            displayName = "深海之力",
+            type = EnvironmentType.IN_WATER,
+            attributes = mapOf(
                 "lightning_damage" to EnvAttributeEffect("PERCENT", 0.20),
                 "fire_damage" to EnvAttributeEffect("PERCENT", -0.50),
                 "movement_speed" to EnvAttributeEffect("PERCENT", -0.20)
-            )))
+            ),
+            description = "水下：闪电伤害 +20%，火焰伤害 -50%，移动速度 -20%"
+        ))
 
-        register(EnvironmentModifier("night_shadow_boost", "暗夜之力", EnvironmentType.TIME,
-            mapOf(
+        register(EnvironmentModifier(
+            id = "night_shadow_boost",
+            displayName = "暗夜之力",
+            type = EnvironmentType.TIME,
+            timeStart = 13000,
+            timeEnd = 23000,
+            attributes = mapOf(
                 "dark_damage" to EnvAttributeEffect("PERCENT", 0.20),
                 "dodge" to EnvAttributeEffect("FLAT", 0.05),
                 "holy_damage" to EnvAttributeEffect("PERCENT", -0.15)
-            )))
+            ),
+            description = "夜晚（13000-23000 tick）：暗影伤害 +20%，闪避 +5%，神圣伤害 -15%"
+        ))
 
-        register(EnvironmentModifier("thunderstorm_lightning", "雷暴增幅", EnvironmentType.WEATHER,
-            mapOf(
+        register(EnvironmentModifier(
+            id = "thunderstorm_lightning",
+            displayName = "雷暴增幅",
+            type = EnvironmentType.WEATHER,
+            weather = "THUNDER",
+            requireOutdoor = true,
+            attributes = mapOf(
                 "lightning_damage" to EnvAttributeEffect("PERCENT", 0.50),
                 "lightning_resistance" to EnvAttributeEffect("FLAT", -0.10)
-            )))
+            ),
+            description = "户外雷暴：闪电伤害 +50%，闪电抗性 -10%"
+        ))
 
-        register(EnvironmentModifier("high_altitude", "高空稀薄", EnvironmentType.ALTITUDE,
-            mapOf(
+        register(EnvironmentModifier(
+            id = "high_altitude",
+            displayName = "高空稀薄",
+            type = EnvironmentType.ALTITUDE,
+            minY = 200.0,
+            attributes = mapOf(
                 "movement_speed" to EnvAttributeEffect("PERCENT", 0.10)
-            )))
+            ),
+            description = "高空（Y > 200）：移动速度 +10%"
+        ))
     }
 }

@@ -110,39 +110,16 @@ levels:
         operation: FLAT
         value: 0.5
     lore: "&9+20 魔法攻击力 &b+25 法力 +0.5 法力恢复"
-
-synthesis:
-  enabled: true
-  count: 3
-  success_rate: 1.0
-  failure_action: "keep"
 ```
 
-### 2.2 宝石槽配置
+### 2.2 宝石槽管理
 
-装备的宝石槽数量由物品稀有度决定：
-
-```yaml
-# config/gem-slots.yml
-gem_slots:
-  default_slots:
-    COMMON: 0
-    UNCOMMON: 1
-    RARE: 2
-    EPIC: 3
-    LEGENDARY: 4
-    MYTHIC: 5
-  
-  # 解锁道具
-  unlock_item:
-    material: NETHER_STAR
-    custom_model_data: 2100
-    display_name: "&e宝石槽钥匙"
-```
-
-### 2.3 操作命令
+宝石槽通过命令或 API 手动管理：
+- 首次解锁时自动创建 3 个锁定槽位（index 0-2）
+- 最多可扩展到 6 个槽位（index 0-5）
 
 ```
+/sym item gem init <装备槽> <数量1-6>              — 初始化已解锁宝石槽
 /sym item gem list <装备槽>
 /sym item gem insert <装备槽> <宝石槽索引> <宝石ID> [等级]
 /sym item gem remove <装备槽> <宝石槽索引>
@@ -165,9 +142,6 @@ description:
   - "&7提升防御力和生命值"
 max_level: 3
 category: defense
-icon:
-  material: DIAMOND
-  custom_model_data: 3002
 
 activation:
   type: FRAGMENT
@@ -232,24 +206,15 @@ triggers:
         type: actionbar
 ```
 
-### 3.2 碎片获取配置
+### 3.2 碎片获取
 
-```yaml
-# config/rune-fragments.yml
-fragment_sources:
-  mob_kill:
-    enabled: true
-    base_chance: 0.05
-    luck_influence: 0.01
-    fragment_pool:
-      - rune: berserker
-        weight: 100
-      - rune: guardian
-        weight: 80
-      - rune: arcane
-        weight: 60
-    amount_range: [1, 3]
+符文碎片通过命令或 API 给予，不内置自动掉落机制：
+
 ```
+/sym player rune fragment <玩家> <符文ID> <数量>
+```
+
+其他插件可通过 `IGrowthManager.addFragments(player, runeId, amount)` API 集成自定义获取逻辑。
 
 ### 3.3 命令
 

@@ -13,6 +13,7 @@ allprojects {
         maven("https://mvn.lumine.io/repository/maven-public/")
         mavenCentral()
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     }
 }
 

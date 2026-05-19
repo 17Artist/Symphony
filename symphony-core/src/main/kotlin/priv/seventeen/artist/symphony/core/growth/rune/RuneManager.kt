@@ -28,7 +28,8 @@ class RuneManager {
             data.persistent.runeFragments[runeId] = (current - required).coerceAtLeast(0)
         }
         data.dirty = true
-        AttributeCalculator.markDirty(player)
+        // 立即重算属性（确保后续查询能拿到最新值，不依赖下一 tick）
+        AttributeCalculator.recalculate(player)
         return true
     }
 
@@ -36,7 +37,8 @@ class RuneManager {
         val data = PlayerDataManager.getData(player.uniqueId) ?: return
         data.persistent.runes[runeId]?.active = false
         data.dirty = true
-        AttributeCalculator.markDirty(player)
+        // 立即重算
+        AttributeCalculator.recalculate(player)
     }
 
     fun addFragments(player: Player, runeId: String, amount: Int) {

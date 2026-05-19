@@ -56,15 +56,6 @@ flowchart TD
 @vanillaBinding('generic.attack_damage')    // 绑定原版属性
 @tag('offensive') @tag('physical')
 class PhysicalDamage {
-    // 自定义计算公式（可选）
-    @formula
-    calc = -> {
-        val.base = args[0]
-        val.flat = args[1]
-        val.percent = args[2]
-        return (base + flat) * (1 + percent)
-    }
-
     // 属性变更回调（可选）
     @onChange
     sync = -> {
@@ -100,15 +91,6 @@ scripts/attributes/elements/
 @format('percent')
 @priority(30)
 class DamageReduction {
-    @formula
-    curve = -> {
-        val.base = args[0]
-        val.flat = args[1]
-        val.percent = args[2]
-        val.raw = (base + flat) * (1 + percent)
-        // 100 防御 = 50% 减伤，200 防御 = 66.7% 减伤
-        return raw / (raw + 100)
-    }
 }
 ```
 
@@ -159,9 +141,9 @@ class CombatPower {
 | `@readonly`        | Boolean/无 | 否     | 是否只读（仅由 `@derive` 计算）                 |
 | `@tag`             | String    | 否     | 单个标签，可重复                              |
 | `@tags`            | String[]  | 否     | 批量标签                                  |
-| `@formula` (类内方法)  | —         | 否     | 自定义叠加公式（接入完成中）                        |
 | `@derive` (类内方法)   | —         | 否     | 派生计算函数                                |
-| `@onChange` (类内方法) | —         | 否     | 属性值变更回调（接入完成中）                        |
+| `@onChange` (类内方法) | —         | 否     | 属性值变更回调                               |
+| `@formula` (类内方法)  | —         | 否     | 自定义聚合公式（入参：base, flatSum, percentSum, holder） |
 | `@dependsOn`       | String... | 否     | 声明属性间静态依赖，用于局部脏标记传播                   |
 | `@when`            | String    | 否     | 条件门控，条件不满足时属性使用默认值                    |
 | `@defaultExpr`     | String    | 否     | 动态默认值表达式（Aria 脚本）                     |
@@ -178,7 +160,7 @@ plugins/Symphony/scripts/attributes/
 ├── movement/    # 移动属性（4 个）
 ├── elements/    # 元素属性（6 元素 × 伤害+抗性 = 12 个）
 ├── resource/    # 资源属性（4 个：等级/经验加成/掉落/幸运）
-├── custom/      # 自定义示例（3 个）
+├── custom/      # 自定义示例（4 个）
 └── special/     # 派生属性（combat_power）
 ```
 
@@ -219,7 +201,7 @@ plugins/Symphony/scripts/attributes/
 
 ### 元素属性 (elements.aria)
 
-6 种元素 × 2（伤害 + 抗性）= 12 个属性，通过循环批量注册：
+6 种元素 × 2（伤害 + 抗性）= 12 个属性，每个独立 `.aria` 文件声明：
 `fire` / `ice` / `lightning` / `poison` / `holy` / `dark`
 
 ### 资源属性 (resource.aria)
@@ -254,14 +236,10 @@ flowchart TD
     Group[按属性 ID 分组]
     Loop{每个属性}
     Sum[flatSum = Σ FLAT<br/>percentSum = Σ PERCENT]
-    Custom{有 @formula?}
-    F1[value = formula base, flat, percent, holder]
-    F2["value = (base + flatSum) × (1 + percentSum)"]
+    Calc["value = (base + flatSum) × (1 + percentSum)"]
     Clamp[clamp value, min, max]
 
-    Collect --> Group --> Loop --> Sum --> Custom
-    Custom -- 有 --> F1 --> Clamp
-    Custom -- 无 --> F2 --> Clamp
+    Collect --> Group --> Loop --> Sum --> Calc --> Clamp
 
     style Sum fill:#e1f5ff,color:#000
     style Clamp fill:#9f6,color:#000
@@ -309,16 +287,10 @@ flowchart LR
 interface IAttributeProvider {
     val id: String
     val priority: Int
-    fun provide(holder: IAttributeHolder): List<AttributeModifier>
-    fun shouldUpdate(holder: IAttributeHolder, event: Any?): Boolean
+    val isAsync: Boolean get() = false
+    fun appliesTo(entity: LivingEntity): Boolean = true
+    fun provide(entity: LivingEntity): List<AttributeModifier>
 }
-
-data class AttributeModifier(
-    val attributeId: String,
-    val operation: Operation,   // FLAT 或 PERCENT
-    val value: Double,
-    val source: String          // 来源标识
-)
 ```
 
 内置来源及优先级：
@@ -344,16 +316,15 @@ data class AttributeModifier(
 
 ## 6. 原版属性桥接
 
-属性脚本通过 `vanilla_binding` 字段声明与原版属性的绑定关系。插件不硬编码任何绑定映射。
+属性脚本通过 `@vanillaBinding` 注解声明与原版属性的绑定关系。插件不硬编码任何绑定映射。
 
 ```aria
-// 脚本中声明绑定
-symphony.attribute.register({
-    'id': 'max_health',
-    'display_name': '最大生命值',
-    'default_value': 20.0,
-    'vanilla_binding': 'generic.max_health'   // ← 这里
-})
+// scripts/attributes/combat/max_health.aria
+@attribute('max_health')
+@displayName('最大生命值')
+@default(20.0) @min(1.0)
+@vanillaBinding('generic.max_health')   // ← 声明绑定
+class MaxHealth {}
 ```
 
 桥接流程：

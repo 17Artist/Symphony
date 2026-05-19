@@ -21,6 +21,7 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.attribute.AttributeProviderRegistry
 import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
 import priv.seventeen.artist.symphony.core.attribute.provider.GemProvider
+import priv.seventeen.artist.symphony.core.attribute.provider.LevelProvider
 import priv.seventeen.artist.symphony.core.config.ConfigLoader
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
 import priv.seventeen.artist.symphony.core.growth.rune.RuneRegistry
@@ -60,15 +61,18 @@ object SymphonyCommands {
 
     private fun pickSlot(player: Player, slot: String): ItemStack? {
         val eq = player.equipment ?: return null
-        return when (slot) {
+        val item = when (slot) {
             "MAIN", "MAIN_HAND", "HAND" -> eq.itemInMainHand
             "OFF", "OFF_HAND" -> eq.itemInOffHand
             "HELMET", "HEAD" -> eq.helmet
             "CHEST", "CHESTPLATE" -> eq.chestplate
             "LEGS", "LEGGINGS" -> eq.leggings
             "BOOTS", "FEET" -> eq.boots
-            else -> null
+            else -> return null
         }
+        // 空气/空物品视为无装备
+        if (item == null || item.type.isAir) return null
+        return item
     }
 
     /**
@@ -120,6 +124,9 @@ object SymphonyCommands {
                     SymphonyPlugin.growthManager.setManager.clear()
 
                     SymphonyPlugin.formulaEngine.clear()
+                    SymphonyPlugin.growthManager.levelManager.clearExpFormulaCache()
+                    // LevelProvider 公式缓存
+                    AttributeProviderRegistry.getAll().filterIsInstance<LevelProvider>().firstOrNull()?.clearCache()
                     SymphonyPlugin.scriptEngine.loadAttributeScripts(bukkitPlugin.dataFolder)
                     SymphonyPlugin.scriptEngine.loadFormulaScripts(bukkitPlugin.dataFolder, SymphonyPlugin.formulaEngine)
                     SymphonyPlugin.scriptEngine.loadMechanicsScripts(bukkitPlugin.dataFolder)
@@ -369,7 +376,10 @@ object SymphonyCommands {
                         }
                         "gem" -> {
                             val slotName = a2.uppercase()
-                            val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c无效装备槽: $slotName (可选: ${SLOT_NAMES.joinToString()})")
+                            if (slotName.isEmpty()) return@command ctx.reply("§c用法: /sym item gem <list|insert|remove|unlock|init> <装备槽> ...")
+                            val validSlots = listOf("MAIN", "MAIN_HAND", "HAND", "OFF", "OFF_HAND", "HELMET", "HEAD", "CHEST", "CHESTPLATE", "LEGS", "LEGGINGS", "BOOTS", "FEET")
+                            if (slotName !in validSlots) return@command ctx.reply("§c无效装备槽: $slotName (可选: ${SLOT_NAMES.joinToString()})")
+                            val slotItem = pickSlot(target, slotName) ?: return@command ctx.reply("§c${slotName} 槽位没有装备，请先穿戴装备")
                             when (a1) {
                                 "list" -> {
                                     val slots = SymphonyPlugin.growthManager.getGemSlots(slotItem)
@@ -403,7 +413,13 @@ object SymphonyCommands {
                                     writeBackSlot(target, slotName, slotItem)
                                     ctx.reply(if (ok) "§a已解锁 $slotName #$idx" else "§c解锁失败")
                                 }
-                                else -> ctx.reply("§c用法: /sym item gem <list|insert|remove|unlock> <槽位> ...")
+                                "init" -> {
+                                    val count = a3.toIntOrNull()?.coerceIn(1, 6) ?: return@command ctx.reply("§c用法: /sym item gem init <槽位> <数量1-6>")
+                                    SymphonyPlugin.growthManager.gemManager.initSlots(slotItem, count)
+                                    writeBackSlot(target, slotName, slotItem)
+                                    ctx.reply("§a已为 $slotName 初始化 $count 个宝石槽（已解锁）")
+                                }
+                                else -> ctx.reply("§c用法: /sym item gem <list|insert|remove|unlock|init> <槽位> ...")
                             }
                         }
                         "set" -> when (a1) {

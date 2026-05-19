@@ -237,10 +237,10 @@ object TriggerDispatcher {
 
 ```kotlin
 // 注册自定义触发器类型
-TriggerManager.register(
+SymphonyAPI.getInstance().getTriggerManager().registerTrigger(
     TriggerType.custom("myplugin:on_combo"),
-    displayName = "连击触发",
-    contextKeys = listOf("comboCount", "totalDamage")
+    "连击触发",
+    listOf("comboCount", "totalDamage")
 )
 
 // 在适当时机触发
