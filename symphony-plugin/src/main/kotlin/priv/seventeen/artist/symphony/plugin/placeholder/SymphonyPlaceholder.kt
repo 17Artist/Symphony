@@ -4,7 +4,6 @@ import org.bukkit.entity.Player
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
-import priv.seventeen.artist.symphony.nms.SymphonyItemData
 import priv.seventeen.artist.symphony.plugin.SymphonyPlugin
 
 /**
@@ -77,7 +76,7 @@ object SymphonyPlaceholder {
 
             // --- 强化等级 ---
             params == "enhance_level" -> {
-                SymphonyItemData.getInt(player.inventory.itemInMainHand, "enhance_level")?.toString() ?: "0"
+                SymphonyPlugin.growthManager.getEnhanceLevel(player.inventory.itemInMainHand).toString()
             }
             params.startsWith("enhance_level_") -> {
                 val slot = params.removePrefix("enhance_level_")
@@ -180,7 +179,7 @@ object SymphonyPlaceholder {
             "BOOTS", "FEET" -> player.inventory.boots
             else -> return "0"
         } ?: return "0"
-        return SymphonyItemData.getInt(item, "enhance_level")?.toString() ?: "0"
+        return SymphonyPlugin.growthManager.getEnhanceLevel(item).toString()
     }
 
     private fun formatAttr(attrId: String, value: Double): String {

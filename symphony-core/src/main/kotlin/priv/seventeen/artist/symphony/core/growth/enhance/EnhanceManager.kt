@@ -49,15 +49,22 @@ class EnhanceManager {
     }
 
     fun getEnhanceLevel(item: ItemStack): Int {
-        return SymphonyItemData.getInt(item, "enhance_level") ?: 0
+        val raw = SymphonyItemData.getInt(item, "enhance_level") ?: 0
+        return raw.coerceIn(0, maxLevel)
     }
 
     fun setEnhanceLevel(item: ItemStack, level: Int) {
-        SymphonyItemData.setInt(item, "enhance_level", level)
+        SymphonyItemData.setInt(item, "enhance_level", level.coerceIn(0, maxLevel))
     }
 
     fun getMultiplier(level: Int): Double {
-        return levelConfigs[level]?.multiplier ?: 1.0
+        if (level <= 0) return 1.0
+        // clamp 到已配置的最高等级，防止超限后加成消失或异常
+        val effectiveLevel = level.coerceAtMost(maxLevel)
+        levelConfigs[effectiveLevel]?.let { return it.multiplier }
+        // 配置不连续：找 ≤ effectiveLevel 的最大已配置等级
+        val nearest = levelConfigs.keys.filter { it in 1..effectiveLevel }.maxOrNull()
+        return if (nearest != null) levelConfigs[nearest]!!.multiplier else 1.0
     }
 
     fun enhance(player: Player, item: ItemStack, protections: List<ItemStack>): EnhanceResult {

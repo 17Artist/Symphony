@@ -418,7 +418,7 @@ class SymphonyBridge {
 
     fun itemGetEnhanceLevel(item: Any?): Int {
         val stack = item as? ItemStack ?: return 0
-        return SymphonyItemData.getInt(stack, "enhance_level") ?: 0
+        return SymphonyAPI.getInstance().getGrowthManager().getEnhanceLevel(stack)
     }
 
     fun itemGetSetId(item: Any?): String? {
@@ -505,13 +505,13 @@ class SymphonyBridge {
 
     fun growthGetEnhanceLevel(item: Any?): Int {
         val stack = item as? ItemStack ?: return 0
-        return SymphonyItemData.getInt(stack, "enhance_level") ?: 0
+        return SymphonyAPI.getInstance().getGrowthManager().getEnhanceLevel(stack)
     }
 
     fun growthSetEnhanceLevel(item: Any?, level: Any?) {
         val stack = item as? ItemStack ?: return
         val lvl = (level as? Number)?.toInt() ?: return
-        SymphonyItemData.setInt(stack, "enhance_level", lvl)
+        SymphonyAPI.getInstance().getGrowthManager().setEnhanceLevel(stack, lvl)
     }
 
     fun growthActivateRune(entity: Any?, runeId: Any?, level: Any?): Boolean {

@@ -365,12 +365,18 @@ object SymphonyCommands {
                             else -> ctx.reply("§c用法: /sym item affix <list|add|clear|generate> ...")
                         }
                         "enhance" -> when (a1) {
-                            "get" -> ctx.reply("§b主手强化等级: §a${SymphonyPlugin.growthManager.getEnhanceLevel(item)}")
+                            "get" -> ctx.reply("§b主手强化等级: §a${SymphonyPlugin.growthManager.getEnhanceLevel(item)} §8/ §7${SymphonyPlugin.growthManager.enhanceManager.maxLevel}")
                             "set" -> {
                                 val level = a2.toIntOrNull() ?: return@command ctx.reply("§c无效等级")
-                                SymphonyPlugin.growthManager.setEnhanceLevel(item, level)
+                                val maxLv = SymphonyPlugin.growthManager.enhanceManager.maxLevel
+                                val clamped = level.coerceIn(0, maxLv)
+                                SymphonyPlugin.growthManager.setEnhanceLevel(item, clamped)
                                 AttributeCalculator.markDirty(target)
-                                ctx.reply("§a已设置强化等级为 $level")
+                                if (clamped != level) {
+                                    ctx.reply("§e输入 $level 已限制到 $clamped §8(允许范围 0..$maxLv)")
+                                } else {
+                                    ctx.reply("§a已设置强化等级为 $clamped")
+                                }
                             }
                             else -> ctx.reply("§c用法: /sym item enhance <get|set> [等级]")
                         }
@@ -513,6 +519,13 @@ object SymphonyCommands {
                                 val opStr = if (c.operation == Operation.FLAT) "+" else "×"
                                 ctx.reply("§8    §7$opStr${"%.3f".format(c.value)} §8from §7${c.source}")
                             }
+                        }
+                    }
+                    // 属性交互
+                    if (explain.interactions.isNotEmpty()) {
+                        ctx.reply("§8  §d─ 属性交互 ─")
+                        for (eff in explain.interactions) {
+                            ctx.reply("§8    §d${eff.type} §8[${eff.role}] §7${eff.interactionId} §8: §f${eff.description}")
                         }
                     }
                     ctx.reply("§8  §ffinal §e${"%.3f".format(explain.finalValue)}")

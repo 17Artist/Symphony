@@ -10,6 +10,7 @@ import priv.seventeen.artist.aria.value.IValue
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.IAttributeContribution
 import priv.seventeen.artist.symphony.api.IAttributeExplain
+import priv.seventeen.artist.symphony.api.IAttributeInteractionEffect
 import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.Operation
 import priv.seventeen.artist.symphony.api.event.AttributeUpdateEvent
@@ -227,11 +228,19 @@ object AttributeCalculator {
         override val value: Double
     ) : IAttributeContribution
 
+    data class AttributeInteractionEffect(
+        override val interactionId: String,
+        override val type: String,
+        override val role: String,
+        override val description: String
+    ) : IAttributeInteractionEffect
+
     data class AttributeExplain(
         override val attrId: String,
         override val displayName: String,
         override val base: Double,
         override val contributions: List<AttributeContribution>,
+        override val interactions: List<AttributeInteractionEffect>,
         override val formulaDescription: String,
         override val finalValue: Double,
         override val whenActive: Boolean,
@@ -254,6 +263,8 @@ object AttributeCalculator {
                 } catch (_: Exception) {}
             }
         }
+        // 收集影响该属性的交互
+        val interactions = collectInteractionEffects(attrId)
         val formulaDesc = when {
             attr.readonly -> "derive: ${attr.deriveId ?: "none"}"
             AttributeCallableRegistry.getFormula(attrId) != null -> "formula: ${attr.formulaId}"
@@ -266,11 +277,60 @@ object AttributeCalculator {
             displayName = attr.displayName,
             base = base,
             contributions = contribs,
+            interactions = interactions,
             formulaDescription = formulaDesc,
             finalValue = finalValue,
             whenActive = whenActive,
             readonly = attr.readonly
         )
+    }
+
+    /** 收集所有"作用于该属性"的交互定义（按角色分类）。 */
+    private fun collectInteractionEffects(attrId: String): List<AttributeInteractionEffect> {
+        val list = mutableListOf<AttributeInteractionEffect>()
+        for (def in priv.seventeen.artist.symphony.core.advanced.interaction.InteractionNetwork.getAll()) {
+            val type = def.type.name
+            // CONVERSION / OVERFLOW / DIMINISH / THRESHOLD: source -> target
+            if (def.source == attrId) {
+                val role = if (type == "THRESHOLD" || type == "DIMINISH") "source" else "source"
+                val desc = describeInteraction(def, "source")
+                list += AttributeInteractionEffect(def.id, type, role, desc)
+            }
+            if (def.target == attrId) {
+                list += AttributeInteractionEffect(def.id, type, "target", describeInteraction(def, "target"))
+            }
+            // SYNERGY: attributes 列表
+            if (attrId in def.attributes) {
+                list += AttributeInteractionEffect(def.id, type, "synergy_member", describeInteraction(def, "synergy_member"))
+            }
+            // CONFLICT: attributeA / attributeB
+            if (def.attributeA == attrId) {
+                list += AttributeInteractionEffect(def.id, type, "conflict_a", describeInteraction(def, "conflict_a"))
+            }
+            if (def.attributeB == attrId) {
+                list += AttributeInteractionEffect(def.id, type, "conflict_b", describeInteraction(def, "conflict_b"))
+            }
+        }
+        return list
+    }
+
+    private fun describeInteraction(
+        def: priv.seventeen.artist.symphony.core.advanced.interaction.InteractionDefinition,
+        role: String
+    ): String {
+        return when (def.type.name) {
+            "CONVERSION" -> if (role == "source") "${def.source} × ${def.ratio} → ${def.target}"
+                else "← ${def.source} × ${def.ratio}"
+            "OVERFLOW" -> if (role == "source") "${def.source} 超过 ${def.threshold} 部分 × ${def.ratio} 转入 ${def.target}（截断到阈值）"
+                else "← ${def.source} 溢出 × ${def.ratio}"
+            "SYNERGY" -> "全员 ≥ ${def.threshold} 时 × (1 + ${def.bonus})"
+            "CONFLICT" -> if (role == "conflict_a") "≥ ${def.thresholdA} 时使 ${def.attributeB} × (1 - ${def.penaltyB})"
+                else "受 ${def.attributeA} ≥ ${def.thresholdA} 衰减 × (1 - ${def.penaltyB})"
+            "AMPLIFY" -> "条件满足时 × ${def.multiplier}"
+            "THRESHOLD" -> "≥ ${def.threshold} 时触发 ${def.id} 效果（不直接改值）"
+            "DIMINISH" -> "超过 ${def.threshold} 后递减收益（excess/(excess+100)*100）"
+            else -> def.description.ifEmpty { def.id }
+        }
     }
 
     //  Aria 脚本函数调用 
