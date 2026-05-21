@@ -1,5 +1,7 @@
 package priv.seventeen.artist.symphony.core.data
 
+import priv.seventeen.artist.symphony.api.affix.AffixInstance
+import priv.seventeen.artist.symphony.api.attribute.AttributeModifier
 import priv.seventeen.artist.symphony.api.attribute.Operation
 import java.util.UUID
 
@@ -18,11 +20,27 @@ class RuntimeData {
     val dynamicTriggers: MutableMap<String, DynamicTriggerData> = mutableMapOf()
     val activeResonances: MutableSet<String> = mutableSetOf()
     val activeEnvironmentModifiers: MutableSet<String> = mutableSetOf()
+    /** 环境系统检测后缓存的属性修改器，由 EnvironmentProvider 直接读取避免重复评估。 */
+    var cachedEnvironmentModifiers: List<AttributeModifier> = emptyList()
     val activeThresholds: MutableSet<String> = mutableSetOf()
     val activeAmplifiers: MutableSet<String> = mutableSetOf()
     var currentMana: Double = 0.0
     var currentHealth: Double = 0.0
     val activeShields: MutableList<ShieldData> = mutableListOf()
+
+    // ── 装备词条缓存 ──
+    /** 缓存的装备词条列表，由 AffixManagerImpl.collectEntityAffixes 写入。 */
+    @Volatile var cachedAffixes: List<AffixInstance>? = null
+    /** 缓存版本号，装备变更时递增以失效缓存。 */
+    @Volatile var affixCacheVersion: Long = 0L
+    /** 上次缓存时的版本号。 */
+    @Volatile var affixCacheBuiltVersion: Long = -1L
+
+    /** 使装备词条缓存失效。 */
+    fun invalidateAffixCache() {
+        affixCacheVersion++
+        cachedAffixes = null
+    }
 }
 
 data class ActiveBuff(

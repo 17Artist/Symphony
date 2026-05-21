@@ -132,19 +132,18 @@ object DamageListener {
         }
 
         // 元素伤害计算
-        val elements = listOf("fire", "ice", "lightning", "poison", "holy", "dark")
-        for (elem in elements) {
-            val elemDmg = AttributeCalculator.getValue(attacker, "${elem}_damage")
+        for (elem in ELEMENTS) {
+            val elemDmg = AttributeCalculator.getValue(attacker, elem.dmgAttr)
             if (elemDmg > 0) {
-                val elemRes = AttributeCalculator.getValue(victim, "${elem}_resistance")
+                val elemRes = AttributeCalculator.getValue(victim, elem.resAttr)
                 val elemFinal = elemDmg * maxOf(0.0, 1.0 - elemRes)
                 if (elemFinal > 0) {
-                    symphonyEvent.elementDamages[elem] = elemFinal
+                    symphonyEvent.elementDamages[elem.id] = elemFinal
                     symphonyEvent.finalDamage += elemFinal
                     // 自动附着元素到目标，触发元素反应
                     if (SymphonyPlugin.config.elementEnabled) {
                         val gauge = (elemFinal / 10.0).coerceIn(0.5, 4.0)
-                        ElementAuraSystem.applyAura(victim, elem, gauge, appliedBy = attacker.uniqueId)
+                        ElementAuraSystem.applyAura(victim, elem.id, gauge, appliedBy = attacker.uniqueId)
                     }
                 }
             }
@@ -156,13 +155,16 @@ object DamageListener {
         if (attacker is Player) {
             val sb = StringBuilder()
             val critMark = if (symphonyEvent.isCritical) " §6✦暴击" else ""
-            sb.append("§f⚔ §c${"%.1f".format(symphonyEvent.finalDamage - symphonyEvent.elementDamages.values.sum())}$critMark")
-            for ((elem, dmg) in symphonyEvent.elementDamages) {
+            sb.append("§f⚔ §c${formatDmg(symphonyEvent.finalDamage - symphonyEvent.elementDamages.values.sum())}$critMark")
+            for ((elemId, dmg) in symphonyEvent.elementDamages) {
                 if (dmg <= 0) continue
-                sb.append(" ${elementColor(elem)}+${"%.1f".format(dmg)} ${elementName(elem)}")
+                val def = ELEMENTS.firstOrNull { it.id == elemId }
+                val color = def?.color ?: "§7"
+                val name = def?.name ?: elemId
+                sb.append(" $color+${formatDmg(dmg)} $name")
             }
             if (symphonyEvent.elementDamages.isNotEmpty()) {
-                sb.append(" §8| §e总 ${"%.1f".format(symphonyEvent.finalDamage)}")
+                sb.append(" §8| §e总 ${formatDmg(symphonyEvent.finalDamage)}")
             }
             attacker.spigot().sendMessage(
                 net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
@@ -273,15 +275,22 @@ object DamageListener {
         data.runtime.lastCombatActionTime = now
     }
 
-    private fun elementColor(elem: String): String = when (elem) {
-        "fire" -> "§c"; "ice" -> "§b"; "lightning" -> "§d"; "poison" -> "§a"
-        "holy" -> "§e"; "dark" -> "§8"; "water" -> "§9"; "wind" -> "§f"
-        else -> "§7"
-    }
+    private data class ElementDef(val id: String, val dmgAttr: String, val resAttr: String, val color: String, val name: String)
 
-    private fun elementName(elem: String): String = when (elem) {
-        "fire" -> "火"; "ice" -> "冰"; "lightning" -> "雷"; "poison" -> "毒"
-        "holy" -> "圣"; "dark" -> "暗"; "water" -> "水"; "wind" -> "风"
-        else -> elem
+    private companion object {
+        val ELEMENTS = arrayOf(
+            ElementDef("fire", "fire_damage", "fire_resistance", "§c", "火"),
+            ElementDef("ice", "ice_damage", "ice_resistance", "§b", "冰"),
+            ElementDef("lightning", "lightning_damage", "lightning_resistance", "§d", "雷"),
+            ElementDef("poison", "poison_damage", "poison_resistance", "§a", "毒"),
+            ElementDef("holy", "holy_damage", "holy_resistance", "§e", "圣"),
+            ElementDef("dark", "dark_damage", "dark_resistance", "§8", "暗")
+        )
+
+        /** 轻量数字格式化，避免 String.format 开销 */
+        fun formatDmg(value: Double): String {
+            val rounded = (value * 10.0 + 0.5).toLong() / 10.0
+            return rounded.toString()
+        }
     }
 }

@@ -21,8 +21,36 @@ class AffixManagerImpl : IAffixManager {
         fun getDefinition(id: String): AffixDefinition? = definitions[id]
 
         fun collectEntityAffixes(entity: LivingEntity): List<AffixInstance> {
-            val result = mutableListOf<AffixInstance>()
             if (entity is Player) {
+                // 使用缓存：装备未变化时直接返回缓存
+                val data = priv.seventeen.artist.symphony.core.storage.PlayerDataManager.getData(entity.uniqueId)
+                if (data != null) {
+                    val runtime = data.runtime
+                    val cached = runtime.cachedAffixes
+                    if (cached != null && runtime.affixCacheBuiltVersion == runtime.affixCacheVersion) {
+                        return cached
+                    }
+                    // 重建缓存
+                    val result = mutableListOf<AffixInstance>()
+                    val equipment = entity.equipment
+                    if (equipment != null) {
+                        listOfNotNull(
+                            equipment.itemInMainHand,
+                            equipment.itemInOffHand,
+                            equipment.helmet,
+                            equipment.chestplate,
+                            equipment.leggings,
+                            equipment.boots
+                        ).forEach { item ->
+                            result.addAll(readAffixes(item))
+                        }
+                    }
+                    runtime.cachedAffixes = result
+                    runtime.affixCacheBuiltVersion = runtime.affixCacheVersion
+                    return result
+                }
+                // 无 PlayerData fallback（极少出现，玩家未加载）
+                val result = mutableListOf<AffixInstance>()
                 val equipment = entity.equipment ?: return result
                 listOfNotNull(
                     equipment.itemInMainHand,
@@ -34,11 +62,13 @@ class AffixManagerImpl : IAffixManager {
                 ).forEach { item ->
                     result.addAll(readAffixes(item))
                 }
+                return result
             } else {
                 // 非玩家实体（如 MM 怪物）的虚拟词条
+                val result = mutableListOf<AffixInstance>()
                 MythicMobSpawnListener.getMobAffixes(entity.uniqueId)?.let { result += it }
+                return result
             }
-            return result
         }
 
         fun collectItemAffixes(item: ItemStack): List<AffixInstance> = readAffixes(item)

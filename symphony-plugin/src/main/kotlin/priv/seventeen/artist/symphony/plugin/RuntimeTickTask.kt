@@ -50,23 +50,26 @@ class RuntimeTickTask : BukkitRunnable() {
 
             // 每 20 tick (1秒)
             if (tickCount % 20 == 0L) {
-                // Buff 过期
-                val expired = data.runtime.activeBuffs.filter { it.isExpired() }
-                if (expired.isNotEmpty()) {
-                    for (buff in expired) {
+                // Buff 过期 — iterator 原地删除避免临时 List
+                val buffIter = data.runtime.activeBuffs.iterator()
+                while (buffIter.hasNext()) {
+                    val buff = buffIter.next()
+                    if (buff.isExpired()) {
+                        buffIter.remove()
                         Bukkit.getPluginManager().callEvent(
                             BuffExpireEvent(player, buff.id, buff.attribute, BuffExpireEvent.ExpireReason.TIMEOUT)
                         )
+                        attributeDirty = true
                     }
-                    data.runtime.activeBuffs.removeAll(expired)
-                    attributeDirty = true
                 }
 
                 // 临时词条过期
-                val expiredAffixes = data.runtime.tempAffixes.filter { it.isExpired() }
-                if (expiredAffixes.isNotEmpty()) {
-                    data.runtime.tempAffixes.removeAll(expiredAffixes)
-                    attributeDirty = true
+                val affixIter = data.runtime.tempAffixes.iterator()
+                while (affixIter.hasNext()) {
+                    if (affixIter.next().isExpired()) {
+                        affixIter.remove()
+                        attributeDirty = true
+                    }
                 }
 
                 // 护盾过期
@@ -107,10 +110,9 @@ class RuntimeTickTask : BukkitRunnable() {
                     TalentManager.checkTalents(player)
                 }
 
-                // 环境系统刷新 — 检查环境变化并标记 dirty
+                // 环境系统刷新 — 检查环境变化并更新缓存
                 if (SymphonyPlugin.config.environmentEnabled) {
-                    val envChanged = EnvironmentSystem.hasEnvironmentChanged(player)
-                    if (envChanged) {
+                    if (EnvironmentSystem.checkAndUpdateEnvironment(player)) {
                         AttributeCache.markDirty(player.uniqueId)
                     }
                 }

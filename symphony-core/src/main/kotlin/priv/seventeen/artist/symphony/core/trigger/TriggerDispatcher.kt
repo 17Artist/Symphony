@@ -38,7 +38,7 @@ object TriggerDispatcher {
 
         for (affix in affixes) {
             val definition = AffixManagerImpl.getDefinition(affix.affixId) ?: continue
-            val triggers = definition.triggers.filter { it.type == triggerType.id }
+            val triggers = definition.triggersByType[triggerType.id] ?: continue
 
             for (trigger in triggers) {
                 // 评估条件

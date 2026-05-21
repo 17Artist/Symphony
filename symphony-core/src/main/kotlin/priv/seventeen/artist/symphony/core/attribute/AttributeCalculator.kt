@@ -53,8 +53,17 @@ object AttributeCalculator {
     fun applyModifiers(entity: LivingEntity, modifiers: List<AttributeModifier>) {
         val entityId = entity.uniqueId
         val previous = AttributeCache.getAll(entityId)
-        val grouped = modifiers.groupBy { it.attributeId }
         val results = mutableMapOf<String, Double>()
+
+        // 单次扫描聚合 flat/percent，避免 groupBy + filter
+        val flatSums = HashMap<String, Double>(modifiers.size / 2)
+        val percentSums = HashMap<String, Double>(modifiers.size / 2)
+        for (m in modifiers) {
+            when (m.operation) {
+                Operation.FLAT -> flatSums[m.attributeId] = (flatSums[m.attributeId] ?: 0.0) + m.value
+                Operation.PERCENT -> percentSums[m.attributeId] = (percentSums[m.attributeId] ?: 0.0) + m.value
+            }
+        }
 
         // 局部脏：仅重算受影响属性，其余沿用旧值
         val dirtyOnly = AttributeCache.getDirtyAttributes(entityId)
@@ -79,9 +88,8 @@ object AttributeCalculator {
                 continue
             }
 
-            val ms = grouped[attr.id] ?: emptyList()
-            val flatSum = ms.filter { it.operation == Operation.FLAT }.sumOf { it.value }
-            val percentSum = ms.filter { it.operation == Operation.PERCENT }.sumOf { it.value }
+            val flatSum = flatSums[attr.id] ?: 0.0
+            val percentSum = percentSums[attr.id] ?: 0.0
 
             val base = resolveDefault(attr, entity)
             val value = invokeFormula(attr.id, base, flatSum, percentSum, entity)
@@ -89,8 +97,6 @@ object AttributeCalculator {
             val clamped = value.coerceIn(resolveMin(attr, entity), resolveMax(attr, entity))
             results[attr.id] = clamped
         }
-
-        AttributeCache.setAll(entityId, results)
 
         // 派生属性 — 惰性递归 + 循环检测
         val ctx = DeriveContext(entity, results)
@@ -105,7 +111,6 @@ object AttributeCalculator {
                 if (!AttributeConditionEvaluator.allMatch(entity, attr.whenConditions)) {
                     results[attr.id] = resolveDefault(attr, entity)
                     ctx.done += attr.id
-                    AttributeCache.set(entityId, attr.id, results[attr.id]!!)
                     continue
                 }
                 computeDerive(attr.id, ctx)
@@ -114,6 +119,7 @@ object AttributeCalculator {
             deriveCtx.remove()
         }
 
+        // 最终一次性写入缓存
         AttributeCache.setAll(entityId, results)
         AttributeCache.clearDirty(entityId)
 
@@ -183,12 +189,16 @@ object AttributeCalculator {
         ctx.computing -= attrId
         ctx.done += attrId
         ctx.results[attrId] = clamped
-        AttributeCache.set(ctx.entity.uniqueId, attrId, clamped)
         return clamped
     }
 
     fun markDirty(entity: LivingEntity) {
         AttributeCache.markDirty(entity.uniqueId)
+        // 同时失效装备词条缓存，确保下次 dispatch/provide 重新读取
+        if (entity is org.bukkit.entity.Player) {
+            priv.seventeen.artist.symphony.core.storage.PlayerDataManager
+                .getData(entity.uniqueId)?.runtime?.invalidateAffixCache()
+        }
     }
 
     fun ensureCalculated(entity: LivingEntity) {

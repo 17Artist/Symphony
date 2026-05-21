@@ -55,7 +55,7 @@ object SymphonyPlaceholder {
             params == "exp_percent" -> {
                 val data = PlayerDataManager.getData(player.uniqueId) ?: return "0%"
                 val required = levelManager.getRequiredExp(data.persistent.level)
-                if (required > 0) "${"%.1f".format(data.persistent.exp.toDouble() / required * 100)}%" else "0%"
+                if (required > 0) "${fastFormat1(data.persistent.exp.toDouble() / required * 100)}%" else "0%"
             }
             params == "exp_bar" -> {
                 val data = PlayerDataManager.getData(player.uniqueId) ?: return buildBar(0.0)
@@ -66,13 +66,13 @@ object SymphonyPlaceholder {
 
             // --- 法力 ---
             params == "mana" -> {
-                PlayerDataManager.getData(player.uniqueId)?.runtime?.currentMana?.let { "%.0f".format(it) } ?: "0"
+                PlayerDataManager.getData(player.uniqueId)?.runtime?.currentMana?.toLong()?.toString() ?: "0"
             }
-            params == "mana_max" -> "%.0f".format(AttributeCalculator.getValue(player, "max_mana"))
+            params == "mana_max" -> AttributeCalculator.getValue(player, "max_mana").toLong().toString()
             params == "mana_percent" -> {
                 val current = PlayerDataManager.getData(player.uniqueId)?.runtime?.currentMana ?: 0.0
                 val max = AttributeCalculator.getValue(player, "max_mana")
-                if (max > 0) "${"%.1f".format(current / max * 100)}%" else "0%"
+                if (max > 0) "${fastFormat1(current / max * 100)}%" else "0%"
             }
 
             // --- 强化等级 ---
@@ -117,7 +117,7 @@ object SymphonyPlaceholder {
             sub.endsWith("_raw") -> {
                 val attrId = sub.removeSuffix("_raw")
                 if (AttributeRegistry.get(attrId) == null) return null
-                "%.6f".format(AttributeCalculator.getValue(player, attrId))
+                AttributeCalculator.getValue(player, attrId).toString()
             }
             else -> {
                 val attrId = sub
@@ -152,8 +152,8 @@ object SymphonyPlaceholder {
     private fun handleStat(player: Player, key: String): String? {
         val stats = PlayerDataManager.getData(player.uniqueId)?.persistent?.statistics ?: return "0"
         return when (key) {
-            "damage_dealt" -> "%.0f".format(stats.totalDamageDealt)
-            "damage_taken" -> "%.0f".format(stats.totalDamageTaken)
+            "damage_dealt" -> stats.totalDamageDealt.toLong().toString()
+            "damage_taken" -> stats.totalDamageTaken.toLong().toString()
             "kills" -> stats.totalKills.toString()
             "deaths" -> stats.totalDeaths.toString()
             "highest_combo" -> stats.highestCombo.toString()
@@ -186,14 +186,31 @@ object SymphonyPlaceholder {
     private fun formatAttr(attrId: String, value: Double): String {
         val attr = AttributeRegistry.get(attrId)
         return when (attr?.format) {
-            "percent" -> "${"%.1f".format(value * 100)}%"
+            "percent" -> "${fastFormat1(value * 100)}%"
             "integer" -> value.toInt().toString()
-            else -> "%.2f".format(value)
+            else -> fastFormat2(value)
         }
+    }
+
+    /** 预计算的 11 种经验条字符串 */
+    private val BARS = Array(BAR_LENGTH + 1) { filled ->
+        BAR_FILLED.toString().repeat(filled) + BAR_EMPTY.toString().repeat(BAR_LENGTH - filled)
     }
 
     private fun buildBar(ratio: Double): String {
         val filled = (ratio.coerceIn(0.0, 1.0) * BAR_LENGTH).toInt()
-        return BAR_FILLED.toString().repeat(filled) + BAR_EMPTY.toString().repeat(BAR_LENGTH - filled)
+        return BARS[filled]
+    }
+
+    /** 轻量格式化：1 位小数，避免 String.format 开销 */
+    private fun fastFormat1(value: Double): String {
+        val rounded = (value * 10.0 + 0.5).toLong() / 10.0
+        return rounded.toString()
+    }
+
+    /** 轻量格式化：2 位小数 */
+    private fun fastFormat2(value: Double): String {
+        val rounded = (value * 100.0 + 0.5).toLong() / 100.0
+        return rounded.toString()
     }
 }

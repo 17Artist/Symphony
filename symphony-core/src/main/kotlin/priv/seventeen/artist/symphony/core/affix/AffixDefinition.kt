@@ -16,6 +16,9 @@ data class AffixDefinition(
     val triggers: List<TriggerBinding> = emptyList(),
     val passiveAttributes: Map<String, PassiveAttribute> = emptyMap()
 ) : IAffix {
+    /** 按触发器类型预索引，避免运行时 filter。 */
+    val triggersByType: Map<String, List<TriggerBinding>> = triggers.groupBy { it.type }
+
     override fun getLevelParams(level: Int): Map<String, Any> {
         return levels[level] ?: levels[1] ?: emptyMap()
     }

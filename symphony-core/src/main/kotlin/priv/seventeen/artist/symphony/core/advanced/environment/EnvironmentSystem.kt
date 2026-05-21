@@ -31,6 +31,7 @@ object EnvironmentSystem {
 
     /**
      * 评估实体当前环境，返回生效的属性修改器。
+     * 同时更新玩家的活跃环境修正器缓存。
      */
     fun evaluateModifiers(entity: LivingEntity): List<AttributeModifier> {
         val result = mutableListOf<AttributeModifier>()
@@ -46,15 +47,24 @@ object EnvironmentSystem {
             }
         }
 
-        // 更新玩家的活跃环境修正器列表
+        // 更新玩家的活跃环境修正器列表和缓存的 modifiers
         if (entity is Player) {
             PlayerDataManager.getData(entity.uniqueId)?.runtime?.let { runtime ->
                 runtime.activeEnvironmentModifiers.clear()
                 runtime.activeEnvironmentModifiers.addAll(activeIds)
+                runtime.cachedEnvironmentModifiers = result
             }
         }
 
         return result
+    }
+
+    /**
+     * 获取玩家缓存的环境 modifiers（由上次 evaluateModifiers 写入）。
+     * EnvironmentProvider 使用此方法避免重复评估。
+     */
+    fun getCachedModifiers(player: Player): List<AttributeModifier>? {
+        return PlayerDataManager.getData(player.uniqueId)?.runtime?.cachedEnvironmentModifiers
     }
 
     fun getActiveModifiers(player: Player): Set<String> {
@@ -62,18 +72,33 @@ object EnvironmentSystem {
     }
 
     /**
-     * 检查玩家环境是否发生变化（与上次记录的活跃修正器对比）。
+     * 检查玩家环境是否发生变化，如果变化则同时更新缓存。
      * 返回 true 表示环境变化，需要重算属性。
      */
-    fun hasEnvironmentChanged(player: Player): Boolean {
+    fun checkAndUpdateEnvironment(player: Player): Boolean {
         val previousActive = PlayerDataManager.getData(player.uniqueId)?.runtime?.activeEnvironmentModifiers ?: emptySet()
         val currentActive = mutableSetOf<String>()
+        val newModifiers = mutableListOf<AttributeModifier>()
+
         for (mod in modifiers.values) {
             if (evaluateCondition(player, mod)) {
                 currentActive.add(mod.id)
+                for ((attrId, effect) in mod.attributes) {
+                    val op = if (effect.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                    newModifiers.add(AttributeModifier(attrId, op, effect.value, "env:${mod.id}"))
+                }
             }
         }
-        return currentActive != previousActive
+
+        if (currentActive != previousActive) {
+            PlayerDataManager.getData(player.uniqueId)?.runtime?.let { runtime ->
+                runtime.activeEnvironmentModifiers.clear()
+                runtime.activeEnvironmentModifiers.addAll(currentActive)
+                runtime.cachedEnvironmentModifiers = newModifiers
+            }
+            return true
+        }
+        return false
     }
 
     private fun evaluateCondition(entity: LivingEntity, mod: EnvironmentModifier): Boolean {
