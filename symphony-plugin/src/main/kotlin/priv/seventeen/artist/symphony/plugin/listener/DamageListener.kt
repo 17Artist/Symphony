@@ -277,20 +277,18 @@ object DamageListener {
 
     private data class ElementDef(val id: String, val dmgAttr: String, val resAttr: String, val color: String, val name: String)
 
-    private companion object {
-        val ELEMENTS = arrayOf(
-            ElementDef("fire", "fire_damage", "fire_resistance", "§c", "火"),
-            ElementDef("ice", "ice_damage", "ice_resistance", "§b", "冰"),
-            ElementDef("lightning", "lightning_damage", "lightning_resistance", "§d", "雷"),
-            ElementDef("poison", "poison_damage", "poison_resistance", "§a", "毒"),
-            ElementDef("holy", "holy_damage", "holy_resistance", "§e", "圣"),
-            ElementDef("dark", "dark_damage", "dark_resistance", "§8", "暗")
-        )
+    private val ELEMENTS = arrayOf(
+        ElementDef("fire", "fire_damage", "fire_resistance", "§c", "火"),
+        ElementDef("ice", "ice_damage", "ice_resistance", "§b", "冰"),
+        ElementDef("lightning", "lightning_damage", "lightning_resistance", "§d", "雷"),
+        ElementDef("poison", "poison_damage", "poison_resistance", "§a", "毒"),
+        ElementDef("holy", "holy_damage", "holy_resistance", "§e", "圣"),
+        ElementDef("dark", "dark_damage", "dark_resistance", "§8", "暗")
+    )
 
-        /** 轻量数字格式化，避免 String.format 开销 */
-        fun formatDmg(value: Double): String {
-            val rounded = (value * 10.0 + 0.5).toLong() / 10.0
-            return rounded.toString()
-        }
+    /** 轻量数字格式化，避免 String.format 开销 */
+    private fun formatDmg(value: Double): String {
+        val rounded = (value * 10.0 + 0.5).toLong() / 10.0
+        return rounded.toString()
     }
 }
