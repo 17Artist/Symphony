@@ -35,6 +35,13 @@ plugins/Symphony/
 ├── sets/                     # 套装定义
 │   ├── dragon_slayer.yml
 │   └── ...
+├── gems/                     # 宝石定义
+├── interactions/             # 属性交互（CONVERSION/OVERFLOW/SYNERGY/...）
+├── resonances/               # 词条共鸣
+├── talents/                  # 天赋门
+├── statuses/                 # 状态层
+├── environments/             # 环境修正（DIMENSION/BIOME/WEATHER/TIME/ALTITUDE/IN_WATER）
+├── reactions/                # 元素反应
 ├── scripts/                  # Aria 脚本
 │   ├── formulas/
 │   ├── skills/
@@ -42,6 +49,9 @@ plugins/Symphony/
 └── data/                     # 玩家数据（自动生成）
     └── players/
 ```
+
+`interactions/` 等高级系统目录的字段写法详见 [高级系统使用指南](08-advanced-guide.md)；
+对应的开关在 `config.yml` 的 `advanced.*` 下（见下一节）。
 
 ## 2. 全局配置
 
@@ -65,17 +75,20 @@ combat-timeout: 10000
 combo-timeout: 3000
 
 advanced:
-  interaction-enabled: true
-  element-enabled: true
-  resonance-enabled: true
-  talent-enabled: true
-  status-enabled: true
-  environment-enabled: true
+  interaction-enabled: true   # 对应 interactions/ 目录
+  element-enabled: true       # 对应 reactions/ 目录
+  resonance-enabled: true     # 对应 resonances/ 目录
+  talent-enabled: true        # 对应 talents/ 目录
+  status-enabled: true        # 对应 statuses/ 目录
+  environment-enabled: true   # 对应 environments/ 目录
 
 performance:
   # 只对 isAsync=true 的 Provider 采集走异步线程池
   async-recalc: false
 ```
+
+> 高级系统的 YAML 字段、类型、示例完整列在 [高级系统使用指南](08-advanced-guide.md)。
+> 如果不想启用某个系统，把对应开关设为 `false`，或直接删掉对应目录即可（插件扫不到就不会加载）。
 
 ## 3. 第一个词条
 
