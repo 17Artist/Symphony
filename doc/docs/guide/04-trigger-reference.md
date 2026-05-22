@@ -75,7 +75,7 @@
 ```yaml
 triggers:
   - type: ON_TIMER
-    interval: 40              # ⚠️ 当前未启用（known limitation）
+    interval: 40              # 每 40 tick（2 秒）触发一次
     conditions: []
     actions:
       - type: HEAL
@@ -83,7 +83,10 @@ triggers:
         target: SELF
 ```
 
-> `ON_TIMER` 当前**固定每 20 tick（1 秒）派发一次**给所有在线玩家，`interval` 字段不被读取，`tickCount / interval` 上下文变量也不会注入。如果需要更长周期，请在 action 里用 `COOLDOWN` 条件或在 SCRIPT 里用 `tickCount % N == 0` 自行节流。
+> `ON_TIMER` 由调度任务每 20 tick（1 秒）派发一次，词条层级再按 `interval` 字段做模运算节流。
+> - `interval` 单位 tick，**实际精度为秒**（dispatcher 每秒派发一次）。例如 `interval: 40` 实际每 2 秒触发一次。
+> - 缺省 / 0 / 负值时回退到默认每秒一次。
+> - 上下文变量：`server.tickCount` = 当前服务器 tick 数（Long）。
 
 ## 2. 条件完整列表
 
@@ -157,26 +160,29 @@ triggers:
 ```yaml
 - type: SCRIPT
   code: |
-    // 注意：词条触发器派发时，SCRIPT 条件求值阶段
-    // 不会注入 server.trigger_* 上下文（仅 action 阶段才有）。
-    // 这里只能读 entity 自身状态，例如：
-    return math.random() < 0.3
+    // SCRIPT 条件求值时会注入与 action 一致的 trigger_* 上下文，
+    // 可以读 server.trigger_entity / trigger_victim / trigger_damage 等。
+    val.hp = symphony.entity.getHealth(server.trigger_entity)
+    val.maxHp = symphony.entity.getMaxHealth(server.trigger_entity)
+    return hp / maxHp < 0.3
 ```
 
 ## 3. 上下文变量在脚本中的访问
 
-触发器 **action 阶段** 的脚本里可以通过 `server.trigger_*` 读到部分上下文。**当前实际注入的 key**（其它文档可能列了更多，但代码里只有以下这些会写入）：
+触发器 **action 阶段** 与 **SCRIPT 条件求值** 都注入相同的 `server.trigger_*` 命名变量。**当前实际注入的 key**（其它文档可能列了更多，但代码里只有以下这些会写入）：
 
-### 词条触发器（`ScriptActionHandler`）注入
+### 词条触发器（`ScriptActionHandler` / `ConditionEvaluator.SCRIPT`）注入
 
 | 变量                      | 类型           | 说明                   |
 |-------------------------|--------------|----------------------|
-| `server.trigger_entity` | LivingEntity | 触发实体（攻击者 / 受害者 / 自身） |
+| `server.trigger_entity` | LivingEntity | `context.entity`，攻击侧=自己、防御侧=受害者本人 |
 | `server.trigger_type`   | String       | 触发器类型 ID             |
 | `server.trigger_location` | Location   | 触发位置                 |
-| `server.trigger_victim` | LivingEntity | 受害者（仅伤害类触发器有）        |
+| `server.trigger_victim` | LivingEntity | `context.target`，攻击侧=受害者、防御侧=攻击者（命名沿用历史） |
 | `server.trigger_damage` | Number       | 伤害值（仅伤害类触发器有）        |
 | 词条 params               | Number       | 当前等级的所有 `levels.<n>.*` 参数 |
+
+> ⚠️ `trigger_victim` 命名容易误导——它实际是 `context.target`。在 ON_DEFEND 下指向攻击者。需要"始终指向受害者"或"始终指向攻击者"的语义时，**优先使用 action 的 `target: TRIGGER_VICTIM` / `TRIGGER_ATTACKER`**（自动按触发侧反转），而不是脚本里手动判断。
 
 ### 技能 / Aria 脚本上下文（`AriaSkillProvider`）注入
 

@@ -36,11 +36,20 @@ object TriggerDispatcher {
         // 获取实体所有装备上的词条
         val affixes = AffixManagerImpl.collectEntityAffixes(entity)
 
+        // ON_TIMER 节流：按 binding.interval 决定本次是否派发
+        val isTimer = triggerType.id == "ON_TIMER"
+        val tickCount = if (isTimer) (context.get<Long>("tickCount") ?: 0L) else 0L
+
         for (affix in affixes) {
             val definition = AffixManagerImpl.getDefinition(affix.affixId) ?: continue
             val triggers = definition.triggersByType[triggerType.id] ?: continue
 
             for (trigger in triggers) {
+                // ON_TIMER interval 节流：单位 tick，最低粒度 20 tick（1 秒）
+                if (isTimer && trigger.interval > 0) {
+                    val effective = trigger.interval.coerceAtLeast(20)
+                    if (tickCount % effective != 0L) continue
+                }
                 // 评估条件
                 if (!ConditionEvaluator.evaluate(trigger.conditions, context, affix.parameters)) continue
 

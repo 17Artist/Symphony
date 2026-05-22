@@ -81,7 +81,8 @@ object ConfigLoader {
                     triggers.add(TriggerBinding(
                         type = tMap["type"]?.toString()?.uppercase() ?: return@forEach,
                         conditions = (tMap["conditions"] as? List<Map<String, Any>>) ?: emptyList(),
-                        actions = (tMap["actions"] as? List<Map<String, Any>>) ?: emptyList()
+                        actions = (tMap["actions"] as? List<Map<String, Any>>) ?: emptyList(),
+                        interval = (tMap["interval"] as? Number)?.toInt() ?: 0
                     ))
                 }
                 val passiveAttrs = mutableMapOf<String, PassiveAttribute>()

@@ -18,11 +18,13 @@ class PeriodicTriggerTask : BukkitRunnable() {
             CooldownManager.cleanup()
         }
 
-        // 每 20 tick (1秒): ON_TIMER 触发器
+        // 每 20 tick (1秒): ON_TIMER 触发器 — 词条层级再按 binding.interval 节流
         if (tickCount % 20 == 0L) {
+            val capturedTick = tickCount
             for (player in Bukkit.getOnlinePlayers()) {
                 TriggerDispatcher.dispatch(TriggerType.ON_TIMER, player) {
-                    set("tick", tickCount)
+                    set("tick", capturedTick)
+                    set("tickCount", capturedTick)
                 }
             }
         }

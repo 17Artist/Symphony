@@ -131,6 +131,34 @@ object AriaCallbackManager {
     }
 
     /**
+     * 执行回调并通过 [SymphonyScriptEngine.injectVars] 注入命名变量（脚本中以 `server.<name>` 访问）。
+     * 用于词条 SCRIPT 条件等需要读 trigger_* 上下文的场景。
+     */
+    fun invokeWithVars(id: String, vars: Map<String, Any?>): Any? {
+        val routine = cache[id] ?: return null
+        val ctx = Aria.createContext()
+        SymphonyScriptEngine.injectVars(ctx, vars)
+        return try {
+            val result = routine.execute(ctx)
+            if (result is IValue<*>) result.jvmValue() else result
+        } catch (e: Exception) {
+            BlinkLog.warn("回调脚本执行失败 [$id]: ${e.message}")
+            null
+        }
+    }
+
+    /** 注入变量后求条件值。 */
+    fun invokeConditionWithVars(id: String, vars: Map<String, Any?>): Boolean {
+        val result = invokeWithVars(id, vars)
+        return when (result) {
+            is Boolean -> result
+            is Number -> result.toDouble() != 0.0
+            is String -> result.toBoolean()
+            else -> false
+        }
+    }
+
+    /**
      * 清除所有缓存（reload 时调用）。
      */
     fun clear() = cache.clear()

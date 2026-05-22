@@ -27,7 +27,12 @@ data class AffixDefinition(
 data class TriggerBinding(
     val type: String,
     val conditions: List<Map<String, Any>> = emptyList(),
-    val actions: List<Map<String, Any>> = emptyList()
+    val actions: List<Map<String, Any>> = emptyList(),
+    /**
+     * ON_TIMER 专用：每多少 tick 派发一次（最小 20，向下取整到 20 的倍数）。
+     * 0 或负值表示按外层默认频率（每秒一次）。
+     */
+    val interval: Int = 0
 )
 
 data class PassiveAttribute(

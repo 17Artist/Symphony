@@ -155,13 +155,12 @@ conditions:
             value: 30
   
   # Aria 脚本条件
-  # 注意：词条触发器派发时，SCRIPT 条件求值早于 action，
-  # 此处暂时无法读取 server.trigger_* 上下文（仅普通条件可用）。
-  # 需要按触发上下文判断时，请用其它内置条件类型如 HEALTH_BELOW。
+  # SCRIPT 条件会注入与 action 一致的 server.trigger_* 上下文（trigger_entity / trigger_victim / trigger_damage 等）
   - type: SCRIPT
     code: |
-      // 仅作示意：根据自身状态判断（不依赖 trigger_*）
-      return math.random() < 0.5
+      val.hp = symphony.entity.getHealth(server.trigger_entity)
+      val.maxHp = symphony.entity.getMaxHealth(server.trigger_entity)
+      return hp / maxHp < 0.3
 ```
 
 ### 动作配置
@@ -361,8 +360,10 @@ triggers:
     actions:
       - type: SCRIPT
         code: |
-          // ON_DEFEND 中 entity=受害者, target=攻击者
-          val.attacker = server.trigger_target
+          // ScriptActionHandler 注入约定：
+          //   trigger_entity = context.entity（ON_DEFEND 下=受害者本人）
+          //   trigger_victim = context.target（ON_DEFEND 下=攻击者，命名沿用历史约定）
+          val.attacker = server.trigger_victim
           val.dmg = server.trigger_damage
           val.percent = {percent}
           if (attacker == none) { return }
@@ -370,13 +371,15 @@ triggers:
       - type: PARTICLE
         particle: CRIT
         count: 10
-        target: TRIGGER_TARGET     # ON_DEFEND 下 TRIGGER_TARGET 指向攻击者
+        target: TRIGGER_ATTACKER   # ON_DEFEND 下 TRIGGER_ATTACKER = 攻击者（语义已修复）
 ```
 
 > **关于 `TRIGGER_ATTACKER` / `TRIGGER_TARGET`**
-> 这两个目标常量在 `ActionHandler` 里分别取 `context.entity` 和 `context.target`。
-> - 在 `ON_ATTACK` / `ON_KILL` 等攻击侧触发器中，`entity = 自己`、`target = 受害者`，所以 `TRIGGER_ATTACKER` = 自己，`TRIGGER_TARGET` = 受害者。
-> - 在 `ON_DEFEND` 中 `entity = 受害者`、`target = 攻击者`。如果你想"反弹给攻击者"，目前要用 `TRIGGER_TARGET`，**不是 `TRIGGER_ATTACKER`**（这是已知 source-bug，未来会修）。
+> 这两个目标常量按触发器侧自动反转语义，无需用户区分攻击/防御场景：
+> - **攻击侧**（`ON_ATTACK` / `ON_KILL` / `ON_MELEE_ATTACK` / `ON_RANGED_ATTACK` / `ON_ATTACK_CRITICAL` / `ON_DAMAGE`）：`TRIGGER_ATTACKER` = 自己，`TRIGGER_TARGET` = 受害者。
+> - **防御侧**（`ON_DEFEND` / `ON_DAMAGED` / `ON_BLOCK` / `ON_DODGE` / `ON_LOW_HEALTH`）：`TRIGGER_ATTACKER` = 攻击者，`TRIGGER_TARGET` = 自己。
+>
+> 另外可用显式 `TRIGGER_VICTIM`（始终指向受害者，不分触发侧）。
 
 ### 击杀触发词条
 

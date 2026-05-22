@@ -172,7 +172,17 @@ object ConditionEvaluator {
                     if (!AriaCallbackManager.has(callbackId)) {
                         AriaCallbackManager.compile(callbackId, code)
                     }
-                    AriaCallbackManager.invokeCondition(callbackId)
+                    // 注入与 ScriptActionHandler 一致的 trigger_* 上下文，
+                    // 让 SCRIPT 条件可以读 server.trigger_entity / trigger_victim / trigger_damage 等
+                    val vars = buildMap<String, Any?> {
+                        put("trigger_entity", context.entity)
+                        put("trigger_type", context.triggerType.id)
+                        put("trigger_location", context.location)
+                        context.target?.let { put("trigger_victim", it) }
+                        context.damage?.let { put("trigger_damage", it) }
+                        params.forEach { (k, v) -> put(k, v) }
+                    }
+                    AriaCallbackManager.invokeConditionWithVars(callbackId, vars)
                 } catch (e: Exception) {
                     BlinkLog.warn("SCRIPT 条件求值异常: ${e.message}")
                     false

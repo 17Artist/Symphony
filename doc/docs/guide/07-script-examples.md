@@ -295,19 +295,30 @@ symphony.effect.actionbar(caster, "&b&l冰霜护盾已激活! ({duration / 1000}
 
 ```aria
 // 词条条件中 type: SCRIPT, code: | 的内容
-// ⚠️ 词条触发器 SCRIPT 条件求值时，server.trigger_* 上下文未注入，
-// 这个示例只适合在技能脚本（AriaSkillProvider）里用 server.target。
-// 词条触发器内做 boss 判定建议改用内置 TARGET_TYPE: BOSS 条件。
+// SCRIPT 条件会注入与 action 一致的 server.trigger_* 上下文。
+// 在 ON_ATTACK 下 trigger_victim = 受害者；在 ON_DEFEND 下 trigger_victim = 攻击者。
 
-val.target = server.target           // 技能脚本里可用；词条条件里用此 key 拿不到
+val.target = server.trigger_victim
 if (target == none) { return false }
 
-// Symphony 没有 entity.getName 等便捷方法，但 getMaxHealth 是存在的。
-// 用最大生命值作为简易 boss 判定阈值。
 val.maxHp = symphony.entity.getMaxHealth(target)
 
 // Boss 判定：生命值超过 500
 return maxHp > 500
+```
+
+### 连击判定（基于自定义元数据）
+
+```aria
+// 词条条件中 type: SCRIPT, code: |
+// 用 IEntityMetadata 在 entity 上累计连击数。
+// 也可以让你的插件注册自定义 ConditionType "COMBO_AT_LEAST" 提供更稳定的语义。
+
+val.entity = server.trigger_entity
+val.now = Java.type('java.lang.System').currentTimeMillis()
+// 实际工程做法：通过 IEntityMetadata.get(entity, "combo", "count") 读取，
+// 此处仅为伪代码示意。
+return true
 ```
 
 ### 连击判定
