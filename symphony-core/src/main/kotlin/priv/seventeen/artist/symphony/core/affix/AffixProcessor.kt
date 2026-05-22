@@ -12,21 +12,31 @@ import priv.seventeen.artist.symphony.core.affix.action.*
 object AffixProcessor {
 
     private val actionHandlers = mutableMapOf<String, IActionHandler>()
+    /** 内置 handler 类型，用于 reload 时区分清理范围。 */
+    private val builtinTypes = mutableSetOf<String>()
 
     fun init() {
-        registerHandler("DAMAGE", DamageActionHandler())
-        registerHandler("HEAL", HealActionHandler())
-        registerHandler("POTION", PotionActionHandler())
-        registerHandler("PARTICLE", ParticleActionHandler())
-        registerHandler("SOUND", SoundActionHandler())
-        registerHandler("MESSAGE", MessageActionHandler())
-        registerHandler("COMMAND", CommandActionHandler())
-        registerHandler("ATTRIBUTE_BUFF", AttributeBuffActionHandler())
-        registerHandler("SKILL", SkillActionHandler())
-        registerHandler("STATUS_STACK", StatusStackActionHandler())
-        registerHandler("MANA", ManaActionHandler())
-        registerHandler("SCRIPT", ScriptActionHandler())
-        registerHandler("ATTRIBUTE_PERMANENT", AttributePermanentActionHandler())
+        actionHandlers.clear()
+        builtinTypes.clear()
+        registerBuiltin("DAMAGE", DamageActionHandler())
+        registerBuiltin("HEAL", HealActionHandler())
+        registerBuiltin("POTION", PotionActionHandler())
+        registerBuiltin("PARTICLE", ParticleActionHandler())
+        registerBuiltin("SOUND", SoundActionHandler())
+        registerBuiltin("MESSAGE", MessageActionHandler())
+        registerBuiltin("COMMAND", CommandActionHandler())
+        registerBuiltin("ATTRIBUTE_BUFF", AttributeBuffActionHandler())
+        registerBuiltin("SKILL", SkillActionHandler())
+        registerBuiltin("STATUS_STACK", StatusStackActionHandler())
+        registerBuiltin("MANA", ManaActionHandler())
+        registerBuiltin("SCRIPT", ScriptActionHandler())
+        registerBuiltin("ATTRIBUTE_PERMANENT", AttributePermanentActionHandler())
+    }
+
+    private fun registerBuiltin(type: String, handler: IActionHandler) {
+        val key = type.uppercase()
+        actionHandlers[key] = handler
+        builtinTypes.add(key)
     }
 
     fun registerHandler(type: String, handler: IActionHandler) {
@@ -34,10 +44,21 @@ object AffixProcessor {
     }
 
     fun unregisterHandler(type: String) {
-        actionHandlers.remove(type.uppercase())
+        val key = type.uppercase()
+        if (key in builtinTypes) return  // 不允许注销内置 handler
+        actionHandlers.remove(key)
     }
 
     fun getRegisteredActionTypes(): Set<String> = actionHandlers.keys.toSet()
+
+    /**
+     * Reload 时调用：保留内置 handler，仅清理第三方注册的，避免重新加载累积。
+     * 第三方插件需要在 onEnable 重新调 [registerHandler]。
+     */
+    fun reloadCustomHandlers() {
+        val toRemove = actionHandlers.keys.filter { it !in builtinTypes }
+        for (key in toRemove) actionHandlers.remove(key)
+    }
 
     fun executeActions(
         actions: List<Map<String, Any>>,

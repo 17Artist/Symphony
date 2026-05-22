@@ -21,9 +21,7 @@ object ResonanceManager {
         definitions[resonance.id] = resonance
     }
 
-    fun unregister(id: String) {
-        definitions.remove(id)
-    }
+    fun unregister(id: String): Boolean = definitions.remove(id) != null
 
     fun getAll(): Collection<ResonanceDefinition> = definitions.values
 

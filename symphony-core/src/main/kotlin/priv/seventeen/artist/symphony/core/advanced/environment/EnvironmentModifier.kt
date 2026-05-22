@@ -36,6 +36,5 @@ enum class EnvironmentType {
     WEATHER,
     TIME,
     ALTITUDE,
-    IN_WATER,
-    COMBAT_TARGET
+    IN_WATER
 }

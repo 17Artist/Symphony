@@ -789,7 +789,16 @@ object ConfigLoader {
                         levelsMap[lvl] = attrs
                     }
                 }
-                gemProvider.registerGem(id, levelsMap)
+                // 解析展示元数据
+                val meta = GemProvider.GemMeta(
+                    displayName = config.getString("display_name") ?: id,
+                    description = config.getStringList("description"),
+                    maxLevel = config.getInt("max_level", levelsMap.keys.maxOrNull() ?: 1),
+                    material = config.getString("material"),
+                    customModelData = if (config.contains("custom_model_data"))
+                        config.getInt("custom_model_data") else null
+                )
+                gemProvider.registerGem(id, levelsMap, meta)
                 count++
             } catch (e: Exception) {
                 BlinkLog.warn("加载宝石文件失败 ${file.name}: ${e.message}")

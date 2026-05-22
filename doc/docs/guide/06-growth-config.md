@@ -77,15 +77,12 @@ level:
 ```yaml
 # gems/sapphire.yml
 id: sapphire
-# ⚠️ 以下字段当前不被 ConfigLoader 读取（material / custom_model_data /
-# display_name / description / max_level）。宝石的物品形态需要服主自行用
-# 命令或第三方插件生成；这些字段保留只是为了将来扩展。
-# display_name: "&9蓝宝石"
-# description:
-#   - "&7镶嵌后增加魔法攻击力"
-# max_level: 5
-# material: LAPIS_LAZULI
-# custom_model_data: 2002
+display_name: "&9蓝宝石"
+description:
+  - "&7镶嵌后增加魔法攻击力"
+max_level: 5
+material: LAPIS_LAZULI
+custom_model_data: 2002
 
 levels:
   1:
@@ -116,6 +113,8 @@ levels:
         value: 0.5
     lore: "&9+20 魔法攻击力 &b+25 法力 +0.5 法力恢复"
 ```
+
+> `display_name` / `description` / `max_level` / `material` / `custom_model_data` 会被 ConfigLoader 读入 `GemProvider.GemMeta`。这些元数据本身不直接生成宝石物品（物品形态由服主自行用命令 / 第三方插件创建），但 GUI 展示、API 查询都会用到，请如实填写。
 
 ### 2.2 宝石槽管理
 

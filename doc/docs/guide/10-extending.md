@@ -245,12 +245,15 @@ BanditBoss:
 第三方插件想动态改怪物属性：
 
 ```kotlin
-// ⚠️ SymphonyAPI.setAttribute 当前只对玩家生效（依赖 PlayerDataManager）
-// 给 MM 怪物加属性请走 MythicMobDataStore 或 mob yaml 的 Symphony: 段
+// SymphonyAPI.setAttribute 玩家走 ActiveBuff 路径，MM 怪物（已通过
+// MythicMobSpawnEvent 注入到 MythicMobDataStore）走 modifier 列表路径。
 SymphonyAPI.getInstance().setAttribute(
-    player, "physical_damage", Operation.FLAT, 100.0, "my_plugin:boss_phase_2"
+    mob, "physical_damage", Operation.FLAT, 100.0, "my_plugin:boss_phase_2"
 )
+// 同 source + attributeId 视为替换；调 removeAttribute(mob, source) 撤销。
 ```
+
+> 注意：MM 怪物必须先经过 `MythicMobSpawnListener` 注入（在 mob yaml 写过 `Symphony:` 段，或代码主动 `MythicMobDataStore.put`）才会有 modifier 容器。原版怪物（如 Bukkit 直接 spawn 的 zombie）目前不支持 setAttribute。
 
 ## 跨插件状态共享
 

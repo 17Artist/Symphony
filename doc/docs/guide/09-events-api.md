@@ -14,7 +14,7 @@ Symphony 所有公开 API 与事件钩子。API 入口统一走 `SymphonyAPI.get
 | 2 | `SymphonyMitigationEvent` | 防御/穿透/格挡应用后、元素伤害前 | `finalPhysical`                    |
 | 3 | `SymphonyDamageEvent`     | 元素伤害合并后、实际施加前     | `finalDamage`、`elementDamages`     |
 
-`SymphonyMitigationEvent.reductionPercent` 字段是**只读信息**：虽然类上声明为 `var`，但事件发布时减伤计算已完成，监听器修改它对最终伤害**无影响**。要调整减伤幅度请直接改 `finalPhysical`。
+`SymphonyMitigationEvent.reductionPercent` / `isCritical` / `blocked` 字段是**只读信息**（声明为 `val`）：减伤计算在事件发布时已完成，仅供监听器分析。要调整减伤幅度请直接改 `finalPhysical`。
 
 三者任一被取消都会中止伤害。
 
@@ -40,7 +40,14 @@ Symphony 所有公开 API 与事件钩子。API 入口统一走 `SymphonyAPI.get
 | `BuffApplyEvent`  | ✓   | `value`、`durationMs` | Buff 加入前，允许调整    |
 | `BuffExpireEvent` | ✗   | —                    | Buff 移出 runtime 列表前 |
 
-> `BuffExpireEvent` 字段 `reason` 枚举有 `TIMEOUT / MANUAL_REMOVE / REPLACED / PLAYER_QUIT`，但**当前版本只有 `TIMEOUT` 会被实际发布**（`RuntimeTickTask` 的过期清理）。其它 reason 是预留字段。
+`BuffExpireEvent` 字段 `reason` 枚举：
+
+| reason | 触发场景 |
+|--------|----------|
+| `TIMEOUT` | `RuntimeTickTask` 检测到 `expireTime` 已过 |
+| `MANUAL_REMOVE` | `/sym player buff clear`、`SymphonyAPI.removeAttribute`、`symphony.attribute.remove` 脚本桥、天赋失活清理 |
+| `REPLACED` | 同 `source` + `attribute` 的旧 buff 被新 buff 替换（命令 buff add / 词条 ATTRIBUTE_BUFF / API setAttribute） |
+| `PLAYER_QUIT` | 玩家退出服务器，所有 buff 在 `PlayerQuitEvent` 处一并发布后清理 |
 
 ### 触发器与状态层
 

@@ -24,6 +24,8 @@ import priv.seventeen.artist.symphony.core.attribute.provider.GemProvider
 import priv.seventeen.artist.symphony.core.attribute.provider.LevelProvider
 import priv.seventeen.artist.symphony.core.config.ConfigLoader
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
+import priv.seventeen.artist.symphony.core.data.BuffOps
+import priv.seventeen.artist.symphony.api.event.BuffExpireEvent
 import priv.seventeen.artist.symphony.core.growth.rune.RuneRegistry
 import priv.seventeen.artist.symphony.core.script.AriaCallbackManager
 import priv.seventeen.artist.symphony.core.script.AttributeCallableRegistry
@@ -121,6 +123,9 @@ object SymphonyCommands {
                     TalentManager.clear()
                     RuneRegistry.clear()
                     AffixManagerImpl.clearDefinitions()
+                    // 移除第三方插件注册的 ActionHandler，保留内置；
+                    // 第三方插件需要在 onEnable / Reload 钩子里重新注册
+                    priv.seventeen.artist.symphony.core.affix.AffixProcessor.reloadCustomHandlers()
                     SymphonyPlugin.growthManager.setManager.clear()
 
                     SymphonyPlugin.formulaEngine.clear()
@@ -140,6 +145,7 @@ object SymphonyCommands {
                     provider?.clear()
                     aria?.clear()
                     val gemProvider = AttributeProviderRegistry.getAll().filterIsInstance<GemProvider>().firstOrNull()
+                    gemProvider?.clear()
                     ConfigLoader.loadAll(
                         bukkitPlugin.dataFolder,
                         SymphonyPlugin.apiImpl.affixManagerInstance,
@@ -204,7 +210,9 @@ object SymphonyCommands {
                                 val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
                                 val buffId = "cmd:buff:$attrId"
                                 // 移除同属性的旧命令 Buff（替换模式）
-                                data.runtime.activeBuffs.removeAll { it.id == buffId }
+                                BuffOps.removeWhere(target, data.runtime, BuffExpireEvent.ExpireReason.REPLACED) {
+                                    it.id == buffId
+                                }
                                 data.runtime.activeBuffs.add(ActiveBuff(
                                     id = buffId,
                                     attribute = attrId,
@@ -230,9 +238,7 @@ object SymphonyCommands {
                             }
                             "clear" -> {
                                 val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
-                                val count = data.runtime.activeBuffs.size
-                                data.runtime.activeBuffs.clear()
-                                AttributeCache.markDirty(target.uniqueId)
+                                val count = BuffOps.clearAll(target, data.runtime, BuffExpireEvent.ExpireReason.MANUAL_REMOVE)
                                 ctx.reply("§a已清除 ${target.name} 的 $count 个 Buff")
                             }
                             else -> ctx.reply("§c用法: /sym player buff <玩家> <add|list|clear> ...")

@@ -21,9 +21,7 @@ object TalentManager {
         talents[talent.id] = talent
     }
 
-    fun unregister(id: String) {
-        talents.remove(id)
-    }
+    fun unregister(id: String): Boolean = talents.remove(id) != null
 
     fun getAll(): Collection<TalentDefinition> = talents.values
 
@@ -65,7 +63,10 @@ object TalentManager {
                 }
                 // 兜底清理：移除该天赋通过 effect 回调添加的永久 buff
                 val talentSource = "talent:${talent.id}"
-                data.runtime.activeBuffs.removeAll { it.source == talentSource }
+                priv.seventeen.artist.symphony.core.data.BuffOps.removeWhere(
+                    player, data.runtime,
+                    priv.seventeen.artist.symphony.api.event.BuffExpireEvent.ExpireReason.MANUAL_REMOVE
+                ) { it.source == talentSource }
                 data.persistent.savedBuffs.removeAll { it.source == talentSource }
             }
         }

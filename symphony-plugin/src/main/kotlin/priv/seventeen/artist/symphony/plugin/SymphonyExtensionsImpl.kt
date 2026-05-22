@@ -24,12 +24,12 @@ object SymphonyExtensionsImpl : ISymphonyExtensions {
 
     override fun unregister(namespace: ExtensionNamespace, id: String): Boolean {
         return when (namespace) {
-            ExtensionNamespace.REACTION -> { ReactionSystem.unregister(id); true }
-            ExtensionNamespace.STATUS -> { StatusLayerSystem.unregister(id); true }
-            ExtensionNamespace.ENVIRONMENT -> { EnvironmentSystem.unregister(id); true }
-            ExtensionNamespace.RESONANCE -> { ResonanceManager.unregister(id); true }
-            ExtensionNamespace.TALENT -> { TalentManager.unregister(id); true }
-            ExtensionNamespace.INTERACTION -> { InteractionNetwork.unregister(id); true }
+            ExtensionNamespace.REACTION -> ReactionSystem.unregister(id)
+            ExtensionNamespace.STATUS -> StatusLayerSystem.unregister(id)
+            ExtensionNamespace.ENVIRONMENT -> EnvironmentSystem.unregister(id)
+            ExtensionNamespace.RESONANCE -> ResonanceManager.unregister(id)
+            ExtensionNamespace.TALENT -> TalentManager.unregister(id)
+            ExtensionNamespace.INTERACTION -> InteractionNetwork.unregister(id)
             ExtensionNamespace.SET -> SymphonyPlugin.growthManager.setManager.unregister(id)
         }
     }

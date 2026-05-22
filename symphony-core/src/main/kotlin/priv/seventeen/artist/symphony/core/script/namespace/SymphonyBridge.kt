@@ -208,8 +208,10 @@ class SymphonyBridge {
         val e = unwrapEntity(entity) as? Player ?: return
         val src = source?.toString() ?: return
         val data = PlayerDataManager.getData(e.uniqueId) ?: return
-        data.runtime.activeBuffs.removeIf { it.source == src }
-        AttributeCache.markDirty(e.uniqueId)
+        priv.seventeen.artist.symphony.core.data.BuffOps.removeWhere(
+            e, data.runtime,
+            priv.seventeen.artist.symphony.api.event.BuffExpireEvent.ExpireReason.MANUAL_REMOVE
+        ) { it.source == src }
     }
 
     // symphony.entity.* (扩展)

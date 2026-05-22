@@ -10,6 +10,7 @@ import priv.seventeen.artist.symphony.api.affix.IAffixManager
 import priv.seventeen.artist.symphony.api.attribute.IAttributeManager
 import priv.seventeen.artist.symphony.api.attribute.Operation
 import priv.seventeen.artist.symphony.api.entity.IPlayerData
+import priv.seventeen.artist.symphony.api.event.BuffExpireEvent
 import priv.seventeen.artist.symphony.api.growth.IGrowthManager
 import priv.seventeen.artist.symphony.api.skill.ISkillProviderManager
 import priv.seventeen.artist.symphony.api.trigger.ITriggerManager
@@ -21,6 +22,7 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeCache
 import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.attribute.AttributeManagerImpl
 import priv.seventeen.artist.symphony.core.data.ActiveBuff
+import priv.seventeen.artist.symphony.core.data.BuffOps
 import priv.seventeen.artist.symphony.core.data.SymphonyPlayerData
 import priv.seventeen.artist.symphony.core.runtime.EntityMetadataImpl
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
@@ -46,23 +48,62 @@ class SymphonyAPIImpl : SymphonyAPI {
         AttributeCalculator.getValue(entity, attributeId)
 
     override fun setAttribute(entity: LivingEntity, attributeId: String, operation: Operation, value: Double, source: String) {
-        val data = PlayerDataManager.getData(entity.uniqueId) ?: return
-        data.runtime.activeBuffs.removeIf { it.source == source && it.attribute == attributeId }
-        data.runtime.activeBuffs.add(ActiveBuff(
-            id = "api:$source:$attributeId",
-            attribute = attributeId,
-            operation = operation,
-            value = value,
-            expireTime = -1L,
-            source = source
-        ))
-        AttributeCalculator.markDirty(entity)
+        val data = PlayerDataManager.getData(entity.uniqueId)
+        if (data != null) {
+            // 玩家：走 buff 体系，旧同 source 同 attribute 视为替换
+            BuffOps.removeWhere(entity, data.runtime, BuffExpireEvent.ExpireReason.REPLACED) {
+                it.source == source && it.attribute == attributeId
+            }
+            data.runtime.activeBuffs.add(ActiveBuff(
+                id = "api:$source:$attributeId",
+                attribute = attributeId,
+                operation = operation,
+                value = value,
+                expireTime = -1L,
+                source = source
+            ))
+            AttributeCalculator.markDirty(entity)
+            return
+        }
+        // 非玩家（如 MM 怪物）：走 MythicMobDataStore 的 modifier 列表
+        val existing = priv.seventeen.artist.symphony.core.skill.builtin.MythicMobDataStore.get(entity.uniqueId)
+        if (existing != null) {
+            val newModifier = priv.seventeen.artist.symphony.api.attribute.AttributeModifier(
+                attributeId, operation, value, source
+            )
+            // 同 source+attribute 视为替换
+            val newMods = existing.modifiers.filterNot {
+                it.source == source && it.attributeId == attributeId
+            } + newModifier
+            priv.seventeen.artist.symphony.core.skill.builtin.MythicMobDataStore.put(
+                entity.uniqueId,
+                existing.copy(modifiers = newMods)
+            )
+            AttributeCalculator.markDirty(entity)
+        }
     }
 
     override fun removeAttribute(entity: LivingEntity, source: String) {
-        val data = PlayerDataManager.getData(entity.uniqueId) ?: return
-        data.runtime.activeBuffs.removeIf { it.source == source }
-        AttributeCalculator.markDirty(entity)
+        val data = PlayerDataManager.getData(entity.uniqueId)
+        if (data != null) {
+            BuffOps.removeWhere(entity, data.runtime, BuffExpireEvent.ExpireReason.MANUAL_REMOVE) {
+                it.source == source
+            }
+            AttributeCalculator.markDirty(entity)
+            return
+        }
+        // 非玩家：从 MM data store 移除指定 source 的 modifier
+        val existing = priv.seventeen.artist.symphony.core.skill.builtin.MythicMobDataStore.get(entity.uniqueId)
+        if (existing != null) {
+            val newMods = existing.modifiers.filterNot { it.source == source }
+            if (newMods.size != existing.modifiers.size) {
+                priv.seventeen.artist.symphony.core.skill.builtin.MythicMobDataStore.put(
+                    entity.uniqueId,
+                    existing.copy(modifiers = newMods)
+                )
+                AttributeCalculator.markDirty(entity)
+            }
+        }
     }
 
     override fun recalculate(entity: LivingEntity) {

@@ -19,9 +19,7 @@ object EnvironmentSystem {
         modifiers[modifier.id] = modifier
     }
 
-    fun unregister(id: String) {
-        modifiers.remove(id)
-    }
+    fun unregister(id: String): Boolean = modifiers.remove(id) != null
 
     fun getAll(): Collection<EnvironmentModifier> = modifiers.values
 
@@ -152,7 +150,6 @@ object EnvironmentSystem {
                 }
                 loc.y in mod.minY..mod.maxY
             }
-            EnvironmentType.COMBAT_TARGET -> false
         }
     }
 

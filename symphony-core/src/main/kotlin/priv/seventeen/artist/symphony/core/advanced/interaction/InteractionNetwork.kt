@@ -21,9 +21,7 @@ object InteractionNetwork {
         interactions[interaction.id] = interaction
     }
 
-    fun unregister(id: String) {
-        interactions.remove(id)
-    }
+    fun unregister(id: String): Boolean = interactions.remove(id) != null
 
     fun getAll(): Collection<InteractionDefinition> = interactions.values
 

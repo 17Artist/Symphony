@@ -36,9 +36,7 @@ object ReactionSystem {
         }
     }
 
-    fun unregister(id: String) {
-        reactions.entries.removeIf { it.value.id == id }
-    }
+    fun unregister(id: String): Boolean = reactions.entries.removeIf { it.value.id == id }
 
     fun getAll(): Collection<ReactionDefinition> = reactions.values
 

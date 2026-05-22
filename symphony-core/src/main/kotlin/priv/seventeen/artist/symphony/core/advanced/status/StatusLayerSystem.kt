@@ -28,9 +28,7 @@ object StatusLayerSystem {
         definitions[status.id] = status
     }
 
-    fun unregister(id: String) {
-        definitions.remove(id)
-    }
+    fun unregister(id: String): Boolean = definitions.remove(id) != null
 
     fun getAll(): Collection<StatusDefinition> = definitions.values
 
