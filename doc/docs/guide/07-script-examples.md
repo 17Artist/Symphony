@@ -247,20 +247,22 @@ allies.forEach(-> {
     // 跳过满血的
     if (hp >= maxHp) { return }
     
-    // 治疗量随距离衰减
-    val.dist = symphony.entity.distance(target, caster)
+    // 治疗量随距离衰减（用 Bukkit Location.distance）
+    val.targetLoc = symphony.entity.getLocation(target)
+    val.casterLoc = symphony.entity.getLocation(caster)
+    val.dist = targetLoc.distance(casterLoc)
     val.distMultiplier = 1 - (dist / radius) * 0.3
     val.finalHeal = healAmount * distMultiplier
     
     symphony.entity.heal(target, finalHeal)
     symphony.effect.particle(target, 'HEART', 5)
-    symphony.effect.line(caster, target, 'VILLAGER_HAPPY', 8)
+    symphony.effect.line(caster, target, 'HAPPY_VILLAGER', 8)
     
     healCount = healCount + 1
 })
 
-// 施法特效
-symphony.effect.circle(caster, radius, 'SPELL_WITCH', 40)
+// 施法特效（注意：1.20.5+ 粒子枚举名 SPELL_WITCH → WITCH，VILLAGER_HAPPY → HAPPY_VILLAGER）
+symphony.effect.circle(caster, radius, 'WITCH', 40)
 symphony.effect.sound(caster, 'block.beacon.activate', 1.0, 1.5)
 ```
 
@@ -293,37 +295,35 @@ symphony.effect.actionbar(caster, "&b&l冰霜护盾已激活! ({duration / 1000}
 
 ```aria
 // 词条条件中 type: SCRIPT, code: | 的内容
-// 检查目标是否为 Boss 级怪物
+// ⚠️ 词条触发器 SCRIPT 条件求值时，server.trigger_* 上下文未注入，
+// 这个示例只适合在技能脚本（AriaSkillProvider）里用 server.target。
+// 词条触发器内做 boss 判定建议改用内置 TARGET_TYPE: BOSS 条件。
 
-val.target = server.trigger_victim
+val.target = server.target           // 技能脚本里可用；词条条件里用此 key 拿不到
 if (target == none) { return false }
 
-// 检查是否有 Boss 标记（通过 PDC 或名称）
-val.name = symphony.entity.getName(target)
+// Symphony 没有 entity.getName 等便捷方法，但 getMaxHealth 是存在的。
+// 用最大生命值作为简易 boss 判定阈值。
 val.maxHp = symphony.entity.getMaxHealth(target)
 
-// Boss 判定：生命值超过 500 或名称包含特定标记
+// Boss 判定：生命值超过 500
 return maxHp > 500
 ```
 
 ### 连击判定
 
 ```aria
-// conditions/combo_check.aria
-// 检查是否达到连击阈值
+// 词条条件中 type: SCRIPT, code: |
+// ⚠️ 词条 SCRIPT 条件不能读 server.trigger_*；连击逻辑请改用
+// 自定义 ConditionType（在插件里读 PlayerData.runtime.comboCount），
+// 这里只展示伪代码思路。
 
-val.player = server.trigger_entity
-val.comboKey = 'combo_count_' + symphony.entity.getName(player)
-
-// 读取连击计数
-var.combo ~= 0
-combo = combo + 1
-
-// 超过 3 秒重置
-val.lastHitKey = 'last_hit_' + symphony.entity.getName(player)
-val.now = Java.type('java.lang.System').currentTimeMillis()
-
-return combo >= 3
+// var.combo ~= 0
+// combo = combo + 1
+// 实际工程做法：
+//   1. 第三方插件用 IEntityMetadata 存 combo_count
+//   2. 注册 customCondition 'COMBO_AT_LEAST'，从 metadata 读取
+return false
 ```
 
 ## 5. 公共模块

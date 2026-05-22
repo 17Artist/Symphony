@@ -142,7 +142,7 @@ BanditBoss:
 | 你已有的插件 | Symphony 怎么接 |
 |------------|----------------|
 | **MythicMobs** | mob yml 写 `Symphony:` 段；同时注册了 `symphony_damage / heal / buff` 三个 mechanic 给 MM skill 用 |
-| **PlaceholderAPI** | `%symphony_attribute_xxx%` `%symphony_when_in_combat%` 等占位符自动可用 |
+| **PlaceholderAPI** | `%symphony_attribute_<id>%` `%symphony_level%` `%symphony_combat_power%` 等占位符自动可用 |
 | **MMOItems / ItemsAdder** | 自定义 `IAttributeProvider` 读对应物品的 NBT，几十行代码即可接通 |
 | **Vault / 经济插件** | 用属性当货币系数，监听 `AttributeUpdateEvent` 即可 |
 

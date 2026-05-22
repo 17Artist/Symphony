@@ -37,16 +37,18 @@ level:
       per_level: 0.1
   
   # 经验来源
-  exp_sources:
-    mob_kill:
-      enabled: true
-      formula: |
-        val.mobLevel = args[0]
-        val.playerLevel = args[1]
-        val.baseExp = args[2]
-        val.diff = playerLevel - mobLevel
-        if (diff > 10) { return 0 }
-        return baseExp * math.max(0.1, 1 - diff * 0.05)
+  # ⚠️ 当前版本未实现：exp_sources 段会被 ConfigLoader 忽略
+  # 经验来源仍由 LevelManager.addExp 调用 + 玩家 exp_bonus 属性自动加成处理
+  # exp_sources:
+  #   mob_kill:
+  #     enabled: true
+  #     formula: |
+  #       val.mobLevel = args[0]
+  #       val.playerLevel = args[1]
+  #       val.baseExp = args[2]
+  #       val.diff = playerLevel - mobLevel
+  #       if (diff > 10) { return 0 }
+  #       return baseExp * math.max(0.1, 1 - diff * 0.05)
   
   # 升级特效
   effects:
@@ -75,12 +77,15 @@ level:
 ```yaml
 # gems/sapphire.yml
 id: sapphire
-display_name: "&9蓝宝石"
-description:
-  - "&7镶嵌后增加魔法攻击力"
-max_level: 5
-material: LAPIS_LAZULI
-custom_model_data: 2002
+# ⚠️ 以下字段当前不被 ConfigLoader 读取（material / custom_model_data /
+# display_name / description / max_level）。宝石的物品形态需要服主自行用
+# 命令或第三方插件生成；这些字段保留只是为了将来扩展。
+# display_name: "&9蓝宝石"
+# description:
+#   - "&7镶嵌后增加魔法攻击力"
+# max_level: 5
+# material: LAPIS_LAZULI
+# custom_model_data: 2002
 
 levels:
   1:
@@ -115,7 +120,8 @@ levels:
 ### 2.2 宝石槽管理
 
 宝石槽通过命令或 API 手动管理：
-- 首次解锁时自动创建 3 个锁定槽位（index 0-2）
+- 装备首次需要 `unlock` 一次（slots 为空时自动创建 3 个 locked 槽位 index 0-2），或用 `init` 显式指定数量
+- **未 init 或 unlock 过的装备直接 `insert` 会失败**
 - 最多可扩展到 6 个槽位（index 0-5）
 
 ```
@@ -300,13 +306,13 @@ bonuses:
         actions:
           - type: POTION
             effect: SLOW
-            duration: 60
+            duration: 3              # 单位：秒
             amplifier: 1
-            target: TRIGGER_ATTACKER
+            target: TRIGGER_TARGET   # ON_DEFEND 下 TRIGGER_TARGET = 攻击者
           - type: DAMAGE
             amount: 15
             damage_type: ice
-            target: TRIGGER_ATTACKER
+            target: TRIGGER_TARGET
 ```
 
 ### 5.2 标记物品为套装件
@@ -315,7 +321,8 @@ bonuses:
 
 ```
 /sym item set list
-/sym item set mark <装备槽> <套装ID>
+/sym item set mark <套装ID>                  # 作用于执行者主手
+/sym item set mark <装备槽> <套装ID>          # 作用于指定槽位的装备
 /sym item set unmark <装备槽>
 ```
 

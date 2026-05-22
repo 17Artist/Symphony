@@ -33,14 +33,14 @@ levels:
   1:
     damage: 40
     radius: 4
-    slow_duration: 60
+    slow_duration: 3              # 单位：秒
   2:
     damage: 65
     radius: 5
-    slow_duration: 80
+    slow_duration: 4
   3:
     damage: 100
-    slow_duration: 100
+    slow_duration: 5
 
 actions:
   - type: DAMAGE
@@ -49,7 +49,7 @@ actions:
     target: NEARBY_ENEMIES
   - type: POTION
     effect: SLOW
-    duration: "{slow_duration}"
+    duration: "{slow_duration}"   # 单位：秒（内部 ×20 转 tick）
     amplifier: 1
     target: NEARBY_ENEMIES
   - type: PARTICLE
@@ -121,7 +121,9 @@ script: |
   // 对范围内敌人造成伤害
   val.enemies = symphony.entity.getNearbyHostile(caster, radius)
   enemies.forEach(-> {
-      val.dist = symphony.entity.distance(args[0], loc)
+      // 用 Bukkit Location.distance 计算（symphony.entity.distance 不存在）
+      val.enemyLoc = symphony.entity.getLocation(args[0])
+      val.dist = enemyLoc.distance(loc)
       if (dist <= radius) {
           val.dmgMultiplier = 1 - (dist / radius) * 0.5
           symphony.entity.damage(args[0], damage * dmgMultiplier, 'fire')
@@ -129,10 +131,14 @@ script: |
   })
   
   // 爆炸特效
-  symphony.effect.particle(loc, 'EXPLOSION_LARGE', 5)
-  symphony.effect.particle(loc, 'FLAME', 50, radius, 1, radius)
+  // 注意：1.20.5+ 粒子枚举名变了（EXPLOSION_LARGE → EXPLOSION_EMITTER），
+  // 这里按你的服务端版本调整
+  symphony.effect.particle(loc, 'EXPLOSION_EMITTER', 5)
+  symphony.effect.particle(loc, 'FLAME', 50)        // 仅 3 个参数（loc, name, count），不支持 offset
   symphony.effect.sound(loc, 'entity.generic.explode', 1.0, 0.8)
 ```
+
+> `symphony.effect.particle(loc, name, count)` 只接 3 个参数。需要散布偏移时用 `symphony.effect.circle / sphere / line`，或多次 `particle` 调用打散。
 
 ### 3.2 脚本可用 API
 

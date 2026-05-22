@@ -114,7 +114,7 @@ SymphonyAPI.getInstance().getAffixManager().registerActionHandler("MY_TELEPORT",
 
 ```yaml
 triggers:
-  ON_ATTACK:
+  - type: ON_ATTACK
     actions:
       - type: MY_TELEPORT
         x: 100
@@ -245,9 +245,10 @@ BanditBoss:
 第三方插件想动态改怪物属性：
 
 ```kotlin
-// 直接通过 SymphonyAPI 修改
+// ⚠️ SymphonyAPI.setAttribute 当前只对玩家生效（依赖 PlayerDataManager）
+// 给 MM 怪物加属性请走 MythicMobDataStore 或 mob yaml 的 Symphony: 段
 SymphonyAPI.getInstance().setAttribute(
-    mob, "physical_damage", Operation.FLAT, 100.0, "my_plugin:boss_phase_2"
+    player, "physical_damage", Operation.FLAT, 100.0, "my_plugin:boss_phase_2"
 )
 ```
 
@@ -256,7 +257,7 @@ SymphonyAPI.getInstance().setAttribute(
 ```kotlin
 val meta = SymphonyAPI.getInstance().getMetadata()
 meta.set(entity, "my_plugin", "bleed_stacks", 5)
-meta.set(entity, "my_plugin", "expire_tick", server.currentTick + 100)
+meta.set(entity, "my_plugin", "expire_time", System.currentTimeMillis() + 5000)
 
 // 其他插件读
 val stacks = meta.get(entity, "my_plugin", "bleed_stacks") as? Int ?: 0

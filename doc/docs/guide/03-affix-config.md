@@ -155,11 +155,13 @@ conditions:
             value: 30
   
   # Aria 脚本条件
+  # 注意：词条触发器派发时，SCRIPT 条件求值早于 action，
+  # 此处暂时无法读取 server.trigger_* 上下文（仅普通条件可用）。
+  # 需要按触发上下文判断时，请用其它内置条件类型如 HEALTH_BELOW。
   - type: SCRIPT
     code: |
-      val.hp = symphony.entity.getHealth(server.trigger_entity)
-      val.maxHp = symphony.entity.getMaxHealth(server.trigger_entity)
-      return hp / maxHp < 0.3
+      // 仅作示意：根据自身状态判断（不依赖 trigger_*）
+      return math.random() < 0.5
 ```
 
 ### 动作配置
@@ -177,7 +179,7 @@ actions:
     attribute: "physical_damage"
     operation: PERCENT
     value: 0.2
-    duration: 10000
+    duration: 10000                # 单位：毫秒（10 秒）
   
   # 造成伤害
   - type: DAMAGE
@@ -193,7 +195,7 @@ actions:
   # 药水效果
   - type: POTION
     effect: SPEED
-    duration: 100
+    duration: 5                    # 单位：秒（内部自动 ×20 转 tick）
     amplifier: 1
     target: SELF
   
@@ -223,15 +225,15 @@ actions:
   # Aria 脚本
   - type: SCRIPT
     code: |
-      val.target = server.trigger_target
+      val.victim = server.trigger_victim
       val.damage = server.trigger_damage
       symphony.entity.heal(server.trigger_entity, damage * 0.1)
   
   # 法力消耗/恢复
   - type: MANA
-    value: -20                    # 负数为消耗，正数为恢复
+    amount: -20                    # 负数为消耗，正数为恢复
 
-  # 状态层叠加
+  # 状态层叠加（始终作用于触发目标，target 字段会被忽略）
   - type: STATUS_STACK
     status: "bleed"
     stacks: 1
@@ -242,6 +244,13 @@ actions:
     operation: FLAT
     value: 5
 ```
+
+> **action 字段单位/规则备忘**
+> - `ATTRIBUTE_BUFF.duration` — 毫秒
+> - `POTION.duration` — 秒（内部 ×20 转 tick）；漏写时默认 200 秒
+> - `MANA.amount` — 法力增量；旧文档曾写 `value` 是错的，请用 `amount`
+> - `amount` / `value` 字段只支持 `{paramName}` 占位符替换 + `toDouble()`，**不支持算式**。需要算式请改 `type: SCRIPT`
+> - `STATUS_STACK` 当前固定作用于 `context.target ?: context.entity`，不读 `target:` 字段
 
 ## 4. 词条池配置
 
@@ -333,7 +342,7 @@ passive_attributes:
 ### 防御触发词条
 
 ```yaml
-# 受击反弹
+# 受击反弹（用 SCRIPT 实现按比例反弹，因为 amount 字段不支持算式）
 id: thorns_aura
 display_name: "荆棘光环"
 description: ["&e被攻击时反弹 {percent}% 伤害"]
@@ -350,15 +359,24 @@ levels:
 triggers:
   - type: ON_DEFEND
     actions:
-      - type: DAMAGE
-        amount: "{percent}% * trigger_damage"
-        damage_type: physical
-        target: TRIGGER_ATTACKER
+      - type: SCRIPT
+        code: |
+          // ON_DEFEND 中 entity=受害者, target=攻击者
+          val.attacker = server.trigger_target
+          val.dmg = server.trigger_damage
+          val.percent = {percent}
+          if (attacker == none) { return }
+          symphony.entity.damage(attacker, dmg * percent / 100, 'physical')
       - type: PARTICLE
         particle: CRIT
         count: 10
-        target: TRIGGER_ATTACKER
+        target: TRIGGER_TARGET     # ON_DEFEND 下 TRIGGER_TARGET 指向攻击者
 ```
+
+> **关于 `TRIGGER_ATTACKER` / `TRIGGER_TARGET`**
+> 这两个目标常量在 `ActionHandler` 里分别取 `context.entity` 和 `context.target`。
+> - 在 `ON_ATTACK` / `ON_KILL` 等攻击侧触发器中，`entity = 自己`、`target = 受害者`，所以 `TRIGGER_ATTACKER` = 自己，`TRIGGER_TARGET` = 受害者。
+> - 在 `ON_DEFEND` 中 `entity = 受害者`、`target = 攻击者`。如果你想"反弹给攻击者"，目前要用 `TRIGGER_TARGET`，**不是 `TRIGGER_ATTACKER`**（这是已知 source-bug，未来会修）。
 
 ### 击杀触发词条
 

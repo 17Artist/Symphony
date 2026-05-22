@@ -11,8 +11,10 @@ Symphony 所有公开 API 与事件钩子。API 入口统一走 `SymphonyAPI.get
 | # | 事件                        | 时机                | 可修改                                |
 |---|---------------------------|-------------------|------------------------------------|
 | 1 | `SymphonyPreDamageEvent`  | 暴击判定后、减伤前         | `baseDamage`、`isCritical`          |
-| 2 | `SymphonyMitigationEvent` | 防御/穿透/格挡应用后、元素伤害前 | `finalPhysical`、`reductionPercent` |
+| 2 | `SymphonyMitigationEvent` | 防御/穿透/格挡应用后、元素伤害前 | `finalPhysical`                    |
 | 3 | `SymphonyDamageEvent`     | 元素伤害合并后、实际施加前     | `finalDamage`、`elementDamages`     |
+
+`SymphonyMitigationEvent.reductionPercent` 字段是**只读信息**：虽然类上声明为 `var`，但事件发布时减伤计算已完成，监听器修改它对最终伤害**无影响**。要调整减伤幅度请直接改 `finalPhysical`。
 
 三者任一被取消都会中止伤害。
 
@@ -36,7 +38,9 @@ Symphony 所有公开 API 与事件钩子。API 入口统一走 `SymphonyAPI.get
 | 事件                | 可取消 | 可改                   | 说明               |
 |-------------------|-----|----------------------|------------------|
 | `BuffApplyEvent`  | ✓   | `value`、`durationMs` | Buff 加入前，允许调整    |
-| `BuffExpireEvent` | ✗   | —                    | 过期/移除/替换/下线 四种原因 |
+| `BuffExpireEvent` | ✗   | —                    | Buff 移出 runtime 列表前 |
+
+> `BuffExpireEvent` 字段 `reason` 枚举有 `TIMEOUT / MANUAL_REMOVE / REPLACED / PLAYER_QUIT`，但**当前版本只有 `TIMEOUT` 会被实际发布**（`RuntimeTickTask` 的过期清理）。其它 reason 是预留字段。
 
 ### 触发器与状态层
 
@@ -87,7 +91,7 @@ SymphonyAPI.getInstance().getTriggerManager().registerConditionType(
 
 ```yaml
 triggers:
-  ON_ATTACK:
+  - type: ON_ATTACK
     conditions:
       - type: ABOVE_Y
         value: 100
@@ -127,7 +131,7 @@ SymphonyAPI.getInstance().registerReaction(
 ```kotlin
 val meta = SymphonyAPI.getInstance().getMetadata()
 meta.set(entity, "bleed", "stacks", 5)
-meta.set(entity, "bleed", "expire_tick", server.currentTick + 100)
+meta.set(entity, "bleed", "expire_time", System.currentTimeMillis() + 5000)
 val stacks = meta.get(entity, "bleed", "stacks") as? Int ?: 0
 ```
 

@@ -2,6 +2,9 @@
 
 ## 1. 触发器类型完整列表
 
+> **关于"上下文变量"**：表格中列的字段描述了该触发器**意图传递**的语义信息。其中 `attacker` 通常对应 `context.entity`（=自己）、`victim` 对应 `context.target`，这两个角色由触发器类型隐式决定（参见 03 文档的 `TRIGGER_ATTACKER` / `TRIGGER_TARGET` 章节）。其余字段是显式 `set(...)` 注入到 `globalStorage` 的命名 key，可在 SCRIPT action 里通过 `server.trigger_<name>` 读取。
+> 真实注入的 key 列在本文末尾"上下文变量在脚本中的访问"章节，**与下表不完全一致**（部分字段是语义指引，未真正写入 storage）。
+
 ### 攻击/伤害类
 
 | 触发器                  | 说明      | 上下文变量                                                           |
@@ -72,13 +75,15 @@
 ```yaml
 triggers:
   - type: ON_TIMER
-    interval: 40              # 每 40 tick（2 秒）触发一次
+    interval: 40              # ⚠️ 当前未启用（known limitation）
     conditions: []
     actions:
       - type: HEAL
         amount: 5
         target: SELF
 ```
+
+> `ON_TIMER` 当前**固定每 20 tick（1 秒）派发一次**给所有在线玩家，`interval` 字段不被读取，`tickCount / interval` 上下文变量也不会注入。如果需要更长周期，请在 action 里用 `COOLDOWN` 条件或在 SCRIPT 里用 `tickCount % N == 0` 自行节流。
 
 ## 2. 条件完整列表
 
@@ -127,9 +132,13 @@ triggers:
 | `DAMAGE_TYPE` | `value`: 伤害类型 | 伤害类型匹配 |
 | `TARGET_TYPE` | `value`: 目标类型 | 目标类型匹配 |
 
-伤害类型：`physical` `magic` `fire` `ice` `lightning` `poison` `holy` `dark` `true`
+伤害类型：`physical` `vanilla`
+
+> `DAMAGE_TYPE` 当前只在 `ON_DAMAGED` 上下文中携带，且取值仅 `physical`（Symphony 直伤入口）/ `vanilla`（其他原版伤害源）。元素伤害走 `SymphonyDamageEvent.elementDamages`，**不会**让 `DAMAGE_TYPE: fire/ice/lightning/...` 匹配命中。如需按元素分流请在 SCRIPT action 里读 `server.trigger_damage` 或 listen 事件。
 
 目标类型：`PLAYER` `MOB` `BOSS` `ANIMAL` `UNDEAD` `ARTHROPOD`
+
+> `BOSS` 当前仅匹配原版 4 种：`ENDER_DRAGON / WITHER / ELDER_GUARDIAN / WARDEN`。MythicMobs 自定义 boss 不会被识别为 `BOSS`，请改用 SCRIPT 条件读 `entity.maxHealth` 或自定义 PDC 标记。
 
 ### 逻辑组合
 
@@ -148,23 +157,41 @@ triggers:
 ```yaml
 - type: SCRIPT
   code: |
-    val.hp = symphony.entity.getHealth(server.trigger_entity)
-    val.maxHp = symphony.entity.getMaxHealth(server.trigger_entity)
-    val.ratio = hp / maxHp
-    return ratio < 0.3 && ratio > 0.1
+    // 注意：词条触发器派发时，SCRIPT 条件求值阶段
+    // 不会注入 server.trigger_* 上下文（仅 action 阶段才有）。
+    // 这里只能读 entity 自身状态，例如：
+    return math.random() < 0.3
 ```
 
 ## 3. 上下文变量在脚本中的访问
 
-触发器上下文变量通过 `server.trigger_*` 前缀在 Aria 脚本中访问：
+触发器 **action 阶段** 的脚本里可以通过 `server.trigger_*` 读到部分上下文。**当前实际注入的 key**（其它文档可能列了更多，但代码里只有以下这些会写入）：
 
-```aria
-val.attacker = server.trigger_attacker
-val.victim = server.trigger_victim
-val.damage = server.trigger_damage
-val.isCritical = server.trigger_isCritical
-val.weapon = server.trigger_weapon
-```
+### 词条触发器（`ScriptActionHandler`）注入
+
+| 变量                      | 类型           | 说明                   |
+|-------------------------|--------------|----------------------|
+| `server.trigger_entity` | LivingEntity | 触发实体（攻击者 / 受害者 / 自身） |
+| `server.trigger_type`   | String       | 触发器类型 ID             |
+| `server.trigger_location` | Location   | 触发位置                 |
+| `server.trigger_victim` | LivingEntity | 受害者（仅伤害类触发器有）        |
+| `server.trigger_damage` | Number       | 伤害值（仅伤害类触发器有）        |
+| 词条 params               | Number       | 当前等级的所有 `levels.<n>.*` 参数 |
+
+### 技能 / Aria 脚本上下文（`AriaSkillProvider`）注入
+
+| 变量                    | 类型                     | 说明     |
+|-----------------------|------------------------|--------|
+| `server.caster`       | LivingEntity           | 施法者    |
+| `server.skill_id`     | String                 | 技能 ID  |
+| `server.skill_level`  | Number                 | 技能等级   |
+| `server.origin`       | Location               | 施法位置   |
+| `server.target`       | LivingEntity           | 主目标    |
+| `server.targets`      | List<LivingEntity>     | 多目标列表  |
+| `server.trigger_type` | String                 | 调用上下文  |
+| `server.trigger_target` | LivingEntity         | 触发的目标  |
+
+> **未注入但常见误用**：`trigger_attacker` / `trigger_isCritical` / `trigger_weapon` / `trigger_comboCount` / `trigger_currentTick` —— 这些 key 没有被任何 listener 写入 globalStorage，脚本里读到的会是 `none`。需要这些信息时请改用 Bukkit 事件或在 listener 里自己注入。
 
 ## 4. 自定义触发器
 
