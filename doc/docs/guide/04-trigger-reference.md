@@ -2,7 +2,7 @@
 
 ## 1. 触发器类型完整列表
 
-> **关于"上下文变量"**：表格中列的字段描述了该触发器**意图传递**的语义信息。其中 `attacker` 通常对应 `context.entity`（=自己）、`victim` 对应 `context.target`，这两个角色由触发器类型隐式决定（参见 03 文档的 `TRIGGER_ATTACKER` / `TRIGGER_TARGET` 章节）。其余字段是显式 `set(...)` 注入到 `globalStorage` 的命名 key，可在 SCRIPT action 里通过 `server.trigger_<name>` 读取。
+> **关于"上下文变量"**：表格中列的字段描述了该触发器**意图传递**的语义信息。其中 `attacker` 通常对应 `context.entity`（=自己）、`victim` 对应 `context.target`，这两个角色由触发器类型隐式决定（参见 03 文档的 `TRIGGER_ATTACKER` / `TRIGGER_TARGET` 章节）。其余字段是显式 `set(...)` 注入到 `globalStorage` 的命名 key，可在 SCRIPT action 里通过 `server.trigger_{name}` 读取。
 > 真实注入的 key 列在本文末尾"上下文变量在脚本中的访问"章节，**与下表不完全一致**（部分字段是语义指引，未真正写入 storage）。
 
 ### 攻击/伤害类
@@ -180,7 +180,7 @@ triggers:
 | `server.trigger_location` | Location   | 触发位置                 |
 | `server.trigger_victim` | LivingEntity | `context.target`，攻击侧=受害者、防御侧=攻击者（命名沿用历史） |
 | `server.trigger_damage` | Number       | 伤害值（仅伤害类触发器有）        |
-| 词条 params               | Number       | 当前等级的所有 `levels.<n>.*` 参数 |
+| 词条 params               | Number       | 当前等级的所有 `levels.{n}.*` 参数 |
 
 > ⚠️ `trigger_victim` 命名容易误导——它实际是 `context.target`。在 ON_DEFEND 下指向攻击者。需要"始终指向受害者"或"始终指向攻击者"的语义时，**优先使用 action 的 `target: TRIGGER_VICTIM` / `TRIGGER_ATTACKER`**（自动按触发侧反转），而不是脚本里手动判断。
 
@@ -193,7 +193,7 @@ triggers:
 | `server.skill_level`  | Number                 | 技能等级   |
 | `server.origin`       | Location               | 施法位置   |
 | `server.target`       | LivingEntity           | 主目标    |
-| `server.targets`      | List<LivingEntity>     | 多目标列表  |
+| `server.targets`      | `List<LivingEntity>`   | 多目标列表  |
 | `server.trigger_type` | String                 | 调用上下文  |
 | `server.trigger_target` | LivingEntity         | 触发的目标  |
 
