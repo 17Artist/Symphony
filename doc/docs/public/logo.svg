@@ -1,39 +1,142 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
   <defs>
-    <linearGradient id="sBg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6366F1"/>
-      <stop offset="0.5" stop-color="#8B5CF6"/>
-      <stop offset="1" stop-color="#D946EF"/>
+    <!-- 深紫徽章底（径向，从中心向外暗下去，像古玉/暗影宝石） -->
+    <radialGradient id="discBg" cx="0.42" cy="0.38" r="0.72">
+      <stop offset="0" stop-color="#4A2D8C"/>
+      <stop offset="0.55" stop-color="#251456"/>
+      <stop offset="1" stop-color="#0E0626"/>
+    </radialGradient>
+
+    <!-- 金色 S 主体：从左上高光到右下深金，金属厚重感 -->
+    <linearGradient id="sGold" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#FBE8A6"/>
+      <stop offset="0.35" stop-color="#E5C158"/>
+      <stop offset="0.7" stop-color="#A07A1E"/>
+      <stop offset="1" stop-color="#5C4308"/>
     </linearGradient>
-    <linearGradient id="sBar" x1="0" y1="0" x2="0" y2="1">
+
+    <!-- S 的高光内描线（侧面金属反光） -->
+    <linearGradient id="sShine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFCE7" stop-opacity="0.85"/>
+      <stop offset="0.5" stop-color="#FFFCE7" stop-opacity="0.0"/>
+      <stop offset="1" stop-color="#FFFCE7" stop-opacity="0.55"/>
+    </linearGradient>
+
+    <!-- 外圈金边 -->
+    <linearGradient id="ringGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8C76A"/>
+      <stop offset="0.5" stop-color="#9A7820"/>
+      <stop offset="1" stop-color="#E8C76A"/>
+    </linearGradient>
+
+    <!-- 紫晶 -->
+    <radialGradient id="gem" cx="0.4" cy="0.3" r="0.85">
       <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.75"/>
-    </linearGradient>
+      <stop offset="0.18" stop-color="#E0C7FF"/>
+      <stop offset="0.55" stop-color="#9B5CFF"/>
+      <stop offset="1" stop-color="#3D1773"/>
+    </radialGradient>
+
+    <!-- 紫晶光晕 -->
+    <radialGradient id="gemHalo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#B07BFF" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#7038C8" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 顶端柔光 -->
+    <radialGradient id="topGloss" cx="0.5" cy="0.0" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <!-- 背板：渐变圆角方形 -->
-  <rect x="0" y="0" width="128" height="128" rx="28" fill="url(#sBg)"/>
+  <!-- ============================================================
+       1. 圆形徽章底（占画面主体，圆角方形外壳裹着圆形徽章感）
+       ============================================================ -->
+  <!-- 外层暗紫圆角方背板（画面安全区） -->
+  <rect x="0" y="0" width="128" height="128" rx="28" fill="#180A33"/>
+  <!-- 内圆徽章 -->
+  <circle cx="64" cy="64" r="54" fill="url(#discBg)"/>
+  <!-- 顶端柔光 -->
+  <circle cx="64" cy="64" r="54" fill="url(#topGloss)"/>
 
-  <!-- 内高光：顶端柔和反光，让 LOGO 有立体感 -->
-  <rect x="0" y="0" width="128" height="64" rx="28" fill="white" fill-opacity="0.08"/>
+  <!-- 双层金边 -->
+  <circle cx="64" cy="64" r="54" fill="none" stroke="url(#ringGold)" stroke-width="2.2"/>
+  <circle cx="64" cy="64" r="49" fill="none" stroke="#7E5E10" stroke-width="0.8" stroke-opacity="0.65"/>
 
-  <!-- 主体：宽笔几何 S，由两段水平线 + 两端圆弧拼成，读作 Symphony -->
-  <path d="
-    M 88 34
-    H 52
-    A 14 14 0 0 0 52 62
-    H 76
-    A 14 14 0 0 1 76 90
-    H 40
-  "
-    stroke="white"
-    stroke-width="14"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    fill="none"/>
+  <!-- 徽章内圈四方位金钉（heraldic 装饰，强化"古老印记"感） -->
+  <g fill="url(#ringGold)" stroke="#5C4308" stroke-width="0.4">
+    <circle cx="64" cy="13" r="2.2"/>
+    <circle cx="115" cy="64" r="2.2"/>
+    <circle cx="64" cy="115" r="2.2"/>
+    <circle cx="13" cy="64" r="2.2"/>
+  </g>
 
-  <!-- 右下角：三条递增的均衡器条，暗示"属性值堆叠" -->
-  <rect x="96" y="92" width="6" height="10" rx="2" fill="url(#sBar)"/>
-  <rect x="104" y="84" width="6" height="18" rx="2" fill="url(#sBar)"/>
-  <rect x="112" y="76" width="6" height="26" rx="2" fill="url(#sBar)" opacity="0.85"/>
+  <!-- 紫晶背后的氛围光（让中央 S 区域有发光感） -->
+  <circle cx="64" cy="64" r="34" fill="url(#gemHalo)" opacity="0.55"/>
+
+  <!-- ============================================================
+       2. 主角：粗壮的金色 S，两端尖锐如刀刃/符文
+          路径思路：上半圆向左张开 → 中段 S 弯 → 下半圆向右张开
+          stroke 用粗笔配合 round-cap，但末端用 path 修成尖角强化"剑刃"感
+       ============================================================ -->
+  <g>
+    <!-- 主体 S 路径（笔画粗壮、形似剑气） -->
+    <path d="
+      M 86 38
+      C 86 26, 70 22, 58 24
+      C 46 26, 38 34, 38 44
+      C 38 56, 50 60, 64 64
+      C 78 68, 90 72, 90 84
+      C 90 94, 82 102, 70 104
+      C 58 106, 42 102, 42 90"
+      stroke="url(#sGold)"
+      stroke-width="14"
+      stroke-linecap="round"
+      fill="none"/>
+    <!-- S 顶端笔锋（左上的尖角延伸） -->
+    <path d="M 88 34 L 84 30 L 80 32 L 84 38 Z"
+          fill="url(#sGold)" stroke="#5C4308" stroke-width="0.5"/>
+    <!-- S 底端笔锋（右下的尖角延伸） -->
+    <path d="M 40 94 L 44 98 L 48 96 L 44 90 Z"
+          fill="url(#sGold)" stroke="#5C4308" stroke-width="0.5"/>
+
+    <!-- S 主体高光（沿笔画走向，加金属光泽线条） -->
+    <path d="
+      M 84 36
+      C 80 30, 70 28, 60 30
+      C 52 32, 46 38, 46 44"
+      stroke="url(#sShine)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="
+      M 70 100
+      C 78 98, 84 92, 84 84"
+      stroke="url(#sShine)" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- ============================================================
+       3. 中央紫晶（S 弯交汇处，作为单点强焦点）
+       ============================================================ -->
+  <g>
+    <!-- 菱形紫晶 -->
+    <path d="M 64 56 L 72 64 L 64 72 L 56 64 Z"
+          fill="url(#gem)" stroke="#3D1773" stroke-width="0.9"/>
+    <!-- 切面线 -->
+    <path d="M 64 56 L 64 72 M 56 64 L 72 64"
+          stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="0.5"/>
+    <!-- 高光小三角 -->
+    <path d="M 58.5 62 L 63 58 L 60.5 65 Z"
+          fill="#FFFFFF" fill-opacity="0.7"/>
+    <!-- 顶端星点 -->
+    <circle cx="63" cy="58.5" r="0.9" fill="#FFFFFF" fill-opacity="0.95"/>
+  </g>
+
+  <!-- ============================================================
+       4. 周围细节：四颗微小金星，强化"魔法徽章"氛围
+       ============================================================ -->
+  <g fill="#FBE8A6" fill-opacity="0.75">
+    <circle cx="98" cy="36" r="0.9"/>
+    <circle cx="32" cy="32" r="0.9"/>
+    <circle cx="100" cy="98" r="0.9"/>
+    <circle cx="28" cy="96" r="0.9"/>
+  </g>
 </svg>
