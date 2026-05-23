@@ -39,7 +39,7 @@ object EnvironmentSystem {
             if (evaluateCondition(entity, mod)) {
                 activeIds.add(mod.id)
                 for ((attrId, effect) in mod.attributes) {
-                    val op = if (effect.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                    val op = Operation.parse(effect.operation)
                     result.add(AttributeModifier(attrId, op, effect.value, "env:${mod.id}"))
                 }
             }
@@ -82,7 +82,7 @@ object EnvironmentSystem {
             if (evaluateCondition(player, mod)) {
                 currentActive.add(mod.id)
                 for ((attrId, effect) in mod.attributes) {
-                    val op = if (effect.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                    val op = Operation.parse(effect.operation)
                     newModifiers.add(AttributeModifier(attrId, op, effect.value, "env:${mod.id}"))
                 }
             }

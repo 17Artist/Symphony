@@ -112,7 +112,7 @@ class SymphonyAPIImpl : SymphonyAPI {
 
     override fun snapshot(entity: LivingEntity): Map<String, Double> {
         AttributeCalculator.ensureCalculated(entity)
-        return AttributeCache.getAll(entity.uniqueId).toMap()
+        return AttributeCache.getAll(entity.uniqueId)
     }
 
     override fun registerReaction(

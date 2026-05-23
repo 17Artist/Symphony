@@ -53,7 +53,8 @@ object AttributeCalculator {
      */
     fun applyModifiers(entity: LivingEntity, modifiers: List<AttributeModifier>) {
         val entityId = entity.uniqueId
-        val previous = AttributeCache.getAll(entityId)
+        // 只读视图：仅用于读取旧值做事件 diff，applyModifiers 内部不修改它
+        val previous = AttributeCache.getAllView(entityId)
         val results = mutableMapOf<String, Double>()
 
         // 单次扫描聚合 flat/percent，避免 groupBy + filter

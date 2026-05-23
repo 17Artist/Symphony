@@ -31,7 +31,7 @@ class SetProvider(private val setManager: SetManager) : IAttributeProvider {
             val bonuses = setManager.getActiveBonuses(setId, pieceCount)
             for (bonus in bonuses) {
                 for ((attrId, attrBonus) in bonus.attributes) {
-                    val op = if (attrBonus.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                    val op = Operation.parse(attrBonus.operation)
                     modifiers.add(AttributeModifier(attrId, op, attrBonus.value, "set:$setId"))
                 }
             }

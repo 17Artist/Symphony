@@ -116,7 +116,7 @@ object StatusLayerSystem {
         for ((statusId, stackData) in getStatusMap(entity)) {
             val def = definitions[statusId] ?: continue
             for ((attrId, attr) in def.perStackAttributes) {
-                val op = if (attr.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                val op = Operation.parse(attr.operation)
                 modifiers.add(AttributeModifier(attrId, op, attr.value * stackData.stacks, "status:$statusId"))
             }
         }

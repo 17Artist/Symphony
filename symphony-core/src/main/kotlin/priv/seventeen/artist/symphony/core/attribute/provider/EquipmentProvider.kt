@@ -34,7 +34,7 @@ class EquipmentProvider : IAttributeProvider {
                 val type = object : TypeToken<ModifierListData>() {}.type
                 val data: ModifierListData = gson.fromJson(json, type)
                 data.modifiers.forEach { mod ->
-                    val op = if (mod.op.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                    val op = Operation.parse(mod.op)
                     modifiers.add(AttributeModifier(mod.attr, op, mod.value, "equipment:${mod.source}"))
                 }
             } catch (_: Exception) {}

@@ -86,7 +86,7 @@ object TalentManager {
         for (talentId in data.persistent.unlockedTalents) {
             val talent = talents[talentId] ?: continue
             for ((attrId, attr) in talent.passiveAttributes) {
-                val op = if (attr.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                val op = Operation.parse(attr.operation)
                 modifiers.add(AttributeModifier(attrId, op, attr.value, "talent:$talentId"))
             }
         }

@@ -55,7 +55,7 @@ class GemProvider(private val gemManager: GemManager) : IAttributeProvider {
                 val gemId = slot.gemId ?: return@forEach
                 val attrs = gemAttributes[gemId]?.get(slot.gemLevel) ?: return@forEach
                 attrs.forEach { (attrId, attr) ->
-                    val op = if (attr.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                    val op = Operation.parse(attr.operation)
                     modifiers.add(AttributeModifier(attrId, op, attr.value, "gem:$gemId:${slot.index}"))
                 }
             }

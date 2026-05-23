@@ -66,7 +66,7 @@ object ResonanceManager {
         for (resonanceId in data.runtime.activeResonances) {
             val def = definitions[resonanceId] ?: continue
             for ((attrId, effect) in def.effects.attributes) {
-                val op = if (effect.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                val op = Operation.parse(effect.operation)
                 modifiers.add(AttributeModifier(attrId, op, effect.value, "resonance:$resonanceId"))
             }
         }

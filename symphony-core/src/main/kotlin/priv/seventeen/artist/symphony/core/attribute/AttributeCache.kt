@@ -19,7 +19,15 @@ object AttributeCache {
 
     fun get(entityId: UUID, attributeId: String): Double? = cache[entityId]?.get(attributeId)
 
+    /** 返回属性 Map 的副本（防御性拷贝）。给到外部 API / 脚本桥用。 */
     fun getAll(entityId: UUID): Map<String, Double> = cache[entityId]?.toMap() ?: emptyMap()
+
+    /**
+     * 返回属性 Map 的**只读视图**，零拷贝。仅供 [AttributeCalculator] 等内部
+     * 主线程使用，调用方**必须保证不修改返回值**（修改会污染缓存）。
+     * 用于高频路径（每秒 N 次重算）避免 toMap 开销。
+     */
+    fun getAllView(entityId: UUID): Map<String, Double> = cache[entityId] ?: emptyMap()
 
     fun set(entityId: UUID, attributeId: String, value: Double) {
         cache.getOrPut(entityId) { ConcurrentHashMap() }[attributeId] = value

@@ -17,7 +17,7 @@ class AffixPassiveProvider : IAttributeProvider {
         for (affix in affixes) {
             val def = AffixManagerImpl.getDefinition(affix.affixId) ?: continue
             for ((attrId, passive) in def.passiveAttributes) {
-                val op = if (passive.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                val op = Operation.parse(passive.operation)
                 // 解析参数引用
                 val valueStr = passive.value
                 val value = resolveValue(valueStr, affix.parameters)

@@ -23,7 +23,7 @@ class RuneProvider : IAttributeProvider {
             val def = RuneRegistry.get(runeId) ?: continue
             val passives = def.passivesFor(runeData.level)
             for ((attrId, pass) in passives) {
-                val op = if (pass.operation.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                val op = Operation.parse(pass.operation)
                 modifiers.add(AttributeModifier(attrId, op, pass.value, "rune:$runeId"))
             }
         }

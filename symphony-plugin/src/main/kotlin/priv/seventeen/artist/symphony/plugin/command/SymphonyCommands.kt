@@ -126,6 +126,8 @@ object SymphonyCommands {
                     // 移除第三方插件注册的 ActionHandler，保留内置；
                     // 第三方插件需要在 onEnable / Reload 钩子里重新注册
                     priv.seventeen.artist.symphony.core.affix.AffixProcessor.reloadCustomHandlers()
+                    // 清空 Placeholder 短周期缓存（属性 / 经验 / 等级值都会变）
+                    priv.seventeen.artist.symphony.plugin.placeholder.SymphonyPlaceholder.clear()
                     SymphonyPlugin.growthManager.setManager.clear()
 
                     SymphonyPlugin.formulaEngine.clear()

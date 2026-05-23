@@ -11,9 +11,8 @@ import priv.seventeen.artist.symphony.core.data.ActiveBuff
 class AttributePermanentActionHandler : ActionHandler {
     override fun execute(params: Map<String, Any>, context: ITriggerContext, affix: AffixInstance) {
         val attribute = resolveParam(params["attribute"], affix.parameters)
-        val opStr = resolveParam(params["operation"], affix.parameters).uppercase()
+        val operation = Operation.parse(resolveParam(params["operation"], affix.parameters))
         val value = resolveDouble(params["value"], affix.parameters)
-        val operation = if (opStr == "PERCENT") Operation.PERCENT else Operation.FLAT
         val source = "affix_permanent:${affix.affixId}:${affix.uuid}"
 
         val player = context.entity as? Player ?: return

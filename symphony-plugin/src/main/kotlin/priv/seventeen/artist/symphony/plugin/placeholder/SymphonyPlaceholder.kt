@@ -5,6 +5,8 @@ import priv.seventeen.artist.symphony.core.attribute.AttributeCalculator
 import priv.seventeen.artist.symphony.core.attribute.AttributeRegistry
 import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.plugin.SymphonyPlugin
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * PlaceholderAPI 占位符解析。
@@ -29,6 +31,10 @@ import priv.seventeen.artist.symphony.plugin.SymphonyPlugin
  * - set_<id>_pieces         套装已激活件数
  * - combat_power            战斗力
  * - stat_<key>              统计数据
+ *
+ * **短周期缓存**：Tab/Scoreboard 高频路径（同 placeholder 每秒被请求几十次），
+ * 解析结果按 (player, params) 缓存 [CACHE_TTL_MS] 毫秒，cache miss 才走真实解析。
+ * 玩家下线时调用 [invalidate] 清理；reload 时调用 [clear]。
  */
 object SymphonyPlaceholder {
 
@@ -38,7 +44,32 @@ object SymphonyPlaceholder {
     private const val BAR_FILLED = '█'
     private const val BAR_EMPTY = '░'
 
+    // ── 短周期缓存 ──
+    /** 缓存条目最大新鲜期。200ms 够吸收 Tab/Scoreboard 同 tick 多次重复请求，又不至于让玩家观感"卡顿"。 */
+    private const val CACHE_TTL_MS = 200L
+
+    private data class CacheEntry(val value: String?, val expireAt: Long)
+
+    private val cache = ConcurrentHashMap<UUID, ConcurrentHashMap<String, CacheEntry>>()
+
     fun onRequest(player: Player, params: String): String? {
+        // 缓存命中检查
+        val now = System.currentTimeMillis()
+        val playerCache = cache[player.uniqueId]
+        if (playerCache != null) {
+            val hit = playerCache[params]
+            if (hit != null && hit.expireAt > now) {
+                return hit.value
+            }
+        }
+        val value = resolve(player, params)
+        // 写入缓存（对 null 也缓存，避免无效 placeholder 反复走 when 分支）
+        cache.computeIfAbsent(player.uniqueId) { ConcurrentHashMap() }[params] =
+            CacheEntry(value, now + CACHE_TTL_MS)
+        return value
+    }
+
+    private fun resolve(player: Player, params: String): String? {
         // 优先匹配固定前缀
         return when {
             // --- 属性 ---
@@ -211,5 +242,15 @@ object SymphonyPlaceholder {
     private fun fastFormat2(value: Double): String {
         val rounded = (value * 100.0 + 0.5).toLong() / 100.0
         return rounded.toString()
+    }
+
+    /** 玩家下线时清理该玩家的所有缓存条目，避免离线玩家占用内存。 */
+    fun invalidate(uuid: UUID) {
+        cache.remove(uuid)
+    }
+
+    /** Reload 时清空所有缓存。 */
+    fun clear() {
+        cache.clear()
     }
 }

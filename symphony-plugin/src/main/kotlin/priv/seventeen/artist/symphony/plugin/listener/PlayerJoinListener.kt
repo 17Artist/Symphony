@@ -33,6 +33,9 @@ object PlayerJoinListener {
         PlayerDataManager.getData(event.player.uniqueId)?.runtime?.let { runtime ->
             BuffOps.clearAll(event.player, runtime, BuffExpireEvent.ExpireReason.PLAYER_QUIT)
         }
+        // 清理 Placeholder 短周期缓存
+        priv.seventeen.artist.symphony.plugin.placeholder.SymphonyPlaceholder
+            .invalidate(event.player.uniqueId)
         PlayerDataManager.onPlayerQuit(event.player.uniqueId)
     }
 }
