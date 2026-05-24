@@ -299,6 +299,8 @@ AttributeCalculator.recalculate(holder)
 ├─ 同步原版属性（遍历有 vanilla_binding 的属性）
 ├─ 触发 on_change 回调（如果值发生变化）
 └─ 发布 AttributeUpdateEvent
+```
+
 ### 3.3 触发器分发流程
 
 ```
@@ -345,12 +347,12 @@ symphony-plugin
 
 ## 5. 线程模型
 
-| 操作 | 线程 | 说明 |
-|------|------|------|
-| 属性计算 | 主线程 | 涉及 Bukkit API，必须同步 |
+| 操作                 | 线程    | 说明                                                                          |
+|--------------------|-------|-----------------------------------------------------------------------------|
+| 属性计算               | 主线程   | 涉及 Bukkit API，必须同步                                                          |
 | 属性计算（async-recalc） | 异步线程池 | `performance.async-recalc: true` 时，`isAsync=true` 的属性来源采集走异步，最终 apply 仍在主线程 |
-| 触发器分发 | 主线程 | 由 Bukkit 事件驱动 |
-| Aria 脚本执行 | 主线程 | 短脚本同步执行，沙箱限时 |
-| 数据加载/保存 | 异步线程 | BukkitScheduler.runTaskAsynchronously |
-| 定时 Buff 过期检查 | 主线程 | BukkitRunnable 每 tick 检查 |
-| 公式预编译 | 启动时异步 | Aria.compile() 在 ENABLE 阶段异步执行 |
+| 触发器分发              | 主线程   | 由 Bukkit 事件驱动                                                               |
+| Aria 脚本执行          | 主线程   | 短脚本同步执行，沙箱限时                                                                |
+| 数据加载/保存            | 异步线程  | BukkitScheduler.runTaskAsynchronously                                       |
+| 定时 Buff 过期检查       | 主线程   | BukkitRunnable 每 tick 检查                                                    |
+| 公式预编译              | 启动时异步 | Aria.compile() 在 ENABLE 阶段异步执行                                              |

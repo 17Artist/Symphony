@@ -9,6 +9,7 @@ export default withMermaid(
     cleanUrls: true,
     lastUpdated: true,
     base: '/Symphony/',
+    appearance: 'force-dark',
 
     head: [
       ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Symphony/logo.svg' }]
@@ -113,16 +114,13 @@ export default withMermaid(
       lastUpdatedText: '最后更新',
       outline: { label: '本页', level: [2, 3] },
       returnToTopLabel: '返回顶部',
-      sidebarMenuLabel: '菜单',
-      darkModeSwitchLabel: '主题',
-      lightModeSwitchTitle: '切换到浅色',
-      darkModeSwitchTitle: '切换到深色'
+      sidebarMenuLabel: '菜单'
     }
   }),
   {
-    // mermaid 渲染配置：使用 default 主题让 vitepress-plugin-mermaid 自动适配深浅色
+    // mermaid 渲染配置：固定 dark 主题（站点强制深色）
     mermaid: {
-      theme: 'default',
+      theme: 'dark',
       securityLevel: 'loose'
     },
     mermaidPlugin: {

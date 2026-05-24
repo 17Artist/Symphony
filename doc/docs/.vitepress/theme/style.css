@@ -1,14 +1,15 @@
-/* Symphony 文档站主题 — Vite 风
+/* Symphony 文档站主题 — 暗色单一主题（force-dark）
  * 居中 hero / 紧凑层级 / 等高 Features / 统一节奏
  */
 
 :root {
-  --vp-c-brand-1: #6d28d9;
-  --vp-c-brand-2: #7c3aed;
-  --vp-c-brand-3: #8b5cf6;
-  --vp-c-brand-soft: rgba(124, 58, 237, 0.14);
+  /* 站点强制深色，下面的色值就是站点最终生效的颜色 */
+  --vp-c-brand-1: #c4b5fd;
+  --vp-c-brand-2: #ddd6fe;
+  --vp-c-brand-3: #ede9fe;
+  --vp-c-brand-soft: rgba(196, 181, 253, 0.16);
 
-  --vp-home-hero-name-color: #6d28d9;
+  --vp-home-hero-name-color: #c4b5fd;
   --vp-home-hero-name-background: none;
 
   --vp-font-family-base:
@@ -16,13 +17,6 @@
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 
   --vp-layout-max-width: 1440px;
-}
-
-.dark {
-  --vp-c-brand-1: #c4b5fd;
-  --vp-c-brand-2: #ddd6fe;
-  --vp-c-brand-3: #ede9fe;
-  --vp-home-hero-name-color: #c4b5fd;
 }
 
 /* ═══════════ Mouse glow 透出 ═══════════ */
@@ -41,14 +35,9 @@ body,
 
 .VPNav .content-body,
 .VPNavBar {
-  background: rgba(var(--vp-c-bg-rgb, 255, 255, 255), 0.7) !important;
+  background: rgba(20, 20, 22, 0.7) !important;
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
-}
-
-.dark .VPNav .content-body,
-.dark .VPNavBar {
-  background: rgba(20, 20, 22, 0.7) !important;
 }
 
 .VPHero,
@@ -131,13 +120,9 @@ body,
   font-size: 16px;
   background-color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
-  color: #fff;
+  color: #1a1a1a;
   box-shadow: none;
   transition: background-color .15s ease;
-}
-
-.dark .VPHero .VPButton.brand {
-  color: #1a1a1a;
 }
 
 .VPHero .VPButton.brand:hover {
@@ -375,17 +360,12 @@ body,
 
 .vp-doc :not(pre) > code {
   color: var(--vp-c-text-1);
-  background: var(--vp-c-default-soft);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 0.86em;
   font-weight: 500;
-  border: 1px solid var(--vp-c-divider);
-}
-
-.dark .vp-doc :not(pre) > code {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* reduced-motion */

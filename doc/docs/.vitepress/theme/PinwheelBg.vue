@@ -35,11 +35,6 @@ onMounted(() => {
   const dust: Dust[] = []
   const ARMS = 4
   const SPIRAL = 1.6
-  let isDark = false
-
-  function detectTheme() {
-    isDark = document.documentElement.classList.contains('dark')
-  }
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -96,9 +91,7 @@ onMounted(() => {
       if (d.y < -10) d.y = h + 10
       if (d.y > h + 10) d.y = -10
       const a = d.alpha * (0.6 + Math.sin(d.twinkle) * 0.4)
-      ctx.fillStyle = isDark
-        ? `rgba(196, 181, 253, ${a})`
-        : `rgba(124, 58, 237, ${a * 0.55})`
+      ctx.fillStyle = `rgba(196, 181, 253, ${a})`
       ctx.beginPath()
       ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2)
       ctx.fill()
@@ -124,9 +117,7 @@ onMounted(() => {
         ? lifeRatio / 0.1
         : 1 - (lifeRatio - 0.1) / 0.9
       const alpha = fade * 0.875
-      ctx.fillStyle = isDark
-        ? `rgba(196, 181, 253, ${alpha})`
-        : `rgba(124, 58, 237, ${alpha * 0.75})`
+      ctx.fillStyle = `rgba(196, 181, 253, ${alpha})`
       ctx.beginPath()
       ctx.arc(x, y, p.size, 0, Math.PI * 2)
       ctx.fill()
@@ -135,27 +126,22 @@ onMounted(() => {
     // soft vignette — 边缘暗角，中心透明，让粒子向中央汇聚的视觉自然形成
     const vg = ctx.createRadialGradient(cx, cy, Math.min(w, h) * 0.2, cx, cy, Math.max(w, h) * 0.7)
     vg.addColorStop(0, 'rgba(0, 0, 0, 0)')
-    vg.addColorStop(1, isDark ? 'rgba(10, 10, 14, 0.45)' : 'rgba(245, 243, 255, 0.55)')
+    vg.addColorStop(1, 'rgba(10, 10, 14, 0.45)')
     ctx.fillStyle = vg
     ctx.fillRect(0, 0, w, h)
 
     raf = requestAnimationFrame(frame)
   }
 
-  detectTheme()
   resize()
   resizeHandler = () => { resize() }
   window.addEventListener('resize', resizeHandler)
-
-  const obs = new MutationObserver(detectTheme)
-  obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
 
   raf = requestAnimationFrame(frame)
 
   onUnmounted(() => {
     cancelAnimationFrame(raf)
     if (resizeHandler) window.removeEventListener('resize', resizeHandler)
-    obs.disconnect()
   })
 })
 </script>
@@ -186,17 +172,11 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(to right, rgba(124, 58, 237, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(124, 58, 237, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(196, 181, 253, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(196, 181, 253, 0.06) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent 75%);
-}
-
-:global(.dark) .bg-grid {
-  background-image:
-    linear-gradient(to right, rgba(196, 181, 253, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(196, 181, 253, 0.06) 1px, transparent 1px);
 }
 
 @media (prefers-reduced-motion: reduce) {
