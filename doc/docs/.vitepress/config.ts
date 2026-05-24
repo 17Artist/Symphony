@@ -81,8 +81,7 @@ export default withMermaid(
               { text: '脚本集成', link: '/design/07-script-integration' },
               { text: '数据存储', link: '/design/08-data-storage' },
               { text: 'API 设计', link: '/design/09-api-design' },
-              { text: '高级系统', link: '/design/10-advanced-systems' },
-              { text: 'NMS 适配', link: '/design/11-nms-adapter' }
+              { text: '高级系统', link: '/design/10-advanced-systems' }
             ]
           }
         ]
