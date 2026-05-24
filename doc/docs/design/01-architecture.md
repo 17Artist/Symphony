@@ -1,13 +1,13 @@
 # 系统架构设计
 
-Symphony 是面向 Minecraft RPG 服务器的属性引擎。属性系统 + Provider 链式计算是核心；词条、触发器、技能、成长等子系统建立在属性引擎之上，全部 API 化允许扩展。
+Symphony 是面向 Minecraft RPG 服务器的属性引擎。属性系统 + 属性来源链式计算是核心；词条、触发器、技能、成长等子系统建立在属性引擎之上，全部 API 化允许扩展。
 
 ## 模块依赖图
 
 ```mermaid
 graph TB
     Plugin[symphony-plugin<br/>Bukkit 入口 / Listeners / Commands / GUI]
-    Core[symphony-core<br/>计算引擎 / Provider / 业务实现]
+    Core[symphony-core<br/>计算引擎 / 属性来源 / 业务实现]
     Common[symphony-common<br/>API 接口 / 数据类]
     NMS[symphony-nms<br/>NMS 适配 - Asteroid 封装]
 
@@ -23,9 +23,9 @@ graph TB
 
 第三方插件**只依赖 `symphony-common`**，零硬依赖核心实现。
 
-## Provider 计算链
+## 属性来源计算链
 
-完整 14 个 Provider 链（按优先级排序）：
+完整 14 个属性来源链（按优先级排序）：
 
 ```
 Base(100) → Level(150) → MythicMob(150) → Equipment(200) → Gem(300) → Rune(400) → Enhance(500) → Set(550) → AffixPassive(600) → Resonance(650) → Talent(660) → Status(670) → Buff(700) → Environment(750)
@@ -348,7 +348,7 @@ symphony-plugin
 | 操作 | 线程 | 说明 |
 |------|------|------|
 | 属性计算 | 主线程 | 涉及 Bukkit API，必须同步 |
-| 属性计算（async-recalc） | 异步线程池 | `performance.async-recalc: true` 时，`isAsync=true` 的 Provider 采集走异步，最终 apply 仍在主线程 |
+| 属性计算（async-recalc） | 异步线程池 | `performance.async-recalc: true` 时，`isAsync=true` 的属性来源采集走异步，最终 apply 仍在主线程 |
 | 触发器分发 | 主线程 | 由 Bukkit 事件驱动 |
 | Aria 脚本执行 | 主线程 | 短脚本同步执行，沙箱限时 |
 | 数据加载/保存 | 异步线程 | BukkitScheduler.runTaskAsynchronously |
