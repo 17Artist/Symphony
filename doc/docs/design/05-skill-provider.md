@@ -6,7 +6,6 @@
 
 调用链：`词条触发 → Action(SKILL) → SkillDispatcher → Provider(id).cast(skillId, level, context)`
 
-这种设计的好处：
 - 词条配置不需要关心技能的具体实现方式
 - 可以无缝对接 MythicMobs、自定义技能插件等第三方系统
 - Aria 脚本技能和 YAML 配置技能使用相同的调用方式
@@ -234,10 +233,10 @@ object MythicMobsMechanicRegistrar : Listener {
 
 注册的 Mechanic：
 
-| Mechanic | 参数 | 说明 |
-|----------|------|------|
-| `symphony_damage{amount=10}` | `amount` | 对目标造成指定数值的伤害 |
-| `symphony_heal{amount=5}` | `amount` | 治疗目标指定数值 |
+| Mechanic                                             | 参数                              | 说明             |
+|------------------------------------------------------|---------------------------------|----------------|
+| `symphony_damage{amount=10}`                         | `amount`                        | 对目标造成指定数值的伤害   |
+| `symphony_heal{amount=5}`                            | `amount`                        | 治疗目标指定数值       |
 | `symphony_buff{id=..;op=flat;value=10;duration=100}` | `id`, `op`, `value`, `duration` | 为目标添加临时属性 Buff |
 
 在 MythicMobs 技能配置中使用：

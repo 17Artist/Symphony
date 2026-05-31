@@ -42,7 +42,7 @@ flowchart TD
 
 ### 3.1 注解式声明
 
-每个属性占用一个文件，使用 Aria 注解声明元数据。Symphony 不再提供 `register({...})` map 风格 API，注解风格是唯一入口。
+每个属性占用一个文件，使用 Aria 注解声明元数据。
 
 ```aria
 // scripts/attributes/combat/physical_damage.aria
@@ -126,29 +126,29 @@ class CombatPower {
 
 ### 3.5 注解参数完整说明
 
-| 注解                 | 参数        | 必填    | 说明                                    |
-|--------------------|-----------|-------|---------------------------------------|
-| `@attribute`       | String    | **是** | 唯一标识符，全局不可重复                          |
-| `@displayName`     | String    | 否     | 显示名称（支持颜色代码）                          |
-| `@description`     | String    | 否     | 描述文本                                  |
-| `@category`        | String    | 否     | 分类标签（默认 `custom`）                     |
-| `@default`         | Number    | 否     | 默认值（默认 0.0）                           |
-| `@min`             | Number    | 否     | 最小值约束                                 |
-| `@max`             | Number    | 否     | 最大值约束                                 |
-| `@format`          | String    | 否     | 显示格式：`number` / `percent` / `integer` |
-| `@priority`        | Number    | 否     | 显示排序优先级，数值越小越靠前                       |
-| `@vanillaBinding`  | String    | 否     | 绑定的原版属性 ID                            |
-| `@readonly`        | Boolean/无 | 否     | 是否只读（仅由 `@derive` 计算）                 |
-| `@tag`             | String    | 否     | 单个标签，可重复                              |
-| `@tags`            | String[]  | 否     | 批量标签                                  |
-| `@derive` (类内方法)   | —         | 否     | 派生计算函数                                |
-| `@onChange` (类内方法) | —         | 否     | 属性值变更回调                               |
+| 注解                 | 参数        | 必填    | 说明                                            |
+|--------------------|-----------|-------|-----------------------------------------------|
+| `@attribute`       | String    | **是** | 唯一标识符，全局不可重复                                  |
+| `@displayName`     | String    | 否     | 显示名称（支持颜色代码）                                  |
+| `@description`     | String    | 否     | 描述文本                                          |
+| `@category`        | String    | 否     | 分类标签（默认 `custom`）                             |
+| `@default`         | Number    | 否     | 默认值（默认 0.0）                                   |
+| `@min`             | Number    | 否     | 最小值约束                                         |
+| `@max`             | Number    | 否     | 最大值约束                                         |
+| `@format`          | String    | 否     | 显示格式：`number` / `percent` / `integer`         |
+| `@priority`        | Number    | 否     | 显示排序优先级，数值越小越靠前                               |
+| `@vanillaBinding`  | String    | 否     | 绑定的原版属性 ID                                    |
+| `@readonly`        | Boolean/无 | 否     | 是否只读（仅由 `@derive` 计算）                         |
+| `@tag`             | String    | 否     | 单个标签，可重复                                      |
+| `@tags`            | String[]  | 否     | 批量标签                                          |
+| `@derive` (类内方法)   | —         | 否     | 派生计算函数                                        |
+| `@onChange` (类内方法) | —         | 否     | 属性值变更回调                                       |
 | `@formula` (类内方法)  | —         | 否     | 自定义聚合公式（入参：base, flatSum, percentSum, holder） |
-| `@dependsOn`       | String... | 否     | 声明属性间静态依赖，用于局部脏标记传播                   |
-| `@when`            | String    | 否     | 条件门控，条件不满足时属性使用默认值                    |
-| `@defaultExpr`     | String    | 否     | 动态默认值表达式（Aria 脚本）                     |
-| `@minExpr`         | String    | 否     | 动态最小值表达式                              |
-| `@maxExpr`         | String    | 否     | 动态最大值表达式                              |
+| `@dependsOn`       | String... | 否     | 声明属性间静态依赖，用于局部脏标记传播                           |
+| `@when`            | String    | 否     | 条件门控，条件不满足时属性使用默认值                            |
+| `@defaultExpr`     | String    | 否     | 动态默认值表达式（Aria 脚本）                             |
+| `@minExpr`         | String    | 否     | 动态最小值表达式                                      |
+| `@maxExpr`         | String    | 否     | 动态最大值表达式                                      |
 
 ## 4. 默认属性包
 
@@ -349,12 +349,6 @@ class MaxHealth {}
     │   │   └── operation = ADD_NUMBER
     │   └── 同步到客户端
 ```
-
-关键设计决策：
-- 使用 `getFinalValue()` 而非 `getBaseValue()`，确保差值计算考虑了其他插件和原版装备的 modifier，避免攻击速度等属性被意外覆盖
-- 无 Provider 贡献的属性不同步到原版，防止 Symphony 的默认值覆盖原版属性（如未配置攻击速度词条时，不会干扰原版攻击速度）
-
-这意味着服务器管理员可以自由决定哪些属性同步到原版。比如自定义一个 `true_damage` 属性，不绑定任何原版属性，它就只存在于 Symphony 的计算体系中。
 
 ## 7. 脚本中的属性操作 API
 

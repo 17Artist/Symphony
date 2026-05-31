@@ -327,15 +327,13 @@ condition:
   tag: "fire"                        # 标签名
   count: 3                           # 需要 3 个
 
-# 共鸣效果（当前仅 attributes 会被 ConfigLoader 装配）
+# 共鸣效果
 effects:
   attributes:
     fire_damage:
       operation: PERCENT
       value: 0.30
 ```
-
-> 目前 `ConfigLoader.loadResonances` 只读取 `effects.attributes` 一项。若需要「共鸣激活时额外挂触发器/反应加成/质变机制」这类进阶联动，走词条 triggers 或 Aria 脚本回调去实现，避免在共鸣 YAML 里堆叠未被装配的字段。
 
 ### 3.3 共鸣条件类型
 
@@ -669,14 +667,14 @@ actions:
 
 通用字段：
 
-| 字段             | 说明                                          |
-|----------------|---------------------------------------------|
-| `id`           | 唯一标识                                        |
-| `display_name` | 显示名                                         |
-| `type`         | 上述枚举之一                                      |
+| 字段             | 说明                                             |
+|----------------|------------------------------------------------|
+| `id`           | 唯一标识                                           |
+| `display_name` | 显示名                                            |
+| `type`         | 上述枚举之一                                         |
 | `attributes`   | 属性修改表，每个条目含 `operation`（FLAT/PERCENT）和 `value` |
-| `description`  | 描述文本                                        |
-| `condition`    | Aria 表达式（可选），优先级最高                          |
+| `description`  | 描述文本                                           |
+| `condition`    | Aria 表达式（可选），优先级最高                             |
 
 类型相关字段：
 
