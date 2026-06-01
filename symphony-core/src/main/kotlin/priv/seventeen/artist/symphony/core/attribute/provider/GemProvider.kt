@@ -36,6 +36,9 @@ class GemProvider(private val gemManager: GemManager) : IAttributeProvider {
     fun getMeta(gemId: String): GemMeta? = gemMeta[gemId]
     fun getAllMeta(): Map<String, GemMeta> = gemMeta
 
+    /** 已注册的全部宝石 ID（权威来源，供命令补全等使用）。 */
+    fun gemIds(): Set<String> = gemAttributes.keys.toSet()
+
     /** Reload 时清空所有宝石定义，由 ConfigLoader 重新填充。 */
     fun clear() {
         gemAttributes.clear()

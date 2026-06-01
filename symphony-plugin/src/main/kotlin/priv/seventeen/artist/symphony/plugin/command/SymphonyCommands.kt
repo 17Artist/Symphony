@@ -174,6 +174,39 @@ object SymphonyCommands {
                                 val value = AttributeCalculator.getValue(target, attrId)
                                 ctx.reply("§b${target.name} §f的 §e$attrId §f= §a${"%.2f".format(value)}")
                             }
+                            "add" -> {
+                                val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr <玩家> add <属性ID> <值> [FLAT|PERCENT]")
+                                val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
+                                val op = if (a4.uppercase() == "PERCENT") Operation.PERCENT else Operation.FLAT
+                                val data = PlayerDataManager.getData(target.uniqueId) ?: return@command
+                                val buffId = "cmd:set:$attrId"
+                                val existing = data.runtime.activeBuffs.firstOrNull { it.id == buffId && it.operation == op }
+                                if (existing != null) {
+                                    // 在已有 buff 上累加数值
+                                    data.runtime.activeBuffs.remove(existing)
+                                    data.runtime.activeBuffs.add(ActiveBuff(
+                                        id = buffId,
+                                        attribute = attrId,
+                                        operation = op,
+                                        value = existing.value + value,
+                                        expireTime = -1L,
+                                        source = "command:set"
+                                    ))
+                                } else {
+                                    data.runtime.activeBuffs.add(ActiveBuff(
+                                        id = buffId,
+                                        attribute = attrId,
+                                        operation = op,
+                                        value = value,
+                                        expireTime = -1L,
+                                        source = "command:set"
+                                    ))
+                                }
+                                AttributeCache.markDirty(target.uniqueId)
+                                val newValue = (existing?.value ?: 0.0) + value
+                                val opLabel = if (op == Operation.PERCENT) "×${"%.1f%%".format(newValue * 100)}" else "+${"%.2f".format(newValue)}"
+                                ctx.reply("§a已增加 ${target.name} 的 $attrId $opLabel (永久)")
+                            }
                             "set" -> {
                                 val attrId = a2.takeIf { it.isNotEmpty() } ?: return@command ctx.reply("§c用法: /sym player attr <玩家> set <属性ID> <值> [FLAT|PERCENT]")
                                 val value = a3.toDoubleOrNull() ?: return@command ctx.reply("§c无效数值")
@@ -199,7 +232,7 @@ object SymphonyCommands {
                                     ctx.reply("  §7$display §f($id): §a${"%.2f".format(value)}")
                                 }
                             }
-                            else -> ctx.reply("§c用法: /sym player attr <玩家> <get|set|list> ...")
+                            else -> ctx.reply("§c用法: /sym player attr <玩家> <get|set|add|list> ...")
                         }
                         "buff" -> when (a1) {
                             "add" -> {

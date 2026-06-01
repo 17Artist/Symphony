@@ -1,7 +1,24 @@
 # Symphony 全局配置
 debug: false
 auto-save-interval: 300
+
+# 存储类型: yaml / sqlite / mysql
 storage-type: yaml
+
+# 数据库存储参数（storage-type 为 sqlite / mysql 时使用）
+# 启动时如果驱动（org.sqlite.JDBC / com.mysql.cj.jdbc.Driver）不在 classpath 上，
+# 会打印错误并自动降级到 YAML，不会让服务器起不来。
+storage:
+  sqlite:
+    # SQLite 数据库文件名（相对插件数据目录）
+    file: data/symphony.db
+  mysql:
+    host: localhost
+    port: 3306
+    database: symphony
+    username: root
+    password: ""
+
 max-level: 100
 combat-timeout: 10000
 combo-timeout: 3000
@@ -14,3 +31,8 @@ advanced:
   talent-enabled: true
   status-enabled: true
   environment-enabled: true
+
+# 性能
+performance:
+  # 属性重算异步采集（仅 isAsync=true 的 Provider 进入异步池；事件 apply 仍在主线）
+  async-recalc: false
