@@ -37,6 +37,7 @@ import priv.seventeen.artist.symphony.nms.NMSAdapterFactory
 import priv.seventeen.artist.symphony.plugin.command.SymphonyCommands
 import priv.seventeen.artist.symphony.plugin.gui.AttributeGuiProvider
 import priv.seventeen.artist.symphony.plugin.gui.BukkitInventoryGuiProvider
+import priv.seventeen.artist.symphony.plugin.listener.EpicFightAnimationListener
 import priv.seventeen.artist.symphony.plugin.placeholder.SymphonyExpansion
 import java.io.File
 
@@ -119,6 +120,19 @@ object SymphonyPlugin {
             BlinkLog.info("已加载 §b${EnvironmentSystem.getAll().size} §f个环境修正器")
         }
 
+        // Epic Fight 动画兼容初始化（动画播放期间延迟属性同步，避免动画卡住）
+        EpicFightAnimationListener.init(config.epicFightEnabled)
+        when {
+            !config.epicFightEnabled ->
+                BlinkLog.info("Epic Fight 兼容已在配置中关闭")
+            !isEpicFightLoaded() ->
+                BlinkLog.info("Epic Fight 未检测到，跳过动画兼容初始化")
+            EpicFightAnimationListener.available ->
+                BlinkLog.success("§bEpic Fight §f动画兼容已启用")
+            else ->
+                BlinkLog.warn("§bEpic Fight §f已安装但反射 API 不兼容，动画兼容未启用")
+        }
+
         scriptEngine.loadAttributeScripts(bukkitPlugin.dataFolder)
         scriptEngine.loadFormulaScripts(bukkitPlugin.dataFolder, formulaEngine)
         scriptEngine.loadMechanicsScripts(bukkitPlugin.dataFolder)
@@ -198,5 +212,12 @@ object SymphonyPlugin {
             }
             else -> YamlStorageProvider(bukkitPlugin.dataFolder)
         }
+    }
+
+    /**
+     * 检查 Epic Fight 模组是否已加载
+     */
+    private fun isEpicFightLoaded(): Boolean {
+        return bukkitPlugin.server.pluginManager.getPlugin("EpicFight") != null
     }
 }

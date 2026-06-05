@@ -19,6 +19,7 @@ import priv.seventeen.artist.symphony.core.storage.PlayerDataManager
 import priv.seventeen.artist.symphony.core.trigger.TriggerDispatcher
 import priv.seventeen.artist.symphony.api.trigger.TriggerType
 import priv.seventeen.artist.symphony.api.event.BuffExpireEvent
+import priv.seventeen.artist.symphony.plugin.listener.EpicFightAnimationListener
 
 class RuntimeTickTask : BukkitRunnable() {
     private var tickCount = 0L
@@ -150,6 +151,11 @@ class RuntimeTickTask : BukkitRunnable() {
         // 每 200 tick: 清理非玩家实体缓存
         if (tickCount % 200 == 0L) {
             EntityRuntimeCache.cleanup()
+        }
+
+        // 每 100 tick: 清理已离线的玩家动画状态
+        if (tickCount % 100 == 0L) {
+            EpicFightAnimationListener.cleanupOfflinePlayers()
         }
     }
 }

@@ -141,6 +141,9 @@ object SymphonyCommands {
                     if (SymphonyPlugin.config.elementEnabled) ReactionSystem.registerDefaults()
                     if (SymphonyPlugin.config.statusEnabled) StatusLayerSystem.registerDefaults()
                     if (SymphonyPlugin.config.environmentEnabled) EnvironmentSystem.registerDefaults()
+                    // Epic Fight 兼容开关热生效
+                    priv.seventeen.artist.symphony.plugin.listener.EpicFightAnimationListener
+                        .init(SymphonyPlugin.config.epicFightEnabled)
 
                     val provider = SymphonyPlugin.skillProviderManager.getProvider("symphony") as? SymphonySkillProvider
                     val aria = SymphonyPlugin.skillProviderManager.getProvider("aria") as? AriaSkillProvider
