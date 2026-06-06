@@ -36,3 +36,8 @@ advanced:
 performance:
   # 属性重算异步采集（仅 isAsync=true 的 Provider 进入异步池；事件 apply 仍在主线）
   async-recalc: false
+
+# 兼容性
+compatibility:
+  # Epic Fight 兼容：玩家播放动画时延迟属性同步，避免动画卡住（仅在装有 Epic Fight 时生效）
+  epicfight-enabled: false

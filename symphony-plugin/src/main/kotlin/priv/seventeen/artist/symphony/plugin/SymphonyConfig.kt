@@ -81,6 +81,10 @@ class SymphonyConfig : BlinkConfig(bukkitPlugin, "config") {
     @ConfigKey("performance.async-recalc")
     var asyncRecalc = false
 
+    @Comment("Epic Fight 兼容：动画播放期间延迟属性同步，避免动画卡住（仅在装有 Epic Fight 时生效）")
+    @ConfigKey("compatibility.epicfight-enabled")
+    var epicFightEnabled = true
+
     companion object {
         lateinit var instance: SymphonyConfig private set
         fun load() { instance = SymphonyConfig(); instance.load() }

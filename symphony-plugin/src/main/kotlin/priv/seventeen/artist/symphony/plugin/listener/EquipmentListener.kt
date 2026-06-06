@@ -25,7 +25,8 @@ object EquipmentListener {
         val player = event.player
         val oldItem = player.inventory.getItem(event.previousSlot)
         val newItem = player.inventory.getItem(event.newSlot)
-        AttributeCalculator.markDirty(player)
+        // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+        EpicFightAnimationListener.markPendingRecalc(player)
         TriggerDispatcher.dispatch(TriggerType.ON_HOLD, player) {
             set("item", newItem?.type?.name ?: "AIR")
             set("previousItem", oldItem?.type?.name ?: "AIR")
@@ -46,7 +47,8 @@ object EquipmentListener {
                 SymphonyAPI.getInstance().getAffixManager()?.getAffixes(oldItem)
             } else emptyList()
             Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
-                AttributeCalculator.markDirty(player)
+                // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+                EpicFightAnimationListener.markPendingRecalc(player)
                 // 装备变更触发器
                 if (event.rawSlot in armorSlots) {
                     val newItemStack = player.inventory.getItem(event.rawSlot)
@@ -94,7 +96,8 @@ object EquipmentListener {
                 type == "CARVED_PUMPKIN" || type == "SKELETON_SKULL" ||
                 type == "ZOMBIE_HEAD" || type == "PLAYER_HEAD" || type == "DRAGON_HEAD") {
                 Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
-                    AttributeCalculator.markDirty(player)
+                    // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+                    EpicFightAnimationListener.markPendingRecalc(player)
                 }, 1L)
             }
         }
@@ -105,7 +108,8 @@ object EquipmentListener {
      */
     @AutoListener
     fun onSwapHands(event: PlayerSwapHandItemsEvent) {
-        AttributeCalculator.markDirty(event.player)
+        // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+        EpicFightAnimationListener.markPendingRecalc(event.player)
     }
 
     /**
@@ -114,7 +118,8 @@ object EquipmentListener {
     @AutoListener
     fun onDropItem(event: PlayerDropItemEvent) {
         Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
-            AttributeCalculator.markDirty(event.player)
+            // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+            EpicFightAnimationListener.markPendingRecalc(event.player)
         }, 1L)
     }
 
@@ -124,7 +129,8 @@ object EquipmentListener {
     @AutoListener
     fun onItemBreak(event: PlayerItemBreakEvent) {
         Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
-            AttributeCalculator.markDirty(event.player)
+            // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+            EpicFightAnimationListener.markPendingRecalc(event.player)
         }, 1L)
     }
 
@@ -134,7 +140,8 @@ object EquipmentListener {
     @AutoListener
     fun onRespawn(event: PlayerRespawnEvent) {
         Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
-            AttributeCalculator.markDirty(event.player)
+            // 使用 EpicFightAnimationListener 延迟重算，避免动画卡住
+            EpicFightAnimationListener.markPendingRecalc(event.player)
         }, 1L)
     }
 }
