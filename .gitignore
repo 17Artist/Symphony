@@ -41,3 +41,5 @@ desktop.ini
 # ─── Claude / 本地工具 ────────────────────────
 .claude/
 /TESTING.md
+.narrafork/
+.worktrees/
