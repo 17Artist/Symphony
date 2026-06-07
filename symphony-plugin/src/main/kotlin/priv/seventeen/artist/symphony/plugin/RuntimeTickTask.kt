@@ -29,6 +29,9 @@ class RuntimeTickTask : BukkitRunnable() {
         val now = System.currentTimeMillis()
 
         for (player in Bukkit.getOnlinePlayers()) {
+            if (tickCount % 20 == 0L) {
+                EpicFightAnimationListener.tickPlayer(player)
+            }
             val data = PlayerDataManager.getData(player.uniqueId) ?: continue
             var attributeDirty = false
 
@@ -123,22 +126,20 @@ class RuntimeTickTask : BukkitRunnable() {
                 AttributeCache.markDirty(player.uniqueId)
             }
 
-            // 属性重算 + 交互网络 + 原版同步
-            if (AttributeCache.isDirty(player.uniqueId)) {
-                if (SymphonyPlugin.config.asyncRecalc) {
-                    AsyncRecalcScheduler.recalculateAsync(player) {
-                        // 异步重算完成后在主线程执行
-                        if (SymphonyPlugin.config.interactionEnabled) {
-                            InteractionNetwork.process(player)
-                        }
-                        VanillaAttributeBridge.syncToVanilla(player)
-                    }
-                } else {
-                    AttributeCalculator.recalculate(player)
+            // 属性重算 + 交互网络 + 原版同步（Epic Fight 动画中延迟，避免换世界/Buff 等触发时卡动作）
+            if (AttributeCache.isDirty(player.uniqueId) ||
+                EpicFightAnimationListener.hasPendingRecalc(player)
+            ) {
+                val afterRecalc: () -> Unit = {
                     if (SymphonyPlugin.config.interactionEnabled) {
                         InteractionNetwork.process(player)
                     }
-                    VanillaAttributeBridge.syncToVanilla(player)
+                    EpicFightAnimationListener.syncVanillaWhenSafe(player)
+                }
+                if (SymphonyPlugin.config.asyncRecalc && !EpicFightAnimationListener.shouldDeferRecalc(player)) {
+                    AsyncRecalcScheduler.recalculateAsync(player, afterRecalc)
+                } else {
+                    EpicFightAnimationListener.scheduleSafeRecalc(player, afterRecalc)
                 }
             }
         }

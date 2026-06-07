@@ -18,6 +18,10 @@ object PlayerJoinListener {
         PlayerDataManager.onPlayerJoin(event.player.uniqueId)
 
         Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
+            EpicFightAnimationListener.registerListener(event.player)
+        }, 5L)
+
+        Bukkit.getScheduler().runTaskLater(bukkitPlugin, Runnable {
             TriggerDispatcher.dispatch(TriggerType.ON_JOIN, event.player) {
                 set("player", event.player)
             }
@@ -36,6 +40,7 @@ object PlayerJoinListener {
         // 清理 Placeholder 短周期缓存
         priv.seventeen.artist.symphony.plugin.placeholder.SymphonyPlaceholder
             .invalidate(event.player.uniqueId)
+        EpicFightAnimationListener.cleanup(event.player)
         PlayerDataManager.onPlayerQuit(event.player.uniqueId)
     }
 }
