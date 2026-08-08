@@ -80,10 +80,9 @@ class UserFacingTextContractTest {
                             fragments += line
                         }
                     } else {
-                        val lineComment = line.indexOf("//")
-                        val blockComment = line.indexOf("/*")
-                        val urlLiteral = lineComment >= 0 && line.substring(0, lineComment).contains(Regex("\"https?:$"))
-                        if (lineComment >= 0 && !urlLiteral && (blockComment < 0 || lineComment < blockComment)) {
+                        val lineComment = commentTokenIndex(line, "//")
+                        val blockComment = commentTokenIndex(line, "/*")
+                        if (lineComment >= 0 && (blockComment < 0 || lineComment < blockComment)) {
                             fragments += line.substring(lineComment + 2)
                         } else if (blockComment >= 0) {
                             val remainder = line.substring(blockComment + 2)
@@ -131,6 +130,29 @@ class UserFacingTextContractTest {
             }
         }
         assertTrue(issues.isEmpty(), "以下运行诊断仍包含英文句式：\n${issues.joinToString("\n")}")
+    }
+
+    private fun commentTokenIndex(line: String, token: String): Int {
+        var quote: Char? = null
+        var escaped = false
+        var index = 0
+        while (index <= line.length - token.length) {
+            val current = line[index]
+            if (quote != null) {
+                when {
+                    escaped -> escaped = false
+                    current == '\\' -> escaped = true
+                    current == quote -> quote = null
+                }
+            } else {
+                when (current) {
+                    '\'', '"' -> quote = current
+                    else -> if (line.startsWith(token, index)) return index
+                }
+            }
+            index++
+        }
+        return -1
     }
 
     private fun productionSourceFiles(): List<Path> {

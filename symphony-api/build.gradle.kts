@@ -30,11 +30,38 @@ kotlin {
     jvmToolchain(17)
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
             artifactId = "symphony-api"
+            pom {
+                name.set("Symphony API")
+                description.set("Symphony 属性、伤害与物品能力的公共接入 API")
+                url.set("https://github.com/17Artist/Symphony")
+                licenses {
+                    license {
+                        name.set("Apache License 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("17Artist")
+                        name.set("17Artist")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/17Artist/Symphony")
+                    connection.set("scm:git:https://github.com/17Artist/Symphony.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/17Artist/Symphony.git")
+                }
+            }
         }
     }
 }

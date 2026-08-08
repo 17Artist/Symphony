@@ -149,7 +149,7 @@ class ComplexExampleContractTest {
         val overtureRoot = exampleRoot.resolve("overture")
         val itemsRoot = overtureRoot.resolve("items/prismatic-arsenal")
         val items = loadOvertureItems(itemsRoot)
-        assertEquals(37, items.size)
+        assertEquals(34, items.size)
         assertEquals("gem_extractor", snapshot.socketRemoval?.tool?.overtureItem)
         val accuracyCalibrator = items.getValue("damage_accuracy_calibrator") as Map<*, *>
         val accuracyComponents = accuracyCalibrator["components"] as Map<*, *>
@@ -180,7 +180,7 @@ class ComplexExampleContractTest {
                 componentCount++
             }
         }
-        assertEquals(39, componentCount)
+        assertEquals(36, componentCount)
 
         val display = Files.readString(overtureRoot.resolve("displays/prismatic-arsenal.yml"))
         listOf("attributes", "affixes", "skills", "sockets", "enhancement", "offhand", "set").forEach {

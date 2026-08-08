@@ -16,6 +16,7 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.publish.PublishingExtension
 
 plugins {
     kotlin("jvm") version "1.8.22" apply false
@@ -45,6 +46,23 @@ subprojects {
         useJUnitPlatform()
         testLogging {
             events("failed", "skipped")
+        }
+    }
+
+    pluginManager.withPlugin("maven-publish") {
+        extensions.configure<PublishingExtension> {
+            repositories {
+                maven {
+                    name = "ArcartX"
+                    val targetUrl = project.providers.gradleProperty("mavenRepoUrl").get()
+                    url = uri(targetUrl)
+                    isAllowInsecureProtocol = targetUrl.startsWith("http://")
+                    credentials {
+                        username = project.providers.gradleProperty("mavenRepoUser").get()
+                        password = project.providers.environmentVariable("repo").orNull.orEmpty()
+                    }
+                }
+            }
         }
     }
 }

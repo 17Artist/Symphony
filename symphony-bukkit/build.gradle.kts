@@ -138,6 +138,25 @@ publishing {
             pom {
                 name.set("Symphony")
                 description.set("面向 Bukkit 服务器的可配置属性、战斗与装备能力引擎")
+                url.set("https://github.com/17Artist/Symphony")
+                licenses {
+                    license {
+                        name.set("Apache License 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("17Artist")
+                        name.set("17Artist")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/17Artist/Symphony")
+                    connection.set("scm:git:https://github.com/17Artist/Symphony.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/17Artist/Symphony.git")
+                }
             }
         }
     }

@@ -1,0 +1,178 @@
+# Copyright 2026 17Artist
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 发布
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Maven 正式版本号，例如 1.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}-${{ inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: 发布 Maven 产物
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 校验 Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: 配置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - name: 配置 Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 允许执行 Gradle Wrapper
+        run: chmod +x ./gradlew
+
+      - name: 解析正式版本号
+        id: version
+        shell: bash
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            version="${DISPATCH_VERSION}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "::error::Maven 正式版本号无效：${version}"
+            exit 1
+          fi
+          if [[ "${version}" == *SNAPSHOT* ]]; then
+            echo "::error::正式仓库不接受 SNAPSHOT 版本：${version}"
+            exit 1
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: 完整构建
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: ./gradlew clean build -Pversion="${RELEASE_VERSION}" --no-daemon --max-workers=1
+
+      - name: 发布插件与公共 API
+        env:
+          repo: ${{ secrets.MAVEN_REPO_PASSWORD }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          if [[ -z "${repo}" ]]; then
+            echo "::error::仓库尚未配置 MAVEN_REPO_PASSWORD"
+            exit 1
+          fi
+          ./gradlew \
+            :symphony-api:publishMavenJavaPublicationToArcartXRepository \
+            :symphony-bukkit:publishPluginPublicationToArcartXRepository \
+            -Pversion="${RELEASE_VERSION}" \
+            --no-daemon --max-workers=1
+
+      - name: 验证远程 Maven 产物
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          MAVEN_BASE_URL: https://repo.arcartx.com/repository/maven-releases
+        shell: bash
+        run: |
+          group_path="priv/seventeen/artist/symphony"
+          verification_root="build/published-verification"
+          mkdir -p "${verification_root}"
+
+          download_artifact() {
+            local artifact="$1"
+            local extension="$2"
+            local classifier="${3:-}"
+            local suffix=""
+            if [[ -n "${classifier}" ]]; then
+              suffix="-${classifier}"
+            fi
+            local base="${MAVEN_BASE_URL}/${group_path}/${artifact}/${RELEASE_VERSION}/${artifact}-${RELEASE_VERSION}${suffix}"
+            curl --fail --silent --show-error --location \
+              --retry 12 --retry-all-errors --retry-delay 5 \
+              --output "${verification_root}/${artifact}${suffix}.${extension}" \
+              "${base}.${extension}"
+          }
+
+          for artifact in symphony symphony-api; do
+            download_artifact "${artifact}" pom
+            download_artifact "${artifact}" jar
+            test -s "${verification_root}/${artifact}.pom"
+            test -s "${verification_root}/${artifact}.jar"
+            grep -Fq '<groupId>priv.seventeen.artist.symphony</groupId>' "${verification_root}/${artifact}.pom"
+            grep -Fq "<artifactId>${artifact}</artifactId>" "${verification_root}/${artifact}.pom"
+            grep -Fq "<version>${RELEASE_VERSION}</version>" "${verification_root}/${artifact}.pom"
+          done
+
+          download_artifact symphony-api jar sources
+          test -s "${verification_root}/symphony-api-sources.jar"
+          jar tf "${verification_root}/symphony.jar" | grep -Fxq 'plugin.yml'
+          jar tf "${verification_root}/symphony-api.jar" | grep -Fxq \
+            'priv/seventeen/artist/symphony/api/service/SymphonyApi.class'
+
+          cmp -s \
+            "${verification_root}/symphony.jar" \
+            "symphony-bukkit/build/libs/symphony-bukkit-${RELEASE_VERSION}.jar"
+          cmp -s \
+            "${verification_root}/symphony-api.jar" \
+            "symphony-api/build/libs/symphony-api-${RELEASE_VERSION}.jar"
+
+          if jar tf "${verification_root}/symphony.jar" | grep -Eq \
+            '^(kotlin/|kotlinx/|org/bukkit/|net/minecraft/|priv/seventeen/artist/blink/|priv/seventeen/artist/overture/|org/snakeyaml/)'; then
+            echo "::error::远程 Symphony JAR 混入了不应打包的依赖类"
+            exit 1
+          fi
+
+          sha256sum "${verification_root}/symphony.jar"
+          sha256sum "${verification_root}/symphony-api.jar"
+
+      - name: 上传正式构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Symphony-${{ steps.version.outputs.version }}
+          path: |
+            symphony-bukkit/build/libs/symphony-bukkit-${{ steps.version.outputs.version }}.jar
+            symphony-api/build/libs/symphony-api-${{ steps.version.outputs.version }}.jar
+            symphony-api/build/libs/symphony-api-${{ steps.version.outputs.version }}-sources.jar
+          if-no-files-found: error
+
+      - name: 生成发布摘要
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          echo '### Maven 发布已经验证' >> "$GITHUB_STEP_SUMMARY"
+          echo "- 插件：\`priv.seventeen.artist.symphony:symphony:${RELEASE_VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API：\`priv.seventeen.artist.symphony:symphony-api:${RELEASE_VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 源码：\`${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
