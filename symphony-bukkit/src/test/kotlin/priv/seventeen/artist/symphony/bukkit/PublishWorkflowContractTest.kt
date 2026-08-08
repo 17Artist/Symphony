@@ -36,6 +36,13 @@ class PublishWorkflowContractTest {
             val root = loader.loadFromString(source) as? Map<*, *>
             assertTrue(root != null && "on" in root && "jobs" in root, "$fileName 不是有效的 GitHub Actions 工作流")
             assertFalse(source.contains("symphony-testkit"), "$fileName 不得依赖未进入仓库的 testkit")
+            listOf(
+                "actions/checkout@v7",
+                "actions/setup-java@v5",
+                "gradle/actions/wrapper-validation@v6",
+                "gradle/actions/setup-gradle@v6",
+                "actions/upload-artifact@v7"
+            ).forEach { action -> assertTrue(action in source, "$fileName 未使用当前的 Node.js 24 Action：$action") }
         }
     }
 
