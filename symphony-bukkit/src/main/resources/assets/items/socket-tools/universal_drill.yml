@@ -1,0 +1,6 @@
+schema: 1
+id: universal_drill
+overture-item: universal_socket_drill
+name: 通用打孔器
+accepts:
+  - '*'

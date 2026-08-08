@@ -1,0 +1,41 @@
+schema: 1
+
+default:
+  attribute:
+    add: '&7{name} &f{value}'
+    multiply-base: '&7{name} &f基础值增幅 {value}'
+    multiply-total: '&7{name} &f最终值增幅 {value}'
+  affix:
+    line: '&d{name}{level}{locked}'
+    level: ' &7等级 {level}'
+    locked: ' &8[锁定]'
+    description: '&8  {description}'
+  skill:
+    line: '&d{name} &7等级 {level}'
+    description: '&8  {description}'
+    activation: '&7  触发：&f{input} &8({source})'
+  socket:
+    locked: '&8◆ 槽位 {slot} · {categories} · 强化 +{level} 解锁'
+    filled: '&b◆ 槽位 {slot} · {name} &8[{categories}]'
+    empty: '&7◇ 槽位 {slot} · 空 &8[{categories}]'
+  enhancement:
+    level: '&e强化 +{level}'
+    bonus: '&7基础加算属性增幅 &f+{bonus} &8(×{multiplier})'
+  set:
+    title: '&a套装：{name}'
+    piece: '&7部位：{piece}'
+    active: '&a✔ {name} &7({count}/{threshold})'
+    inactive: '&8○ {name} ({count}/{threshold})'
+    unknown: '&7◇ {name}（穿戴后显示进度）'
+    description: '&8  {description}'
+  offhand:
+    allowed: '&7副手：允许 &8(物品比例 {scale})'
+    denied: '&8副手：不可用'
+
+displays:
+  compact:
+    attribute:
+      add: '&f{name} {value}'
+    socket:
+      filled: '&b◆ {name}'
+      empty: '&7◇ 空槽位'

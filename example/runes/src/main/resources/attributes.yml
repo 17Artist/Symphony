@@ -1,0 +1,12 @@
+attributes:
+  rune_resonance:
+    name: '符文共鸣'
+    description: '由外部符文系统注册并累计的共鸣强度'
+    category: rune
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 10000.0
+    format: number
+    rounding-scale: 1
+    priority: 200

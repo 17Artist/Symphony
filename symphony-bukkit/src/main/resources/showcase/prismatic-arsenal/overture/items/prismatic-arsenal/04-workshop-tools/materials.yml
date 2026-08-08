@@ -1,0 +1,69 @@
+refined_crystal:
+  display: prismatic_arsenal_material
+  icon: PRISMARINE_SHARD
+  name:
+    item_name: '&d精炼棱晶'
+  lore:
+    item_type: '&8[词条工坊材料]'
+    item_desc:
+      - '&7棱彩词条池每次消耗 2 个'
+
+protection_scroll:
+  display: prismatic_arsenal_material
+  icon: PAPER
+  name:
+    item_name: '&6防毁保护卷轴'
+  lore:
+    item_type: '&8[强化保护材料]'
+    item_desc:
+      - '&7阻止本次强化的摧毁结果'
+
+stabilizer:
+  display: prismatic_arsenal_material
+  icon: NETHERITE_SCRAP
+  name:
+    item_name: '&e强化稳定器'
+  lore:
+    item_type: '&8[强化保护材料]'
+    item_desc:
+      - '&7阻止本次强化的降级结果'
+
+gem_extractor:
+  display: prismatic_arsenal_material
+  icon: AMETHYST_SHARD
+  name:
+    item_name: '&d棱晶拆卸器'
+  lore:
+    item_type: '&8[宝石拆卸道具]'
+    item_desc:
+      - '&7拆卸所选孔位并返还宝石'
+
+defense_socket_drill:
+  display: prismatic_arsenal_material
+  icon: IRON_PICKAXE
+  name:
+    item_name: '&b防御打孔器'
+  lore:
+    item_type: '&8[打孔道具 · defense]'
+    item_desc:
+      - '&7新增仅接受 defense 的槽位'
+
+elemental_socket_drill:
+  display: prismatic_arsenal_material
+  icon: DIAMOND_PICKAXE
+  name:
+    item_name: '&d元素打孔器'
+  lore:
+    item_type: '&8[打孔道具 · fire / ice / lightning]'
+    item_desc:
+      - '&7新增保留三个类别的多类别槽位'
+
+universal_socket_drill:
+  display: prismatic_arsenal_material
+  icon: NETHERITE_PICKAXE
+  name:
+    item_name: '&6通用打孔器'
+  lore:
+    item_type: '&8[打孔道具 · *]'
+    item_desc:
+      - '&7新增接受任意宝石类别的槽位'

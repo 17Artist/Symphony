@@ -1,0 +1,19 @@
+schema: 1
+id: arc_bolt
+provider: symphony:aria
+name: 奥术箭
+description: 对单体敌人造成奥术伤害
+cooldown-ms: 3000
+max-level: 5
+targeting:
+  type: single_enemy
+  range: 20
+activation:
+  input: right_click
+  source: main_hand
+  cancel-event: on_success
+  priority: 100
+script: |-
+  if (ctx.target == none) { return false }
+  self.damage(ctx.target, 8 + ctx.level * 2, 'arcane')
+  return true

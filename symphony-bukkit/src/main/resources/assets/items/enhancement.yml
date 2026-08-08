@@ -1,0 +1,29 @@
+schema: 1
+levels:
+  1:
+    success: 1.0
+    downgrade: 0.0
+    destroy: 0.0
+    multiplier: 1.05
+    cost:
+      material: LAPIS_LAZULI
+      amount: 1
+  5:
+    success: 0.75
+    downgrade: 0.10
+    destroy: 0.0
+    multiplier: 1.30
+    cost:
+      material: LAPIS_LAZULI
+      amount: 5
+  10:
+    success: 0.35
+    downgrade: 0.30
+    destroy: 0.05
+    multiplier: 1.80
+    cost:
+      material: LAPIS_LAZULI
+      amount: 10
+protection-items:
+  prevent-destroy: protection_scroll
+  prevent-downgrade: stabilizer

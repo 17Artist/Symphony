@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arcartx.example/symphony/gui.schema.json",
+  "title": "Symphony GUI layout",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "title-key", "rows"],
+  "properties": {
+    "schema": { "const": 1 }, "id": { "type": "string" }, "title-key": { "type": "string", "minLength": 1 },
+    "rows": { "const": 6 },
+    "refresh-ticks": { "type": "integer", "minimum": 1, "maximum": 1200 },
+    "page-slots": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 53 }, "uniqueItems": true },
+    "slots": { "type": "object" },
+    "target-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "material-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "downgrade-protection-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "destroy-protection-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "output-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "preview-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "confirm-slot": { "type": "integer", "minimum": 0, "maximum": 53 },
+    "cancel-slot": { "type": "integer", "minimum": 0, "maximum": 53 }
+  }
+}

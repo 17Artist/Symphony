@@ -1,0 +1,37 @@
+schema: 1
+id: tempo_engine
+name: 节律引擎
+rarity: rare
+category: weapon
+max-level: 3
+tags:
+  - speed
+  - prismatic
+display:
+  description:
+    - '被动：攻击速度倍率提高 {speed|percent}。'
+    - '暴击时播放节律提示音，提示音冷却 1 秒。'
+levels:
+  1:
+    speed: 0.10
+  2:
+    speed: 0.20
+  3:
+    speed: 0.35
+passive:
+  attack_speed:
+    operation: add
+    value: '{speed}'
+callbacks:
+  tempo_note:
+    trigger: combat.critical
+    conditions:
+      - type: cooldown
+        key: tempo_engine_note
+        duration-ms: 1000
+    actions:
+      - type: sound
+        sound: block.note_block.harp
+        volume: 0.5
+        pitch: 1.6
+        target: self

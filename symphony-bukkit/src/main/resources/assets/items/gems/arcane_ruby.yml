@@ -1,0 +1,25 @@
+schema: 1
+id: arcane_ruby
+overture-item: arcane_ruby
+name: 奥术红宝石
+category: offensive
+tags:
+  - offense
+  - arcane
+max-level: 3
+levels:
+  1:
+    modifiers:
+      arcane_damage:
+        operation: add
+        value: 5
+  2:
+    modifiers:
+      arcane_damage:
+        operation: add
+        value: 12
+  3:
+    modifiers:
+      arcane_damage:
+        operation: add
+        value: 22

@@ -1,0 +1,6 @@
+schema: 1
+id: focus_synergy
+type: synergy
+source: vanguard_focus
+target: interaction_synergy
+ratio: 0.01

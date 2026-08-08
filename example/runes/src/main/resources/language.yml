@@ -1,0 +1,93 @@
+console:
+  enabled: '&a符文系统已启用，载入 &f{runes} &a种符文和 &f{slots} &a个槽位。'
+  disabled: '&7符文来源已清理，玩家数据已保存。'
+  reload-failed: '符文系统配置重载失败。'
+  source-rejected: '玩家 {player} 的符文来源更新被拒绝：{reason}；操作场景：{context}'
+  command-failed: '符文范例命令执行失败。'
+
+command-system:
+  help-header: '&7/{label} 可用命令：'
+  help-entry: '&f{usage} &8- &7{description}'
+  unknown: '&c未知命令：/{label} {command}'
+  player-only: '&c该命令只能由玩家执行。'
+  permission-denied: '&c你没有执行该命令的权限。'
+  missing-arguments: '&c参数不足，正确用法：&f{usage}'
+  execution-error: '&c命令执行失败，请联系服务器管理员。'
+
+arguments:
+  player: '玩家'
+  rune: '符文ID'
+  rank: '阶级'
+  slot: '槽位'
+
+common:
+  unknown-error: '未知错误'
+  unknown-rune: '已失效的符文'
+  unknown-attribute: '未知属性'
+
+categories:
+  offense: '进攻'
+  defense: '守护'
+  elemental: '元素'
+  focus: '专注'
+  other: '其它'
+
+operations:
+  add: '固定增加'
+  multiply_base: '按基础值增加'
+  multiply_total: '最终倍率'
+  other: '其它运算'
+
+states:
+  active: '&a生效中'
+  empty: '&7空'
+  rune_missing: '&c定义缺失'
+  not_unlocked: '&c尚未解锁'
+  category_mismatch: '&c槽位类别不匹配'
+  level_provider_missing: '&e缺少等级数据'
+  level_too_low: '&e等级不足'
+
+commands:
+  description:
+    show: '查看符文槽位与生效状态'
+    inspect: '查看符文定义'
+    equip: '装备已解锁的符文'
+    unequip: '卸下符文'
+    grant: '授予玩家指定阶级的符文'
+    revoke: '收回玩家的符文'
+    equipfor: '为在线玩家装备符文'
+    reload: '重载符文、槽位与属性定义'
+  show:
+    header: '&b{player}&7 的符文槽位，当前生效 &f{count} &7个：'
+    empty: '&8○ &f{slot} &8- &7空'
+    entry: '&a◆ &f{slot} &8- &f{rune} &7阶级 {rank}，要求 Lv.{level}，状态：{state}'
+  inspect:
+    header: '&d{name} &7类别：&f{category} &7最高阶级：&f{maximum}'
+    description: '&7{text}'
+    modifier: '&8- &f{attribute} &7{operation}：基础 {base}，每阶 +{per}'
+  equip:
+    success: '&a符文已装备，属性来源已经刷新。'
+  unequip:
+    success: '&a符文已卸下，属性来源已经移除。'
+  grant:
+    success: '&a已授予 &f{player} &a符文 &f{rune} &a阶级 {rank}。'
+  revoke:
+    success: '&a已收回 &f{player} &a的符文 &f{rune}&a。'
+  equipfor:
+    success: '&a已为 &f{player} &a装备符文。'
+  reload:
+    success: '&a符文定义、槽位和外部属性已重载。'
+    failed: '&c重载失败，旧配置已恢复；详细原因请查看控制台。'
+
+errors:
+  player-required: '&c该操作需要指定一名在线玩家。'
+  player-offline: '&c目标玩家当前不在线。'
+  slot-not-found: '&c没有找到该符文槽位。'
+  rune-not-found: '&c没有找到该符文定义。'
+  not-unlocked: '&c玩家尚未解锁该符文。'
+  category-mismatch: '&c该槽位不接受这类符文。'
+  already-equipped: '&c同一枚符文不能同时占用多个槽位。'
+  rank-invalid: '&c符文阶级必须是 1 至 {maximum} 的整数。'
+  level-provider-missing: '&c该符文有等级要求，但当前没有外部等级提供者返回数据。'
+  level-too-low: '&c当前等级不足，需要达到 Lv.{level}。'
+  source-rejected: '&c属性来源更新失败，原有装备状态已恢复；详细原因请查看控制台。'

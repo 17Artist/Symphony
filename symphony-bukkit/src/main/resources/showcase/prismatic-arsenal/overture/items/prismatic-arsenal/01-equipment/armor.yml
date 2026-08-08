@@ -1,0 +1,161 @@
+vanguard_crown:
+  display: prismatic_arsenal
+  icon: NETHERITE_HELMET
+  name:
+    item_name: '&b元素先锋头冠'
+  lore:
+    item_type: '&8[套装防具 · 头部]'
+    item_desc:
+      - '&7三系抗性、物理防御与三种基础孔位'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      max_health:
+        operation: add
+        value: 60
+        description: 先锋头冠生命
+      physical_defense:
+        operation: add
+        value: 25
+      fire_resistance:
+        operation: add
+        value: 8%
+      ice_resistance:
+        operation: add
+        value: 8%
+      lightning_resistance:
+        operation: add
+        value: 8%
+    symphony:sockets:
+      max-extra-slots: 2
+      slots:
+        - accepts:
+            - defense
+          unlock-at-enhancement: 0
+        - accepts:
+            - defense
+            - universal
+          unlock-at-enhancement: 5
+        - accepts:
+            - '*'
+          unlock-at-enhancement: 10
+    symphony:set:
+      id: elemental_vanguard
+      piece: head
+
+vanguard_plate:
+  display: prismatic_arsenal
+  icon: NETHERITE_CHESTPLATE
+  name:
+    item_name: '&b元素先锋胸甲'
+  lore:
+    item_type: '&8[套装防具 · 胸部]'
+    item_desc:
+      - '&7提供元素防卫核心与物理防御'
+      - '&7低血量时触发护盾和临时减伤回调'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      max_health:
+        operation: add
+        value: 120
+      physical_defense:
+        operation: add
+        value: 55
+      elemental_guard_core:
+        operation: add
+        value: 1
+        priority: 100
+      damage_reduction:
+        operation: add
+        value: 5%
+    symphony:sockets:
+      max-extra-slots: 2
+      slots:
+        - accepts:
+            - defense
+          unlock-at-enhancement: 0
+        - accepts:
+            - defense
+            - universal
+          unlock-at-enhancement: 5
+    symphony:set:
+      id: elemental_vanguard
+      piece: chest
+
+vanguard_leggings:
+  display: prismatic_arsenal
+  icon: NETHERITE_LEGGINGS
+  name:
+    item_name: '&b元素先锋腿甲'
+  lore:
+    item_type: '&8[套装防具 · 腿部]'
+    item_desc:
+      - '&7强化生命、物理防御、格挡率和格挡强度'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      max_health:
+        operation: add
+        value: 90
+      physical_defense:
+        operation: add
+        value: 40
+      block_chance:
+        operation: add
+        value: 8%
+      block_power:
+        operation: add
+        value: 12%
+    symphony:sockets:
+      max-extra-slots: 2
+      slots:
+        - accepts:
+            - defense
+          unlock-at-enhancement: 0
+        - accepts:
+            - fire
+            - ice
+            - lightning
+          unlock-at-enhancement: 3
+    symphony:set:
+      id: elemental_vanguard
+      piece: legs
+
+vanguard_boots:
+  display: prismatic_arsenal
+  icon: NETHERITE_BOOTS
+  name:
+    item_name: '&b元素先锋战靴'
+  lore:
+    item_type: '&8[套装防具 · 足部]'
+    item_desc:
+      - '&7提供移动、闪避、雷抗与通用孔位'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      physical_defense:
+        operation: add
+        value: 25
+      movement_speed:
+        operation: multiply_total
+        value: 8%
+      dodge:
+        operation: add
+        value: 5%
+      lightning_resistance:
+        operation: add
+        value: 10%
+    symphony:sockets:
+      max-extra-slots: 2
+      slots:
+        - accepts:
+            - '*'
+          unlock-at-enhancement: 0
+    symphony:set:
+      id: elemental_vanguard
+      piece: feet

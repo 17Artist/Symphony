@@ -1,0 +1,83 @@
+arcane_ruby:
+  display: prismatic_arsenal_material
+  icon: REDSTONE
+  name:
+    item_name: '&d奥术红宝石'
+  lore:
+    item_type: '&8[宝石 · offensive]'
+    item_desc:
+      - '&7对应奥术红宝石定义'
+  meta:
+    unique: true
+
+ember_core:
+  display: prismatic_arsenal_material
+  icon: MAGMA_CREAM
+  name:
+    item_name: '&c灼炎核心'
+  lore:
+    item_type: '&8[宝石 · fire]'
+    item_desc:
+      - '&7用于火焰槽位和多元素槽位'
+  meta:
+    unique: true
+
+frost_core:
+  display: prismatic_arsenal_material
+  icon: HEART_OF_THE_SEA
+  name:
+    item_name: '&b霜结核心'
+  lore:
+    item_type: '&8[宝石 · ice]'
+    item_desc:
+      - '&7用于冰霜槽位和多元素槽位'
+  meta:
+    unique: true
+
+storm_core:
+  display: prismatic_arsenal_material
+  icon: ECHO_SHARD
+  name:
+    item_name: '&9雷暴核心'
+  lore:
+    item_type: '&8[宝石 · lightning]'
+    item_desc:
+      - '&7用于雷电槽位和多元素槽位'
+  meta:
+    unique: true
+
+bulwark_core:
+  display: prismatic_arsenal_material
+  icon: TURTLE_SCUTE
+  name:
+    item_name: '&3壁垒核心'
+  lore:
+    item_type: '&8[宝石 · defense]'
+    item_desc:
+      - '&7用于防御专属槽位'
+  meta:
+    unique: true
+
+universal_prism:
+  display: prismatic_arsenal_material
+  icon: NETHER_STAR
+  name:
+    item_name: '&f万用棱晶'
+  lore:
+    item_type: '&8[宝石 · universal]'
+    item_desc:
+      - '&7用于显式接受 universal 的槽位或 * 槽位'
+  meta:
+    unique: true
+
+piercing_quartz:
+  display: prismatic_arsenal_material
+  icon: QUARTZ
+  name:
+    item_name: '&f贯穿石英'
+  lore:
+    item_type: '&8[宝石 · offense]'
+    item_desc:
+      - '&7提供固定穿透与百分比穿透'
+  meta:
+    unique: true

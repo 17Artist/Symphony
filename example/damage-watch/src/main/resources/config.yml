@@ -1,0 +1,15 @@
+output:
+  notify-attacker: true
+  notify-victim: true
+  notify-console: true
+  chat-details: true
+  action-bar-summary: true
+  confirmation-message: true
+  miss-message: true
+
+details:
+  include-inactive-attributes: false
+  include-metadata: true
+  maximum-channels: 16
+  maximum-attributes: 24
+  decimals: 3

@@ -1,0 +1,36 @@
+schema: 1
+enabled: true
+
+formula: |-
+  max(
+    0,
+    attribute("max_health") * 2
+      + attribute("physical_damage") * 10
+      + attribute("physical_defense") * 3
+      + attribute("fire_damage") * 8
+      + attribute("ice_damage") * 8
+      + attribute("lightning_damage") * 8
+      + attribute("arcane_damage") * 8
+      + attribute("fire_resistance") * 300
+      + attribute("ice_resistance") * 300
+      + attribute("lightning_resistance") * 300
+      + attribute("arcane_resistance") * 300
+      + max(0, attribute("critical_chance")) * 400
+      + max(0, attribute("critical_damage") - 1) * 200
+      + max(0, attribute("attack_speed") - 1) * 200
+      + level * 15
+      + set_tier_count * 100
+      + skill_count * 30
+      + affix_count * 20
+      + gem_count * 25
+      + enhancement_total * 12
+  )
+
+bounds:
+  min: 0
+  max: 1000000000000
+
+output:
+  scale: 0
+  rounding: half_up
+  format: '#,##0'

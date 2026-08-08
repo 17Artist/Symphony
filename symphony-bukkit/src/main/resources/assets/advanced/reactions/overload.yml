@@ -1,0 +1,11 @@
+schema: 1
+id: overload
+trigger: fire
+aura: lightning
+type: amplify
+multiplier: 2.5
+gauge-consume: 0.5
+effects:
+  particle: EXPLOSION_NORMAL
+  sound: entity.generic.explode
+

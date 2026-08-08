@@ -1,0 +1,21 @@
+schema: 1
+id: poison
+name: 中毒
+max-stacks: 5
+duration-ms: 10000
+decay: individual
+tick-ms: 1000
+per-stack:
+  modifiers:
+    movement_speed:
+      operation: multiply_total
+      value: -0.05
+callbacks:
+  tick:
+    trigger: status.tick
+    actions:
+      - type: damage
+        channel: poison
+        amount-per-stack: 2
+        target: self
+

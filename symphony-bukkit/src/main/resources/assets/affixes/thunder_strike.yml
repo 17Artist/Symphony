@@ -1,0 +1,42 @@
+schema: 1
+id: thunder_strike
+name: 雷霆一击
+rarity: rare
+category: weapon
+max-level: 3
+tags:
+  - offense
+  - lightning
+exclusive-group: elemental_strike
+display:
+  description:
+    - '被动：每次普通攻击附带 {damage|number} 点雷电伤害。'
+    - '命中后有 {chance|percent} 几率再追加 {damage|number} 点雷电伤害，冷却 2 秒。'
+levels:
+  1:
+    chance: 0.10
+    damage: 15
+  2:
+    chance: 0.15
+    damage: 25
+  3:
+    chance: 0.20
+    damage: 40
+passive:
+  lightning_damage:
+    operation: add
+    value: '{damage}'
+callbacks:
+  strike:
+    trigger: combat.attack_confirmed
+    conditions:
+      - type: chance
+        value: '{chance}'
+      - type: cooldown
+        key: thunder_strike
+        duration-ms: 2000
+    actions:
+      - type: damage
+        channel: lightning
+        amount: '{damage}'
+        target: target

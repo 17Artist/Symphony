@@ -1,0 +1,30 @@
+schema: 1
+id: bulwark_core
+overture-item: bulwark_core
+name: 壁垒核心
+category: defense
+tags:
+  - defense
+max-level: 3
+levels:
+  1:
+    modifiers:
+      physical_defense:
+        operation: add
+        value: 10
+  2:
+    modifiers:
+      physical_defense:
+        operation: add
+        value: 20
+      damage_reduction:
+        operation: add
+        value: 3%
+  3:
+    modifiers:
+      physical_defense:
+        operation: add
+        value: 35
+      damage_reduction:
+        operation: add
+        value: 5%

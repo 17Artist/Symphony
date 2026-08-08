@@ -1,0 +1,10 @@
+schema: 1
+id: static_suppression
+trigger: ice
+aura: lightning
+type: amplify
+multiplier: 0.5
+gauge-consume: 1.0
+effects:
+  particle: CLOUD
+  sound: block.fire.extinguish

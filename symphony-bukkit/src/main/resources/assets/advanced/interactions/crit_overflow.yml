@@ -1,0 +1,7 @@
+schema: 1
+id: crit_overflow
+type: overflow
+source: critical_chance
+threshold: 1.0
+target: critical_damage
+ratio: 0.5

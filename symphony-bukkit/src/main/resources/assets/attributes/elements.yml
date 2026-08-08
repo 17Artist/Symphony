@@ -1,0 +1,86 @@
+schema: 1
+attributes:
+  dark_damage: &damage
+    name: 暗影伤害
+    category: element
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 100
+  dark_resistance: &resistance
+    name: 暗影抗性
+    category: element
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 101
+  dark_amplification: &amplification
+    name: 暗影增幅
+    category: element
+    base: 0.0
+    bounds:
+      min: -1.0
+      max: 10.0
+    format: percent
+    priority: 102
+  fire_damage:
+    <<: *damage
+    name: 火焰伤害
+  fire_resistance:
+    <<: *resistance
+    name: 火焰抗性
+  fire_amplification:
+    <<: *amplification
+    name: 火焰增幅
+  holy_damage:
+    <<: *damage
+    name: 神圣伤害
+  holy_resistance:
+    <<: *resistance
+    name: 神圣抗性
+  holy_amplification:
+    <<: *amplification
+    name: 神圣增幅
+  ice_damage:
+    <<: *damage
+    name: 冰霜伤害
+  ice_resistance:
+    <<: *resistance
+    name: 冰霜抗性
+  ice_amplification:
+    <<: *amplification
+    name: 冰霜增幅
+  lightning_damage:
+    <<: *damage
+    name: 雷电伤害
+  lightning_resistance:
+    <<: *resistance
+    name: 雷电抗性
+  lightning_amplification:
+    <<: *amplification
+    name: 雷电增幅
+  poison_damage:
+    <<: *damage
+    name: 毒素伤害
+  poison_resistance:
+    <<: *resistance
+    name: 毒素抗性
+  poison_amplification:
+    <<: *amplification
+    name: 毒素增幅
+  arcane_damage:
+    <<: *damage
+    name: 奥术伤害
+    category: custom_damage
+  arcane_resistance:
+    <<: *resistance
+    name: 奥术抗性
+    category: custom_damage
+  arcane_amplification:
+    <<: *amplification
+    name: 奥术增幅
+    category: custom_damage
+

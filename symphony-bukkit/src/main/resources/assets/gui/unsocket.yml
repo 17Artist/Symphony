@@ -1,0 +1,36 @@
+schema: 1
+title-key: gui.titles.unsocket
+rows: 6
+target-slot: 10
+material-slot: 19
+output-slot: 28
+preview-slot: 37
+confirm-slot: 41
+slots:
+  target-label:
+    slot: 9
+  material-label:
+    slot: 18
+  output-label:
+    slot: 27
+  remove:
+    slot: 41
+  previous:
+    slot: 47
+  close:
+    slot: 49
+  next:
+    slot: 51
+page-slots:
+  - 13
+  - 14
+  - 15
+  - 16
+  - 22
+  - 23
+  - 24
+  - 25
+  - 31
+  - 32
+  - 33
+  - 34

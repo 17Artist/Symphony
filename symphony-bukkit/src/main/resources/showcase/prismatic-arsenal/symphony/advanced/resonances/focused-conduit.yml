@@ -1,0 +1,12 @@
+schema: 1
+id: focused_conduit
+name: 专注导体
+condition:
+  type: attribute
+  attribute: vanguard_focus
+  operator: '>='
+  value: 40
+modifiers:
+  luck:
+    operation: add
+    value: 10

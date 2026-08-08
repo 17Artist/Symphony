@@ -1,0 +1,7 @@
+schema: 1
+id: focus_amplify
+type: amplify
+source: vanguard_focus
+threshold: 20
+target: interaction_amplify
+ratio: 0.02

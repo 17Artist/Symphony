@@ -1,0 +1,45 @@
+schema: 1
+id: adaptive_bulwark
+name: 自适应壁垒
+gate:
+  all:
+    - attribute: physical_defense
+      operator: '>='
+      value: 100
+    - attribute: vanguard_focus
+      operator: '>='
+      value: 20
+  any:
+    - attribute: fire_resistance
+      operator: '>='
+      value: 0.2
+    - attribute: ice_resistance
+      operator: '>='
+      value: 0.2
+    - attribute: lightning_resistance
+      operator: '>='
+      value: 0.2
+  none:
+    - attribute: damage_reduction
+      operator: '>='
+      value: 0.9
+modifiers:
+  damage_reduction:
+    operation: add
+    value: 5%
+callbacks:
+  block_recovery:
+    trigger: combat.block_confirmed
+    conditions:
+      - type: cooldown
+        key: adaptive_bulwark_recovery
+        duration-ms: 5000
+    actions:
+      - type: heal
+        amount: 6
+        target: self
+      - type: sound
+        sound: block.amethyst_block.chime
+        volume: 0.6
+        pitch: 1.2
+        target: self

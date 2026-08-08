@@ -1,0 +1,47 @@
+schema: 2
+
+combat:
+  enabled: true
+  minimum-damage: 0.0
+  confirmation-delay-ticks: 1
+  max-transaction-depth: 8
+
+scripts:
+  java-interop: unrestricted
+  slow-callback-warning-ms: 5
+  failure-window-seconds: 60
+  disable-after-failures: 5
+
+performance:
+  equipment-coalesce-ticks: 1
+  timer-bucket-ticks: 20
+  cache-idle-seconds: 300
+
+equipment:
+  offhand:
+    # full / scaled / item-controlled / disabled
+    mode: full
+    # 仅 scaled 模式使用；item-controlled 读取物品自己的比例。
+    attribute-scale: 50%
+  coalesce-ticks: 1
+
+compatibility:
+  epic-fight:
+    # 仅在混合端安装对应模组时开启。
+    enabled: false
+    post-world-grace-ms: 4000
+    stuck-inaction-ms: 6000
+    fallback-poll-ticks: 1
+
+features:
+  affixes: true
+  skills: true
+  gems: true
+  sockets: true
+  enhancement: true
+  interactions: true
+  elements: true
+  resonances: true
+  talents: true
+  statuses: true
+  environments: true

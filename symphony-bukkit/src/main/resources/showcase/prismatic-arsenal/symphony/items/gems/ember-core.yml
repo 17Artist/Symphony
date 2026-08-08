@@ -1,0 +1,31 @@
+schema: 1
+id: ember_core
+overture-item: ember_core
+name: 灼炎核心
+category: fire
+tags:
+  - offense
+  - fire
+max-level: 3
+levels:
+  1:
+    modifiers:
+      fire_damage:
+        operation: add
+        value: 6
+  2:
+    modifiers:
+      fire_damage:
+        operation: add
+        value: 14
+      fire_amplification:
+        operation: add
+        value: 5%
+  3:
+    modifiers:
+      fire_damage:
+        operation: add
+        value: 25
+      fire_amplification:
+        operation: add
+        value: 10%

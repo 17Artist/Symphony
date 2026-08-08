@@ -1,0 +1,30 @@
+schema: 1
+id: elemental_exposure
+name: 元素暴露
+max-stacks: 4
+duration-ms: 8000
+decay: individual
+tick-ms: 1000
+per-stack:
+  modifiers:
+    fire_resistance:
+      operation: add
+      value: -4%
+    ice_resistance:
+      operation: add
+      value: -4%
+    lightning_resistance:
+      operation: add
+      value: -4%
+    movement_speed:
+      operation: multiply_total
+      value: -2%
+callbacks:
+  arc_tick:
+    trigger: status.tick
+    actions:
+      - type: damage
+        channel: lightning
+        amount-per-stack: 1
+        target: self
+        allow-critical: false

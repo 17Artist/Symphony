@@ -1,0 +1,6 @@
+schema: 1
+id: defense_drill
+overture-item: defense_socket_drill
+name: 防御打孔器
+accepts:
+  - defense

@@ -1,0 +1,48 @@
+schema: 1
+id: prismatic_burst
+provider: symphony:aria
+name: 三相爆发
+description: 连续创建火、冰、雷三笔伤害事务并施加元素暴露
+cooldown-ms: 8000
+max-level: 3
+targeting:
+  type: single_enemy
+  range: 16
+activation:
+  input: right_click
+  source: main_hand
+  cancel-event: on_success
+  priority: 100
+actions:
+  - type: damage
+    channel: fire
+    amount: 12
+    target: target
+    allow-critical: false
+  - type: damage
+    channel: ice
+    amount: 12
+    target: target
+    allow-critical: false
+  - type: damage
+    channel: lightning
+    amount: 12
+    target: target
+    allow-critical: false
+  - type: status
+    status: elemental_exposure
+    stacks: 2
+    duration-ms: 8000
+    target: target
+  - type: particle
+    particle: ELECTRIC_SPARK
+    count: 20
+    offset-x: 0.4
+    offset-y: 0.8
+    offset-z: 0.4
+    target: target
+  - type: sound
+    sound: entity.lightning_bolt.thunder
+    volume: 0.8
+    pitch: 1.2
+    target: target

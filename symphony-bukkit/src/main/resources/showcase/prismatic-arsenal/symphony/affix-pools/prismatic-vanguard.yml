@@ -1,0 +1,31 @@
+schema: 1
+id: prismatic_vanguard
+priority: 100
+applies-to:
+  overture-items:
+    - prismatic_blade
+    - vanguard_crown
+    - vanguard_plate
+    - vanguard_leggings
+    - vanguard_boots
+max-affixes: 3
+cost:
+  overture-item: refined_crystal
+  amount: 2
+entries:
+  - affix: prismatic_conduit
+    weight: 1.0
+    min-level: 1
+    max-level: 3
+  - affix: aegis_matrix
+    weight: 0.8
+    min-level: 1
+    max-level: 3
+  - affix: tempo_engine
+    weight: 0.8
+    min-level: 1
+    max-level: 3
+  - affix: thunder_strike
+    weight: 0.35
+    min-level: 2
+    max-level: 3

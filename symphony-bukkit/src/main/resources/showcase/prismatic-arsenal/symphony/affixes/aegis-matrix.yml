@@ -1,0 +1,44 @@
+schema: 1
+id: aegis_matrix
+name: 守御矩阵
+rarity: epic
+category: armor
+max-level: 3
+tags:
+  - defense
+  - prismatic
+display:
+  description:
+    - '被动：获得 {defense|number} 点物理防御力。'
+    - '生命值不高于 50% 时受伤，获得 {shield|number} 点护盾，冷却 12 秒。'
+levels:
+  1:
+    defense: 12
+    shield: 8
+  2:
+    defense: 22
+    shield: 14
+  3:
+    defense: 36
+    shield: 22
+passive:
+  physical_defense:
+    operation: add
+    value: '{defense}'
+callbacks:
+  emergency_shield:
+    trigger: combat.damage_taken
+    conditions:
+      - type: health
+        target: self
+        operator: '<='
+        value: 0.5
+        percent: true
+      - type: cooldown
+        key: aegis_matrix
+        duration-ms: 12000
+    actions:
+      - type: shield
+        amount: '{shield}'
+        mode: add
+        target: self

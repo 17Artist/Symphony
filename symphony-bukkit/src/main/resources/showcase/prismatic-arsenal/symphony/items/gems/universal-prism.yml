@@ -1,0 +1,24 @@
+schema: 1
+id: universal_prism
+overture-item: universal_prism
+name: 万用棱晶
+category: universal
+tags:
+  - universal
+max-level: 3
+levels:
+  1:
+    modifiers:
+      elemental_mastery:
+        operation: add
+        value: 10
+  2:
+    modifiers:
+      elemental_mastery:
+        operation: add
+        value: 25
+  3:
+    modifiers:
+      elemental_mastery:
+        operation: add
+        value: 45

@@ -1,0 +1,7 @@
+schema: 1
+id: focus_diminish
+type: diminish
+source: vanguard_focus
+threshold: 20
+target: interaction_diminish
+ratio: 0.02

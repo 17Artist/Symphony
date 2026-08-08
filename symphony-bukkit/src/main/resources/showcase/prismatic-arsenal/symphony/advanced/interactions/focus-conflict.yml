@@ -1,0 +1,6 @@
+schema: 1
+id: focus_conflict
+type: conflict
+source: vanguard_focus
+target: interaction_conflict
+ratio: 0.01

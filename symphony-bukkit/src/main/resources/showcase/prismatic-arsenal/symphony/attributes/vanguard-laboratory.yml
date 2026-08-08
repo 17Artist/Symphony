@@ -1,0 +1,139 @@
+schema: 1
+attributes:
+  elemental_guard_core:
+    name: 元素防卫核心
+    description: 大于等于 1 时启用低血量自救回调
+    category: elemental_vanguard
+    base: 0
+    bounds:
+      min: 0
+      max: 1
+    format: integer
+    priority: 900
+    callbacks:
+      emergency_barrier:
+        trigger: combat.low_health
+        priority: 50
+        conditions:
+          - type: attribute
+            attribute: elemental_guard_core
+            operator: '>='
+            value: 1
+            target: self
+          - type: cooldown
+            key: elemental_guard_barrier
+            duration-ms: 30000
+        actions:
+          - type: shield
+            amount: 40
+            mode: add
+            target: self
+          - type: attribute_buff
+            attribute: damage_reduction
+            operation: add
+            value: 0.15
+            duration-ms: 8000
+            target: self
+          - type: message
+            target: self
+            message: '§b元素屏障启动：获得 40 护盾与 8 秒 15% 减伤'
+
+  vanguard_focus:
+    name: 先锋专注
+    description: 属性交互实验的统一输入值
+    category: elemental_vanguard
+    base: 0
+    bounds:
+      min: 0
+      max: 1000
+    format: number
+    priority: 910
+
+  interaction_conversion:
+    name: 转换结果
+    description: 将一部分先锋专注转化为此属性
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    priority: 911
+
+  interaction_overflow:
+    name: 溢出结果
+    description: 记录超出阈值的先锋专注
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    priority: 912
+
+  interaction_threshold:
+    name: 阈值结果
+    description: 先锋专注达到阈值后获得固定提升
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    priority: 913
+
+  interaction_synergy:
+    name: 协同结果
+    description: 与协同目标按比例共同提高
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    priority: 914
+
+  interaction_conflict:
+    name: 冲突结果
+    description: 与冲突目标互相抵消
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    priority: 915
+
+  interaction_amplify:
+    name: 放大结果
+    description: 按比例放大已有属性
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    priority: 916
+
+  interaction_diminish:
+    name: 衰减结果
+    description: 按比例减弱已有属性
+    category: elemental_vanguard
+    base: 10
+    bounds:
+      min: 0
+    format: number
+    rounding: 2
+    priority: 917
+
+  callback_calculation:
+    name: 回调运算结果
+    description: 标准值 5 加上先锋专注的四分之一
+    category: elemental_vanguard
+    base: 5
+    bounds:
+      min: 0
+    format: number
+    priority: 918
+    depends_on:
+      - vanguard_focus
+    callbacks:
+      focus_formula:
+        trigger: attribute.calculate
+        priority: 10
+        script: |-
+          return ctx.standardValue + self.getAttribute("vanguard_focus") * 0.25

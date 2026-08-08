@@ -1,0 +1,66 @@
+prismatic_blade:
+  display: prismatic_arsenal
+  icon: NETHERITE_SWORD
+  name:
+    item_name: '&d棱彩长刃'
+  lore:
+    item_type: '&8[套装武器 · 主手]'
+    item_desc:
+      - '&7三系伤害、三相爆发、词条池与四种孔位'
+  meta:
+    unique: true
+    shiny: true
+  components:
+    symphony:offhand:
+      enabled: false
+    symphony:attributes:
+      physical_damage:
+        operation: add
+        value: 32
+      attack_speed:
+        operation: add
+        value: 0.2
+      fire_damage:
+        operation: add
+        value: 12
+      ice_damage:
+        operation: add
+        value: 12
+      lightning_damage:
+        operation: add
+        value: 12
+      critical_chance:
+        operation: add
+        value: 12%
+      elemental_mastery:
+        operation: add
+        value: 80
+    symphony:skills:
+      prismatic_burst:
+        level: 3
+    symphony:sockets:
+      max-extra-slots: 3
+      slots:
+        - accepts:
+            - offense
+            - fire
+            - ice
+            - lightning
+          unlock-at-enhancement: 0
+        - accepts:
+            - fire
+            - ice
+          unlock-at-enhancement: 3
+        - accepts:
+            - lightning
+            - universal
+          unlock-at-enhancement: 6
+        - accepts:
+            - '*'
+          unlock-at-enhancement: 10
+    symphony:set:
+      id: elemental_vanguard
+      piece: main_hand
+
+
+

@@ -1,0 +1,6 @@
+priority: 60
+icon: COMPARATOR
+name: '&606 · 属性交互实验'
+lore:
+  - '&7七种交互类型与 calculate 回调'
+  - '&7注入后在属性明细中核对固定结果'

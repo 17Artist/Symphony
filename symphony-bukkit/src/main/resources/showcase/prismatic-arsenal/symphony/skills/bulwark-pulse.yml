@@ -1,0 +1,32 @@
+schema: 1
+id: bulwark_pulse
+provider: symphony:aria
+name: 壁垒脉冲
+description: 由有效物品来源提供的自我防护技能
+cooldown-ms: 12000
+max-level: 3
+targeting:
+  type: self
+activation:
+  input: sneak_right_click
+  source: any
+  cancel-event: on_success
+  priority: 90
+actions:
+  - type: shield
+    amount: 35
+    mode: add
+    target: self
+  - type: attribute_buff
+    attribute: damage_reduction
+    operation: add
+    value: 0.10
+    duration-ms: 5000
+    target: self
+  - type: particle
+    particle: TOTEM
+    count: 12
+    offset-x: 0.5
+    offset-y: 0.8
+    offset-z: 0.5
+    target: self

@@ -1,0 +1,26 @@
+schema: 1
+id: assembled_vanguard
+name: 先锋集结
+condition:
+  type: set_count
+  set: elemental_vanguard
+  count: 8
+modifiers:
+  elemental_mastery:
+    operation: add
+    value: 50
+callbacks:
+  enter_notice:
+    trigger: combat.enter
+    conditions:
+      - type: cooldown
+        key: assembled_vanguard_notice
+        duration-ms: 15000
+    actions:
+      - type: shield
+        amount: 25
+        mode: add
+        target: self
+      - type: message
+        message: '§d先锋集结：八件来源已共同生效'
+        target: self

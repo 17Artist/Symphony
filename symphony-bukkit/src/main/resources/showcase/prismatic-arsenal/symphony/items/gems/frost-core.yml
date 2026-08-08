@@ -1,0 +1,31 @@
+schema: 1
+id: frost_core
+overture-item: frost_core
+name: 霜结核心
+category: ice
+tags:
+  - offense
+  - ice
+max-level: 3
+levels:
+  1:
+    modifiers:
+      ice_damage:
+        operation: add
+        value: 6
+  2:
+    modifiers:
+      ice_damage:
+        operation: add
+        value: 14
+      ice_amplification:
+        operation: add
+        value: 5%
+  3:
+    modifiers:
+      ice_damage:
+        operation: add
+        value: 25
+      ice_amplification:
+        operation: add
+        value: 10%

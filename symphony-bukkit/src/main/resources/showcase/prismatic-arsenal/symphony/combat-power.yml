@@ -1,0 +1,36 @@
+schema: 1
+enabled: true
+
+formula: |-
+  max(
+    0,
+    attribute("max_health") * 2
+      + attribute("physical_damage") * 8
+      + attribute("physical_defense") * 3
+      + attribute("fire_damage") * 10
+      + attribute("ice_damage") * 10
+      + attribute("lightning_damage") * 10
+      + attribute("elemental_mastery") * 4
+      + attribute("elemental_guard_core") * 3
+      + attribute("fire_resistance") * 300
+      + attribute("ice_resistance") * 300
+      + attribute("lightning_resistance") * 300
+      + max(0, attribute("critical_chance")) * 400
+      + max(0, attribute("critical_damage") - 1) * 200
+      + if(set_pieces("elemental_vanguard") >= 8, 800, 0)
+      + set_tiers("elemental_vanguard") * 180
+      + level * 15
+      + skill_count * 35
+      + affix_count * 25
+      + gem_count * 30
+      + enhancement_total * 12
+  )
+
+bounds:
+  min: 0
+  max: 1000000000000
+
+output:
+  scale: 0
+  rounding: half_up
+  format: '#,##0 战力'

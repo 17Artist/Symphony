@@ -1,0 +1,126 @@
+damage_attacker_calibrator:
+  display: prismatic_arsenal
+  icon: BLAZE_ROD
+  name:
+    item_name: '&c攻击端校准器'
+  lore:
+    item_type: '&8[伤害实验 · 攻击者来源]'
+    item_desc:
+      - '&7暴击率 100%、暴击倍率 2.0'
+      - '&750% 百分比穿透、10 固定穿透、三系增幅 20%'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      critical_chance:
+        operation: add
+        value: 95%
+      critical_damage:
+        operation: add
+        value: 0.5
+      penetration:
+        operation: add
+        value: 50%
+      flat_penetration:
+        operation: add
+        value: 10
+      fire_amplification:
+        operation: add
+        value: 20%
+      ice_amplification:
+        operation: add
+        value: 20%
+      lightning_amplification:
+        operation: add
+        value: 20%
+
+damage_defender_calibrator:
+  display: prismatic_arsenal
+  icon: SHIELD
+  name:
+    item_name: '&3防御端校准器'
+  lore:
+    item_type: '&8[伤害实验 · 受击者来源]'
+    item_desc:
+      - '&7100 物理防御、三系抗性 25%、全局减伤 10%'
+      - '&7物理 100 输入在无穿透时先降至 50'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      physical_defense:
+        operation: add
+        value: 100
+      fire_resistance:
+        operation: add
+        value: 25%
+      ice_resistance:
+        operation: add
+        value: 25%
+      lightning_resistance:
+        operation: add
+        value: 25%
+      damage_reduction:
+        operation: add
+        value: 10%
+
+damage_block_calibrator:
+  display: prismatic_arsenal
+  icon: IRON_DOOR
+  name:
+    item_name: '&7格挡校准器'
+  lore:
+    item_type: '&8[伤害实验 · 受击者来源]'
+    item_desc:
+      - '&7格挡率达到上限 90%，格挡强度 75%'
+      - '&7用于观察 triggeredAttributes 和格挡回调'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      block_chance:
+        operation: add
+        value: 90%
+      block_power:
+        operation: add
+        value: 25%
+
+damage_dodge_calibrator:
+  display: prismatic_arsenal
+  icon: FEATHER
+  name:
+    item_name: '&f闪避校准器'
+  lore:
+    item_type: '&8[伤害实验 · 受击者来源]'
+    item_desc:
+      - '&7闪避率达到上限 90%'
+      - '&7用于观察真实触发与未触发属性的差异'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      dodge:
+        operation: add
+        value: 90%
+
+damage_accuracy_calibrator:
+  display: prismatic_arsenal
+  icon: TARGET
+  name:
+    item_name: '&e低命中校准器'
+  lore:
+    item_type: '&8[伤害实验 · 攻击者来源]'
+    item_desc:
+      - '&7将默认 100% 命中属性降低至 10%'
+      - '&7目标无闪避时，单次攻击有 90% 概率未命中'
+      - '&7用于单独验证命中属性、随机值和 MISSED 结果'
+  meta:
+    unique: true
+  components:
+    symphony:offhand:
+      enabled: true
+      attribute-scale: 50%
+    symphony:attributes:
+      accuracy:
+        operation: add
+        value: -90%

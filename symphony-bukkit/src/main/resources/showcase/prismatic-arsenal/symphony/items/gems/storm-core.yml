@@ -1,0 +1,31 @@
+schema: 1
+id: storm_core
+overture-item: storm_core
+name: 雷暴核心
+category: lightning
+tags:
+  - offense
+  - lightning
+max-level: 3
+levels:
+  1:
+    modifiers:
+      lightning_damage:
+        operation: add
+        value: 6
+  2:
+    modifiers:
+      lightning_damage:
+        operation: add
+        value: 14
+      critical_chance:
+        operation: add
+        value: 4%
+  3:
+    modifiers:
+      lightning_damage:
+        operation: add
+        value: 25
+      critical_chance:
+        operation: add
+        value: 8%

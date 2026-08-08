@@ -1,0 +1,67 @@
+schema: 1
+formulas:
+  armor:
+    type: diminishing
+    constant: 100.0
+    defense: physical_defense
+    percent-penetration: penetration
+    flat-penetration: flat_penetration
+channels:
+  physical:
+    name: 物理
+    damage-attribute: physical_damage
+    mitigation: armor
+    can-crit: true
+    element: false
+  dark: &element
+    name: 暗影
+    color: '§8'
+    damage-attribute: dark_damage
+    resistance-attribute: dark_resistance
+    amplification-attribute: dark_amplification
+    can-crit: false
+    element: true
+  fire:
+    <<: *element
+    name: 火焰
+    color: '§c'
+    damage-attribute: fire_damage
+    resistance-attribute: fire_resistance
+    amplification-attribute: fire_amplification
+  holy:
+    <<: *element
+    name: 神圣
+    color: '§e'
+    damage-attribute: holy_damage
+    resistance-attribute: holy_resistance
+    amplification-attribute: holy_amplification
+  ice:
+    <<: *element
+    name: 冰霜
+    color: '§b'
+    damage-attribute: ice_damage
+    resistance-attribute: ice_resistance
+    amplification-attribute: ice_amplification
+  lightning:
+    <<: *element
+    name: 雷电
+    color: '§9'
+    damage-attribute: lightning_damage
+    resistance-attribute: lightning_resistance
+    amplification-attribute: lightning_amplification
+  poison:
+    <<: *element
+    name: 毒素
+    color: '§2'
+    damage-attribute: poison_damage
+    resistance-attribute: poison_resistance
+    amplification-attribute: poison_amplification
+  arcane:
+    name: 奥术
+    color: '§5'
+    damage-attribute: arcane_damage
+    resistance-attribute: arcane_resistance
+    amplification-attribute: arcane_amplification
+    can-crit: false
+    element: false
+

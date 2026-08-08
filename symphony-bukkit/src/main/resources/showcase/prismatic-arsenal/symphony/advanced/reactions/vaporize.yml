@@ -1,0 +1,10 @@
+schema: 1
+id: vaporize
+trigger: fire
+aura: ice
+type: amplify
+multiplier: 2.0
+gauge-consume: 1.0
+effects:
+  particle: EXPLOSION_NORMAL
+  sound: entity.generic.explode

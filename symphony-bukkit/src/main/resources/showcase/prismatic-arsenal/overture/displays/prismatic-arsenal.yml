@@ -1,0 +1,19 @@
+prismatic_arsenal:
+  name: '<item_name> <symphony:enhancement>'
+  lore:
+    - '<item_type>'
+    - '<item_desc...>'
+    - ''
+    - '<symphony:attributes...>'
+    - '<symphony:affixes...>'
+    - '<symphony:skills...>'
+    - '<symphony:sockets...>'
+    - '<symphony:enhancement...>'
+    - '<symphony:offhand...>'
+    - '<symphony:set...>'
+
+prismatic_arsenal_material:
+  name: '<item_name>'
+  lore:
+    - '<item_type>'
+    - '<item_desc...>'

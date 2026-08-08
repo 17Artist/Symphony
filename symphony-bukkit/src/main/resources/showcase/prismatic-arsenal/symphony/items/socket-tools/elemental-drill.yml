@@ -1,0 +1,8 @@
+schema: 1
+id: elemental_drill
+overture-item: elemental_socket_drill
+name: 元素打孔器
+accepts:
+  - fire
+  - ice
+  - lightning

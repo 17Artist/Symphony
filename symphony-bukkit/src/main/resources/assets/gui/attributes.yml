@@ -1,0 +1,44 @@
+schema: 1
+title-key: gui.titles.attributes
+rows: 6
+slots:
+  summary:
+    slot: 4
+  section-attributes:
+    slot: 9
+  section-sources:
+    slot: 11
+  section-skills:
+    slot: 13
+  section-sets:
+    slot: 15
+  section-status:
+    slot: 17
+  previous:
+    slot: 45
+  close:
+    slot: 49
+  next:
+    slot: 53
+page-slots:
+  - 19
+  - 20
+  - 21
+  - 22
+  - 23
+  - 24
+  - 25
+  - 28
+  - 29
+  - 30
+  - 31
+  - 32
+  - 33
+  - 34
+  - 37
+  - 38
+  - 39
+  - 40
+  - 41
+  - 42
+  - 43

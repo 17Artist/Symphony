@@ -1,0 +1,4 @@
+interface:
+  display_name: "Symphony 配置编写"
+  short_description: "生成并验证 Symphony 与 Overture 配置包"
+  default_prompt: "使用 $write-symphony-config 编写并验证一套 Symphony 与 Overture 配置。"

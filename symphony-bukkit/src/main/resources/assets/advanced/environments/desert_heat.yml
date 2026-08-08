@@ -1,0 +1,19 @@
+schema: 1
+id: desert_heat
+name: 沙漠酷热
+when:
+  biomes:
+    - DESERT
+    - BADLANDS
+  outdoor: true
+  time:
+    from: 6000
+    to: 12000
+modifiers:
+  fire_damage:
+    operation: multiply_total
+    value: 0.20
+  ice_damage:
+    operation: multiply_total
+    value: -0.20
+

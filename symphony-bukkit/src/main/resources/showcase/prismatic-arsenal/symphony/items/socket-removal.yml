@@ -1,0 +1,4 @@
+schema: 1
+tool:
+  overture-item: gem_extractor
+  amount: 1

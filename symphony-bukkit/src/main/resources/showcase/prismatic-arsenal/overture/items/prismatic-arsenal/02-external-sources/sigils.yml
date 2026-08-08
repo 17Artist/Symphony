@@ -1,0 +1,99 @@
+vanguard_sigil_fire:
+  display: prismatic_arsenal
+  icon: BLAZE_POWDER
+  name:
+    item_name: '&c炎之先锋徽记'
+  lore:
+    item_type: '&8[外部 ItemStack 来源 · 第 6 件]'
+    item_desc:
+      - '&7提供火伤、火增幅和壁垒脉冲技能'
+  meta:
+    unique: true
+    shiny: true
+  components:
+    symphony:attributes:
+      fire_damage:
+        operation: add
+        value: 20
+      fire_amplification:
+        operation: add
+        value: 8%
+    symphony:skills:
+      bulwark_pulse:
+        level: 2
+    symphony:set:
+      id: elemental_vanguard
+      piece: sigil_fire
+
+vanguard_sigil_ice:
+  display: prismatic_arsenal
+  icon: PRISMARINE_CRYSTALS
+  name:
+    item_name: '&b霜之先锋徽记'
+  lore:
+    item_type: '&8[外部 ItemStack 来源 · 第 7 件]'
+    item_desc:
+      - '&7提供冰伤与冰增幅'
+  meta:
+    unique: true
+    shiny: true
+  components:
+    symphony:attributes:
+      ice_damage:
+        operation: add
+        value: 20
+      ice_amplification:
+        operation: add
+        value: 8%
+    symphony:set:
+      id: elemental_vanguard
+      piece: sigil_ice
+
+vanguard_sigil_storm:
+  display: prismatic_arsenal
+  icon: AMETHYST_SHARD
+  name:
+    item_name: '&9雷之先锋徽记'
+  lore:
+    item_type: '&8[外部 ItemStack 来源 · 第 8 件]'
+    item_desc:
+      - '&7提供雷伤、雷增幅和二级三相爆发'
+      - '&7与主手同名技能按最高等级合并'
+  meta:
+    unique: true
+    shiny: true
+  components:
+    symphony:attributes:
+      lightning_damage:
+        operation: add
+        value: 20
+      lightning_amplification:
+        operation: add
+        value: 8%
+    symphony:skills:
+      prismatic_burst:
+        level: 2
+    symphony:set:
+      id: elemental_vanguard
+      piece: sigil_storm
+
+vanguard_sigil_fire_duplicate_control:
+  display: prismatic_arsenal
+  icon: FIRE_CHARGE
+  name:
+    item_name: '&6炎徽记部位重复对照'
+  lore:
+    item_type: '&8[外部来源负向计数对照]'
+    item_desc:
+      - '&7具有不同实例编号，但仍占用炎之先锋徽记部位'
+      - '&7同一套装部位不会重复增加套装件数'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      fire_damage:
+        operation: add
+        value: 5
+    symphony:set:
+      id: elemental_vanguard
+      piece: sigil_fire

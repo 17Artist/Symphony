@@ -1,0 +1,195 @@
+schema: 1
+attributes:
+  physical_damage:
+    name: 物理攻击力
+    description: Symphony 普通攻击与物理通道的基础伤害
+    category: combat
+    base: 1.0
+    bounds:
+      min: 0.0
+      max: 999999.0
+    format: number
+    priority: 10
+  physical_defense:
+    name: 物理防御力
+    description: 仅进入 Symphony 自定义护甲公式，不映射原版护甲值
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 11
+  magic_damage:
+    name: 魔法攻击力
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 12
+  magic_defense:
+    name: 魔法防御力
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 13
+  attack_speed:
+    name: 攻击速度
+    category: combat
+    base: 1.0
+    bounds:
+      min: 0.1
+      max: 10.0
+    format: number
+    priority: 14
+  critical_chance:
+    name: 暴击率
+    category: combat
+    base: 0.05
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 15
+  critical_damage:
+    name: 暴击伤害倍率
+    category: combat
+    base: 1.5
+    bounds:
+      min: 1.0
+      max: 100.0
+    format: number
+    priority: 16
+  max_health:
+    name: 最大生命值
+    category: combat
+    base: 20.0
+    bounds:
+      min: 1.0
+      max: 1000000.0
+    format: number
+    priority: 20
+  health_regen:
+    name: 生命恢复
+    description: 每秒恢复的生命值
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 21
+  lifesteal:
+    name: 生命偷取
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 24
+  elemental_mastery:
+    name: 元素精通
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: integer
+    priority: 25
+  damage_reduction:
+    name: 伤害减免
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 0.9
+    format: percent
+    priority: 30
+  penetration:
+    name: 百分比穿透
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 31
+  flat_penetration:
+    name: 固定穿透
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 32
+  accuracy:
+    name: 命中率
+    category: combat
+    base: 1.0
+    bounds:
+      min: 0.0
+    format: percent
+    priority: 33
+  dodge:
+    name: 闪避率
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 0.9
+    format: percent
+    priority: 34
+  block_chance:
+    name: 格挡率
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 0.9
+    format: percent
+    priority: 35
+  block_power:
+    name: 格挡强度
+    category: combat
+    base: 0.5
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 36
+  block_multiplier:
+    name: 格挡后伤害倍率
+    category: combat
+    base: 1.0
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 37
+  thorns:
+    name: 反伤比例
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 10.0
+    format: percent
+    priority: 38
+  shield_capacity:
+    name: 护盾容量
+    category: combat
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 39
+  healing_power:
+    name: 治疗强度
+    category: combat
+    base: 0.0
+    bounds:
+      min: -1.0
+      max: 10.0
+    format: percent
+    priority: 40

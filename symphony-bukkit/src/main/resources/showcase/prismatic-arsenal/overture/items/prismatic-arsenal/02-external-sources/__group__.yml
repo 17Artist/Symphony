@@ -1,0 +1,6 @@
+priority: 20
+icon: AMETHYST_SHARD
+name: '&d02 · 外部物品来源'
+lore:
+  - '&7通过 replaceSourceFromItem 注入'
+  - '&7覆盖 5 → 8 件套与技能来源合并'

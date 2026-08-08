@@ -1,0 +1,6 @@
+schema: 1
+id: focus_conversion
+type: conversion
+source: vanguard_focus
+target: interaction_conversion
+ratio: 0.5

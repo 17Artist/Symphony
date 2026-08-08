@@ -1,0 +1,7 @@
+schema: 1
+id: focus_overflow
+type: overflow
+source: vanguard_focus
+threshold: 25
+target: interaction_overflow
+ratio: 2

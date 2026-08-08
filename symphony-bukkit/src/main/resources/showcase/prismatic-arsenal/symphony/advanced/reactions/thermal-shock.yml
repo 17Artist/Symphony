@@ -1,0 +1,10 @@
+schema: 1
+id: thermal_shock
+trigger: ice
+aura: fire
+type: amplify
+multiplier: 1.75
+gauge-consume: 0.75
+effects:
+  particle: SPELL_MOB
+  sound: block.glass.break

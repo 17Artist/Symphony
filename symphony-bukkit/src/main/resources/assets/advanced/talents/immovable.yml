@@ -1,0 +1,13 @@
+schema: 1
+id: immovable
+name: 坚不可摧
+gate:
+  all:
+    - attribute: max_health
+      operator: '>='
+      value: 1000
+modifiers:
+  knockback_resistance:
+    operation: add
+    value: 0.8
+

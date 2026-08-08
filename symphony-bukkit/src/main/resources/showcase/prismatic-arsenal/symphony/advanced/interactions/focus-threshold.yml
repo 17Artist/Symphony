@@ -1,0 +1,7 @@
+schema: 1
+id: focus_threshold
+type: threshold
+source: vanguard_focus
+threshold: 30
+target: interaction_threshold
+ratio: 15

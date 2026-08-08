@@ -1,0 +1,79 @@
+console:
+  enabled: '&a伤害事件观察器已启用。'
+  disabled: '&7伤害事件观察器已停用。'
+
+resolved:
+  header: '&8&m---------------- &6伤害解析事件 &8&m----------------'
+  transaction: '&7事务 &f{transaction} &8| &7原因 &f{cause}'
+  participants: '&7攻击者 &f{attacker} &8→ &7目标 &f{victim}'
+  summary: '&7解析总伤害 &c{damage} &8| &7命中 &f{hit} &8| &7暴击 &f{critical} &8| &7事件取消 &f{cancelled}'
+  relations: '&7克制伤害 &a{advantaged} &8| &7普通伤害 &f{neutral} &8| &7被克制伤害 &c{disadvantaged}'
+  parent: '&7父事务 &f{parent}'
+  metadata-header: '&e请求元数据：'
+  metadata: '&8- &7{key}: &f{value}'
+  channel-header: '&e伤害通道：'
+  channel: '&8- &f{name} &8(&7{id}&8) &7请求 {requested} → 克制 {relation} 后 {related} → 暴击后 {critical} → 减免后 {mitigated} → &c{final}'
+  reactions: '  &7反应：&f{reactions}'
+  attribute-header: '&e参与本轮运算的属性：'
+  attribute: '&8- &f{name} &8(&7{id}&8) &7归属 {owner}，用途 {role}，值 &f{value}&7，通道 &f{channel}&7，已触发 &f{activated}'
+  truncated: '&8……其余 {count} 条为避免刷屏已省略。'
+  footer: '&8该信息来自解析事件；“已确认”消息代表伤害已经通过 Bukkit 落地。'
+
+confirmed:
+  chat: '&a[伤害已确认] &7事务 &f{transaction} &8| &7最终伤害 &c{damage} &8| &7通道 &f{channels}'
+
+miss:
+  header: '&8&m---------------- &e攻击未命中 &8&m----------------'
+  transaction: '&7事务 &f{transaction} &8| &7原因 &f{cause}'
+  participants: '&7攻击者 &f{attacker} &8→ &7目标 &f{victim}'
+  summary: '&7命中属性 &f{accuracy} &8| &7闪避属性 &f{dodge} &8| &7闪避概率 &f{chance} &8| &7随机值 &f{roll}'
+
+action-bar:
+  resolved: '&6伤害解析 &8| &c{damage} &8| &7{channels}'
+  confirmed: '&a伤害已确认 &8| &c{damage}'
+  missed: '&e本次攻击未命中'
+
+common:
+  none: '无'
+  unknown: '未知'
+  self: '自身'
+  affirmative: '是'
+  negative: '否'
+  not-applicable: '不适用'
+
+relations:
+  advantaged: '克制'
+  neutral: '普通'
+  disadvantaged: '被克制'
+
+owners:
+  attacker: '攻击者'
+  victim: '目标'
+
+roles:
+  attack_power: '攻击力'
+  critical_chance: '暴击率'
+  critical_damage: '暴击伤害'
+  accuracy: '命中'
+  dodge: '闪避'
+  defense: '防御'
+  percent_penetration: '百分比穿透'
+  flat_penetration: '固定穿透'
+  resistance: '抗性'
+  amplification: '增伤'
+  damage_reduction: '全局减伤'
+  block_chance: '格挡率'
+  block_power: '格挡强度'
+  shield_capacity: '护盾'
+  lifesteal: '吸血'
+  thorns: '反伤'
+
+channels:
+  physical: '物理'
+  fire: '火焰'
+  ice: '寒冰'
+  lightning: '雷电'
+  arcane: '奥术'
+  light: '光能'
+  dark: '暗影'
+  true: '真实'

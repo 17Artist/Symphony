@@ -1,0 +1,49 @@
+SymphonyAttributeGuardian:
+  Type: ZOMBIE
+  Display: '&6属性守卫 &7<caster.level>'
+  Health: 20
+  Damage: 2
+  Options:
+    PreventOtherDrops: true
+    PreventSunburn: true
+    Despawn: true
+  Symphony:
+    Enabled: true
+    Attributes:
+      max_health:
+        Operation: add
+        Value: 80
+        PerLevel: 10
+        Priority: 100
+        Description: '属性守卫生命成长'
+      physical_damage:
+        Operation: add
+        Value: 12
+        PerLevel: 2
+        Priority: 100
+        Description: '属性守卫物理伤害'
+      physical_defense:
+        Operation: add
+        Value: 60
+        PerLevel: 5
+        Priority: 100
+      accuracy:
+        Operation: add
+        Value: 10%
+        PerLevel: 2%
+      critical_chance:
+        Operation: add
+        Value: 15%
+      critical_damage:
+        Operation: add
+        Value: 50%
+      fire_resistance:
+        Operation: add
+        Value: 25%
+      arcane_resistance:
+        Operation: add
+        Value: 40%
+      movement_speed:
+        Operation: multiply_total
+        Value: 10%
+

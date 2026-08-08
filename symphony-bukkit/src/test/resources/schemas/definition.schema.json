@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arcartx.example/symphony/definition.schema.json",
+  "title": "Symphony single definition",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9._/-]+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "callbacks": { "type": "object" },
+    "modifiers": { "type": "object" },
+    "levels": { "type": "object" },
+    "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "cost": { "$ref": "#/$defs/itemRequirement" }
+  },
+  "$defs": {
+    "itemRequirement": {
+      "type": "object", "additionalProperties": false, "required": ["amount"],
+      "properties": {
+        "material": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+        "overture-item": { "type": "string", "minLength": 1 },
+        "amount": { "type": "integer", "minimum": 1, "maximum": 3456 }
+      },
+      "oneOf": [
+        { "required": ["material"], "not": { "required": ["overture-item"] } },
+        { "required": ["overture-item"], "not": { "required": ["material"] } }
+      ]
+    },
+    "modifier": {
+      "type": "object", "additionalProperties": false, "required": ["value"],
+      "properties": {
+        "operation": { "enum": ["add", "multiply_base", "multiply_total"] },
+        "value": { "oneOf": [ { "type": "number" }, { "type": "string" } ] },
+        "priority": { "type": "integer" }, "description": { "type": "string" }
+      }
+    }
+  }
+}

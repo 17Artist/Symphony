@@ -1,0 +1,10 @@
+schema: 1
+id: superconduct
+trigger: lightning
+aura: ice
+type: add
+multiplier: 12
+gauge-consume: 0.5
+effects:
+  particle: ELECTRIC_SPARK
+  sound: entity.lightning_bolt.impact

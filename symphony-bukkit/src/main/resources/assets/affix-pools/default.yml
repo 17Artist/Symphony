@@ -1,0 +1,15 @@
+schema: 1
+id: default
+priority: 0
+applies-to:
+  overture-items:
+    - '*'
+max-affixes: 3
+cost:
+  material: LAPIS_LAZULI
+  amount: 3
+entries:
+  - affix: thunder_strike
+    weight: 1.0
+    min-level: 1
+    max-level: 3

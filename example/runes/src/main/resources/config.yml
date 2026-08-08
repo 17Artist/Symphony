@@ -1,0 +1,25 @@
+definition-priority: 100
+
+# accepts 中的 * 表示通用槽位；列出多个类别即可形成多类别槽位。
+slots:
+  offense:
+    display-name: '进攻符文槽'
+    accepts:
+      - offense
+      - elemental
+
+  defense:
+    display-name: '守护符文槽'
+    accepts:
+      - defense
+
+  focus:
+    display-name: '专注符文槽'
+    accepts:
+      - focus
+      - elemental
+
+  wildcard:
+    display-name: '通用符文槽'
+    accepts:
+      - '*'

@@ -1,0 +1,12 @@
+schema: 1
+id: arcane_master
+name: 奥术大师
+condition:
+  type: affix_tag_count
+  tag: arcane
+  count: 3
+modifiers:
+  arcane_damage:
+    operation: multiply_total
+    value: 0.25
+

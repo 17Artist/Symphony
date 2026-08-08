@@ -1,0 +1,49 @@
+schema: 1
+id: frost_guardian
+display:
+  name: 寒霜守护者
+  pieces:
+    crown: 寒霜冠冕
+    chest: 寒霜胸甲
+    legs: 寒霜护腿
+    boots: 寒霜战靴
+    blade: 寒霜之刃
+    charm: 霜语护符
+    sigil: 极寒徽记
+    talisman: 凛冬护心镜
+counting:
+  mode: active_item_sources
+  duplicate-instance: once
+  allow-duplicate-piece-id: false
+bonuses:
+  2:
+    display:
+      name: 冰霜壁垒
+      description:
+        - 冰霜抗性提高 15%
+    modifiers:
+      ice_resistance:
+        operation: add
+        value: 15%
+  4:
+    display:
+      name: 寒霜反击
+      description:
+        - 格挡成功时，对攻击者造成 15 点冰霜伤害
+    callbacks:
+      frost_block:
+        trigger: combat.block_confirmed
+        actions:
+          - type: damage
+            channel: ice
+            amount: 15
+            target: attacker
+  7:
+    display:
+      name: 极寒意志
+      description:
+        - 冰霜伤害提高 35%
+    modifiers:
+      ice_damage:
+        operation: multiply_total
+        value: 35%

@@ -1,0 +1,31 @@
+schema: 1
+id: piercing_quartz
+overture-item: piercing_quartz
+name: 贯穿石英
+category: offense
+tags:
+  - offense
+  - physical
+max-level: 3
+levels:
+  1:
+    modifiers:
+      flat_penetration:
+        operation: add
+        value: 5
+  2:
+    modifiers:
+      flat_penetration:
+        operation: add
+        value: 10
+      penetration:
+        operation: add
+        value: 5%
+  3:
+    modifiers:
+      flat_penetration:
+        operation: add
+        value: 18
+      penetration:
+        operation: add
+        value: 10%

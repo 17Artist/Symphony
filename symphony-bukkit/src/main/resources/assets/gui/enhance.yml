@@ -1,0 +1,29 @@
+schema: 1
+title-key: gui.titles.enhance
+rows: 6
+target-slot: 19
+material-slot: 21
+downgrade-protection-slot: 23
+destroy-protection-slot: 25
+preview-slot: 31
+confirm-slot: 40
+slots:
+  target-label:
+    slot: 10
+  material-label:
+    slot: 12
+  downgrade-protection-label:
+    slot: 14
+  destroy-protection-label:
+    slot: 16
+  confirm:
+    slot: 40
+  close:
+    slot: 49
+page-slots:
+  - 28
+  - 29
+  - 30
+  - 32
+  - 33
+  - 34

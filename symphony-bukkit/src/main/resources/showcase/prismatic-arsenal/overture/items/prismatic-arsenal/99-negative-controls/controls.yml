@@ -1,0 +1,63 @@
+plain_overture_item:
+  display: prismatic_arsenal_material
+  icon: STICK
+  name:
+    item_name: '&7普通 Overture 物品'
+  lore:
+    item_type: '&8[负例 · 无 Symphony 组件]'
+    item_desc:
+      - '&7打开 Symphony 物品界面时应被正常拒绝'
+
+undefined_gem:
+  display: prismatic_arsenal_material
+  icon: COAL
+  name:
+    item_name: '&8未注册宝石'
+  lore:
+    item_type: '&8[负例 · 非宝石 OT 物品]'
+    item_desc:
+      - '&7尝试镶嵌时应拒绝且不消耗'
+
+undefined_socket_drill:
+  display: prismatic_arsenal_material
+  icon: WOODEN_PICKAXE
+  name:
+    item_name: '&8未注册打孔器'
+  lore:
+    item_type: '&8[负例 · 非打孔器 OT 物品]'
+    item_desc:
+      - '&7尝试打孔时应拒绝且不消耗'
+
+symphony_item_without_sockets:
+  display: prismatic_arsenal
+  icon: WOODEN_SWORD
+  name:
+    item_name: '&7无孔位属性物品'
+  lore:
+    item_type: '&8[负例 · 有属性但无孔位组件]'
+    item_desc:
+      - '&7镶嵌和打孔入口应给出可读拒绝原因'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      physical_damage:
+        operation: add
+        value: 1
+
+symphony_item_without_skills:
+  display: prismatic_arsenal
+  icon: BOOK
+  name:
+    item_name: '&7无技能属性物品'
+  lore:
+    item_type: '&8[负例 · 有属性但无技能组件]'
+    item_desc:
+      - '&7技能界面应显示空状态，不得出现内部 ID'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      luck:
+        operation: add
+        value: 1

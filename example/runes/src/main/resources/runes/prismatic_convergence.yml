@@ -1,0 +1,39 @@
+id: prismatic_convergence
+display:
+  name: '棱彩汇聚'
+  description:
+    - '把奥术伤害、元素精通与暴击率组合在一个高等级符文中。'
+    - '用于演示多属性来源和等级提供者联动。'
+category: focus
+maximum-rank: 3
+minimum-level:
+  base: 10
+  per-rank: 10
+modifiers:
+  - id: arcane-damage
+    attribute: symphony:arcane_damage
+    operation: add
+    value:
+      base: 8.0
+      per-rank: 5.0
+
+  - id: elemental-mastery
+    attribute: symphony:elemental_mastery
+    operation: add
+    value:
+      base: 12.0
+      per-rank: 8.0
+
+  - id: critical-chance
+    attribute: symphony:critical_chance
+    operation: add
+    value:
+      base: 0.01
+      per-rank: 0.01
+
+  - id: resonance
+    attribute: symphonyrunes:rune_resonance
+    operation: add
+    value:
+      base: 8.0
+      per-rank: 4.0

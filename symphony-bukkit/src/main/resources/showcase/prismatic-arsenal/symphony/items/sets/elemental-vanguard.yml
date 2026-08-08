@@ -1,0 +1,86 @@
+schema: 1
+id: elemental_vanguard
+display:
+  name: 元素先锋
+  pieces:
+    head: 先锋冠冕
+    chest: 先锋胸甲
+    legs: 先锋护腿
+    feet: 先锋战靴
+    main_hand: 棱彩长刃
+    sigil_fire: 炎之先锋徽记
+    sigil_ice: 霜之先锋徽记
+    sigil_storm: 雷之先锋徽记
+counting:
+  mode: active_item_sources
+  duplicate-instance: once
+  allow-duplicate-piece-id: false
+bonuses:
+  2:
+    display:
+      name: 三相守御
+      description:
+        - 火焰、冰霜与雷电抗性各提高 10%
+    modifiers:
+      fire_resistance:
+        operation: add
+        value: 10%
+      ice_resistance:
+        operation: add
+        value: 10%
+      lightning_resistance:
+        operation: add
+        value: 10%
+  4:
+    display:
+      name: 元素壁垒
+      description:
+        - 护盾容量提高 80
+        - 元素精通提高 60
+    modifiers:
+      shield_capacity:
+        operation: add
+        value: 80
+      elemental_mastery:
+        operation: add
+        value: 60
+  6:
+    display:
+      name: 元素反制
+      description:
+        - 格挡后造成 18 点冰霜伤害
+        - 同时施加两层元素暴露，冷却 3 秒
+    callbacks:
+      elemental_counter:
+        trigger: combat.block_confirmed
+        priority: 25
+        conditions:
+          - type: cooldown
+            key: elemental_counter
+            duration-ms: 3000
+        actions:
+          - type: damage
+            channel: ice
+            amount: 18
+            target: attacker
+            allow-critical: false
+          - type: status
+            status: elemental_exposure
+            stacks: 2
+            duration-ms: 8000
+            target: attacker
+  8:
+    display:
+      name: 万象归一
+      description:
+        - 火焰、冰霜与雷电最终伤害属性各提高 30%
+    modifiers:
+      fire_damage:
+        operation: multiply_total
+        value: 30%
+      ice_damage:
+        operation: multiply_total
+        value: 30%
+      lightning_damage:
+        operation: multiply_total
+        value: 30%

@@ -1,0 +1,18 @@
+interaction_matrix:
+  display: prismatic_arsenal
+  icon: COMPARATOR
+  name:
+    item_name: '&6属性交互矩阵 · 输入 40'
+  lore:
+    item_type: '&8[计算实验 · 外部来源]'
+    item_desc:
+      - '&7向先锋专注增加 40'
+      - '&7预期：30 / 40 / 25 / 14 / 6 / 14 / 7.14'
+      - '&7calculate 回调结果预期为 15'
+  meta:
+    unique: true
+  components:
+    symphony:attributes:
+      vanguard_focus:
+        operation: add
+        value: 40

@@ -1,0 +1,32 @@
+id: glacial_ward
+display:
+  name: '冰川守御'
+  description:
+    - '同时提供冰霜抗性与自定义物理防御。'
+    - '物理防御只参与 Symphony 公式，不写入原版护甲值。'
+category: defense
+maximum-rank: 5
+minimum-level:
+  base: 1
+  per-rank: 3
+modifiers:
+  - id: ice-resistance
+    attribute: symphony:ice_resistance
+    operation: add
+    value:
+      base: 0.03
+      per-rank: 0.015
+
+  - id: physical-defense
+    attribute: symphony:physical_defense
+    operation: add
+    value:
+      base: 4.0
+      per-rank: 2.0
+
+  - id: resonance
+    attribute: symphonyrunes:rune_resonance
+    operation: add
+    value:
+      base: 2.0
+      per-rank: 1.0

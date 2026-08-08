@@ -1,0 +1,38 @@
+schema: 1
+attributes:
+  movement_speed:
+    name: 移动速度
+    category: movement
+    base: 0.1
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: number
+    priority: 120
+  jump_height:
+    name: 跳跃高度
+    category: movement
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 121
+  fly_speed:
+    name: 飞行速度
+    category: movement
+    base: 0.1
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: number
+    priority: 122
+  knockback_resistance:
+    name: 击退抗性
+    category: movement
+    base: 0.0
+    bounds:
+      min: 0.0
+      max: 1.0
+    format: percent
+    priority: 123
+

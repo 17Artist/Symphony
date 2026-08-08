@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arcartx.example/symphony/config.schema.json",
+  "title": "Symphony config.yml",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "combat", "scripts", "performance", "features", "equipment", "compatibility"],
+  "properties": {
+    "schema": { "const": 2 },
+    "combat": {
+      "type": "object", "additionalProperties": false,
+      "required": ["enabled", "minimum-damage", "confirmation-delay-ticks", "max-transaction-depth"],
+      "properties": {
+        "enabled": { "type": "boolean" }, "minimum-damage": { "type": "number", "minimum": 0 },
+        "confirmation-delay-ticks": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "max-transaction-depth": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "environmental-causes": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "scripts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["java-interop", "slow-callback-warning-ms", "failure-window-seconds", "disable-after-failures"],
+      "properties": {
+        "java-interop": { "const": "unrestricted" }, "slow-callback-warning-ms": { "type": "integer", "minimum": 1, "maximum": 60000 },
+        "failure-window-seconds": { "type": "integer", "minimum": 1, "maximum": 86400 }, "disable-after-failures": { "type": "integer", "minimum": 1, "maximum": 1000 }
+      }
+    },
+    "performance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["equipment-coalesce-ticks", "timer-bucket-ticks", "cache-idle-seconds"],
+      "properties": {
+        "equipment-coalesce-ticks": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "timer-bucket-ticks": { "type": "integer", "minimum": 1, "maximum": 1200 },
+        "cache-idle-seconds": { "type": "integer", "minimum": 30, "maximum": 86400 }
+      }
+    },
+    "features": {
+      "type": "object", "additionalProperties": false,
+      "required": ["affixes", "skills", "gems", "sockets", "enhancement", "interactions", "elements", "resonances", "talents", "statuses", "environments"],
+      "properties": {
+        "affixes": { "type": "boolean" }, "skills": { "type": "boolean" },
+        "gems": { "type": "boolean" }, "sockets": { "type": "boolean" },
+        "enhancement": { "type": "boolean" }, "interactions": { "type": "boolean" },
+        "elements": { "type": "boolean" }, "resonances": { "type": "boolean" },
+        "talents": { "type": "boolean" }, "statuses": { "type": "boolean" },
+        "environments": { "type": "boolean" }
+      }
+    },
+    "equipment": {
+      "type": "object", "additionalProperties": false, "required": ["coalesce-ticks"],
+      "oneOf": [
+        { "required": ["offhand"] },
+        { "required": ["include-offhand"], "not": { "required": ["offhand"] } }
+      ],
+      "properties": {
+        "offhand": {
+          "type": "object", "additionalProperties": false, "required": ["mode", "attribute-scale"],
+          "properties": {
+            "mode": { "enum": ["disabled", "full", "scaled", "item-controlled"] },
+            "attribute-scale": {
+              "anyOf": [
+                { "type": "number", "minimum": 0, "maximum": 1 },
+                { "type": "string", "pattern": "^(100(?:\\.0+)?|(?:[0-9]?[0-9])(?:\\.[0-9]+)?)%$" }
+              ]
+            }
+          }
+        },
+        "include-offhand": { "type": "boolean", "deprecated": true },
+        "coalesce-ticks": { "type": "integer", "minimum": 1, "maximum": 200 }
+      }
+    },
+    "compatibility": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "epic-fight": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "post-world-grace-ms": { "type": "integer", "minimum": 0, "maximum": 60000, "default": 4000 },
+            "stuck-inaction-ms": { "type": "integer", "minimum": 1000, "maximum": 120000, "default": 6000 },
+            "fallback-poll-ticks": { "type": "integer", "minimum": 1, "maximum": 20, "default": 1 }
+          }
+        }
+      }
+    }
+  }
+}

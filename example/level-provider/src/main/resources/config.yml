@@ -1,0 +1,8 @@
+provider:
+  display-name: '玩家等级'
+  priority: 100
+
+level-curve:
+  maximum-level: 100
+  base-experience: 100
+  growth-factor: 1.18

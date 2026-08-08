@@ -1,0 +1,68 @@
+schema: 1
+id: prismatic_conduit
+name: 棱彩导体
+rarity: legendary
+category: weapon
+max-level: 3
+tags:
+  - offense
+  - elemental
+  - prismatic
+exclusive-group: conduit_strike
+display:
+  description:
+    - '被动：获得 {mastery|number} 点元素精通。'
+    - '每次普通攻击附带火焰、寒冰和雷电伤害各 {damage|number} 点。'
+    - '命中后有 {chance|percent} 几率再追加 {damage|number} 点雷电伤害并施加元素暴露，冷却 2.5 秒。'
+levels:
+  1:
+    chance: 0.12
+    damage: 8
+    mastery: 20
+  2:
+    chance: 0.18
+    damage: 14
+    mastery: 40
+  3:
+    chance: 0.25
+    damage: 22
+    mastery: 70
+passive:
+  elemental_mastery:
+    operation: add
+    value: '{mastery}'
+  fire_damage:
+    operation: add
+    value: '{damage}'
+  ice_damage:
+    operation: add
+    value: '{damage}'
+  lightning_damage:
+    operation: add
+    value: '{damage}'
+callbacks:
+  conduit_strike:
+    trigger: combat.attack_confirmed
+    priority: 20
+    conditions:
+      - type: chance
+        value: '{chance}'
+      - type: cooldown
+        key: prismatic_conduit
+        duration-ms: 2500
+    actions:
+      - type: damage
+        channel: lightning
+        amount: '{damage}'
+        target: target
+        allow-critical: false
+      - type: status
+        status: elemental_exposure
+        stacks: 1
+        duration-ms: 8000
+        target: target
+      - type: sound
+        sound: entity.lightning_bolt.impact
+        volume: 0.7
+        pitch: 1.4
+        target: target

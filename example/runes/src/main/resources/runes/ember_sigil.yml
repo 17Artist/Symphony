@@ -1,0 +1,32 @@
+id: ember_sigil
+display:
+  name: '余烬刻印'
+  description:
+    - '提高火焰伤害与火焰增幅。'
+    - '等级越高，增幅成长越明显。'
+category: elemental
+maximum-rank: 5
+minimum-level:
+  base: 1
+  per-rank: 4
+modifiers:
+  - id: fire-damage
+    attribute: symphony:fire_damage
+    operation: add
+    value:
+      base: 5.0
+      per-rank: 2.0
+
+  - id: fire-amplification
+    attribute: symphony:fire_amplification
+    operation: add
+    value:
+      base: 0.02
+      per-rank: 0.01
+
+  - id: resonance
+    attribute: symphonyrunes:rune_resonance
+    operation: add
+    value:
+      base: 3.0
+      per-rank: 1.0

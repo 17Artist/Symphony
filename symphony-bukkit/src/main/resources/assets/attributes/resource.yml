@@ -1,0 +1,33 @@
+schema: 1
+attributes:
+  drop_bonus:
+    name: 掉落加成
+    category: resource
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: percent
+    priority: 152
+  luck:
+    name: 幸运值
+    category: resource
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: number
+    priority: 153
+  combat_power:
+    name: 战斗力
+    category: resource
+    base: 0.0
+    bounds:
+      min: 0.0
+    format: integer
+    priority: 200
+    depends_on:
+      - physical_damage
+      - magic_damage
+      - physical_defense
+      - max_health
+      - critical_chance
+      - critical_damage
