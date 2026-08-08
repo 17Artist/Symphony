@@ -157,17 +157,14 @@ jobs:
               exit 1
             fi
 
-            if ./gradlew "${task}" \
-              -Pversion="${RELEASE_VERSION}" \
-              --no-daemon --max-workers=1; then
+            if [[ "${artifact}" != "symphony" ]]; then
+              ./gradlew "${task}" \
+                -Pversion="${RELEASE_VERSION}" \
+                --no-daemon --max-workers=1
               return
             fi
 
-            if [[ "${artifact}" != "symphony" ]]; then
-              exit 1
-            fi
-
-            echo "标准 Maven PUT 被拒绝，改用 Nexus 官方组件上传接口并保留响应信息"
+            echo "通过 Nexus 官方组件上传接口发布 ${artifact}:${RELEASE_VERSION}"
             ./gradlew :symphony-bukkit:generatePomFileForPluginPublication \
               -Pversion="${RELEASE_VERSION}" \
               --no-daemon --max-workers=1
@@ -209,7 +206,7 @@ jobs:
 
           publish_or_verify \
             symphony \
-            :symphony-bukkit:publishPluginPublicationToArcartXRepository \
+            "" \
             "symphony-bukkit/build/libs/symphony-bukkit-${RELEASE_VERSION}.jar"
           publish_or_verify \
             symphony-api \
