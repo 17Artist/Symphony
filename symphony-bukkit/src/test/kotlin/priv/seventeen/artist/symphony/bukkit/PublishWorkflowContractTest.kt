@@ -56,6 +56,8 @@ class PublishWorkflowContractTest {
             "MAVEN_REPO_PASSWORD",
             "publish_or_verify",
             "部分发布状态",
+            "service/rest/v1/components",
+            "Nexus 响应正文",
             "published-verification"
         ).forEach { required -> assertTrue(required in source, "发布工作流缺少契约：$required") }
         assertTrue(

@@ -89,6 +89,9 @@ jobs:
           repo: ${{ secrets.MAVEN_REPO_PASSWORD }}
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
           MAVEN_BASE_URL: https://repo.arcartx.com/repository/maven-releases
+          NEXUS_BASE_URL: https://repo.arcartx.com
+          MAVEN_REPOSITORY: maven-releases
+          MAVEN_REPO_USER: admin
         shell: bash
         run: |
           if [[ -z "${repo}" ]]; then
@@ -154,9 +157,54 @@ jobs:
               exit 1
             fi
 
-            ./gradlew "${task}" \
+            if ./gradlew "${task}" \
+              -Pversion="${RELEASE_VERSION}" \
+              --no-daemon --max-workers=1; then
+              return
+            fi
+
+            if [[ "${artifact}" != "symphony" ]]; then
+              exit 1
+            fi
+
+            echo "标准 Maven PUT 被拒绝，改用 Nexus 官方组件上传接口并保留响应信息"
+            ./gradlew :symphony-bukkit:generatePomFileForPluginPublication \
               -Pversion="${RELEASE_VERSION}" \
               --no-daemon --max-workers=1
+
+            local local_pom="symphony-bukkit/build/publications/plugin/pom-default.xml"
+            local response_headers="${recovery_root}/nexus-upload.headers"
+            local response_body="${recovery_root}/nexus-upload.body"
+            local upload_status
+            upload_status="$(curl --silent --show-error \
+              --user "${MAVEN_REPO_USER}:${repo}" \
+              --dump-header "${response_headers}" \
+              --output "${response_body}" \
+              --write-out '%{http_code}' \
+              --form-string "maven2.groupId=priv.seventeen.artist.symphony" \
+              --form-string "maven2.artifactId=symphony" \
+              --form-string "maven2.version=${RELEASE_VERSION}" \
+              --form-string "maven2.generate-pom=false" \
+              --form "maven2.asset1=@${local_jar};type=application/java-archive" \
+              --form-string "maven2.asset1.extension=jar" \
+              --form "maven2.asset2=@${local_pom};type=application/xml" \
+              --form-string "maven2.asset2.extension=pom" \
+              "${NEXUS_BASE_URL}/service/rest/v1/components?repository=${MAVEN_REPOSITORY}")"
+
+            if [[ "${upload_status}" =~ ^2[0-9][0-9]$ ]]; then
+              echo "Nexus 组件上传接口已接受 ${artifact}:${RELEASE_VERSION}（HTTP ${upload_status}）"
+              return
+            fi
+
+            echo "::error::Nexus 组件上传接口返回 HTTP ${upload_status}"
+            grep -Eai '^(server|via|x-[a-z0-9-]+|content-type|content-length):' \
+              "${response_headers}" || true
+            if [[ -s "${response_body}" ]]; then
+              echo "Nexus 响应正文："
+              head -c 4096 "${response_body}"
+              echo
+            fi
+            exit 1
           }
 
           publish_or_verify \
