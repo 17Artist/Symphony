@@ -47,7 +47,14 @@ class PublishWorkflowContractTest {
             ":symphony-bukkit:publishPluginPublicationToArcartXRepository",
             "priv/seventeen/artist/symphony/api/service/SymphonyApi.class",
             "MAVEN_REPO_PASSWORD",
+            "publish_or_verify",
+            "部分发布状态",
             "published-verification"
         ).forEach { required -> assertTrue(required in source, "发布工作流缺少契约：$required") }
+        assertTrue(
+            source.indexOf(":symphony-bukkit:publishPluginPublicationToArcartXRepository") <
+                source.indexOf(":symphony-api:publishMavenJavaPublicationToArcartXRepository"),
+            "发布工作流应先上传服务端插件，避免插件失败后留下新的 API 半发布版本"
+        )
     }
 }

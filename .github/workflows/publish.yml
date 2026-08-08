@@ -88,17 +88,86 @@ jobs:
         env:
           repo: ${{ secrets.MAVEN_REPO_PASSWORD }}
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          MAVEN_BASE_URL: https://repo.arcartx.com/repository/maven-releases
         shell: bash
         run: |
           if [[ -z "${repo}" ]]; then
             echo "::error::仓库尚未配置 MAVEN_REPO_PASSWORD"
             exit 1
           fi
-          ./gradlew \
-            :symphony-api:publishMavenJavaPublicationToArcartXRepository \
+
+          group_path="priv/seventeen/artist/symphony"
+          recovery_root="build/publication-recovery"
+          mkdir -p "${recovery_root}"
+
+          publish_or_verify() {
+            local artifact="$1"
+            local task="$2"
+            local local_jar="$3"
+            shift 3
+            local required_files=(
+              "${artifact}-${RELEASE_VERSION}.jar"
+              "${artifact}-${RELEASE_VERSION}.pom"
+              "$@"
+            )
+            local existing=0
+            local missing=0
+
+            for file_name in "${required_files[@]}"; do
+              local output="${recovery_root}/${file_name}"
+              local status
+              status="$(curl --silent --show-error --location \
+                --retry 3 --retry-delay 2 \
+                --output "${output}" --write-out '%{http_code}' \
+                "${MAVEN_BASE_URL}/${group_path}/${artifact}/${RELEASE_VERSION}/${file_name}")"
+              case "${status}" in
+                200) ((existing += 1)) ;;
+                404)
+                  ((missing += 1))
+                  rm -f "${output}"
+                  ;;
+                *)
+                  echo "::error::检查 ${artifact} 远程状态失败：HTTP ${status}"
+                  exit 1
+                  ;;
+              esac
+            done
+
+            if (( existing == ${#required_files[@]} )); then
+              if ! cmp -s \
+                "${recovery_root}/${artifact}-${RELEASE_VERSION}.jar" \
+                "${local_jar}"; then
+                echo "::error::${artifact}:${RELEASE_VERSION} 已存在，但 JAR 内容与当前构建不一致"
+                exit 1
+              fi
+              if [[ "${artifact}" == "symphony-api" ]] && ! cmp -s \
+                "${recovery_root}/symphony-api-${RELEASE_VERSION}-sources.jar" \
+                "symphony-api/build/libs/symphony-api-${RELEASE_VERSION}-sources.jar"; then
+                echo "::error::symphony-api:${RELEASE_VERSION} 已存在，但源码包与当前构建不一致"
+                exit 1
+              fi
+              echo "${artifact}:${RELEASE_VERSION} 已存在且内容一致，跳过重复上传"
+              return
+            fi
+            if (( missing != ${#required_files[@]} )); then
+              echo "::error::${artifact}:${RELEASE_VERSION} 处于部分发布状态，请先核对远程仓库"
+              exit 1
+            fi
+
+            ./gradlew "${task}" \
+              -Pversion="${RELEASE_VERSION}" \
+              --no-daemon --max-workers=1
+          }
+
+          publish_or_verify \
+            symphony \
             :symphony-bukkit:publishPluginPublicationToArcartXRepository \
-            -Pversion="${RELEASE_VERSION}" \
-            --no-daemon --max-workers=1
+            "symphony-bukkit/build/libs/symphony-bukkit-${RELEASE_VERSION}.jar"
+          publish_or_verify \
+            symphony-api \
+            :symphony-api:publishMavenJavaPublicationToArcartXRepository \
+            "symphony-api/build/libs/symphony-api-${RELEASE_VERSION}.jar" \
+            "symphony-api-${RELEASE_VERSION}-sources.jar"
 
       - name: 验证远程 Maven 产物
         env:
@@ -147,6 +216,9 @@ jobs:
           cmp -s \
             "${verification_root}/symphony-api.jar" \
             "symphony-api/build/libs/symphony-api-${RELEASE_VERSION}.jar"
+          cmp -s \
+            "${verification_root}/symphony-api-sources.jar" \
+            "symphony-api/build/libs/symphony-api-${RELEASE_VERSION}-sources.jar"
 
           if jar tf "${verification_root}/symphony.jar" | grep -Eq \
             '^(kotlin/|kotlinx/|org/bukkit/|net/minecraft/|priv/seventeen/artist/blink/|priv/seventeen/artist/overture/|org/snakeyaml/)'; then
