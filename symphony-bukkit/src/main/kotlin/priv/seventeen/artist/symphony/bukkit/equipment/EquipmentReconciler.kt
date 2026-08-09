@@ -129,16 +129,25 @@ class EquipmentReconciler(
     }
 
     private fun refreshPlayerItems(player: Player) {
+        val availableItemIds = OvertureAPI.getItemIds().toHashSet()
         for (slot in 0 until player.inventory.size) {
             val item = player.inventory.getItem(slot) ?: continue
-            rebuildItem(player, item, slot.toString())?.let { rebuilt -> player.inventory.setItem(slot, rebuilt) }
+            rebuildItem(player, item, slot.toString(), availableItemIds)?.let { rebuilt ->
+                player.inventory.setItem(slot, rebuilt)
+            }
         }
         val cursor = player.itemOnCursor
-        rebuildItem(player, cursor, "cursor")?.let(player::setItemOnCursor)
+        rebuildItem(player, cursor, "cursor", availableItemIds)?.let(player::setItemOnCursor)
     }
 
-    private fun rebuildItem(player: Player, item: ItemStack, slot: String): ItemStack? {
+    private fun rebuildItem(
+        player: Player,
+        item: ItemStack,
+        slot: String,
+        availableItemIds: Set<String>
+    ): ItemStack? {
         if (item.type.isAir || !OvertureAPI.isOvertureItem(item)) return null
+        if (!shouldAttemptOvertureRebuild(OvertureAPI.getOvertureId(item), availableItemIds)) return null
         return when (val rebuilt = OvertureAPI.rebuildItem(item, player)) {
             is ItemMutationResult.Success -> rebuilt.itemStack.takeIf {
                 !item.isSimilar(it) || item.amount != it.amount
@@ -164,3 +173,6 @@ class EquipmentReconciler(
         pendingLoreRefresh.clear()
     }
 }
+
+internal fun shouldAttemptOvertureRebuild(itemId: String?, availableItemIds: Set<String>): Boolean =
+    itemId.isNullOrBlank() || itemId in availableItemIds
