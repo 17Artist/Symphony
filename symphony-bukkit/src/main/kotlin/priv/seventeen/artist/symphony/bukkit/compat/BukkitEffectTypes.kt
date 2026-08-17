@@ -26,6 +26,7 @@ object BukkitEffectTypes {
         "EXPLOSION_LARGE" to listOf("EXPLOSION_LARGE", "EXPLOSION"),
         "EXPLOSION_HUGE" to listOf("EXPLOSION_HUGE", "EXPLOSION_EMITTER"),
         "SPELL_MOB" to listOf("SPELL_MOB", "ENTITY_EFFECT"),
+        "TOTEM" to listOf("TOTEM", "TOTEM_OF_UNDYING"),
         "REDSTONE" to listOf("REDSTONE", "DUST")
     )
 

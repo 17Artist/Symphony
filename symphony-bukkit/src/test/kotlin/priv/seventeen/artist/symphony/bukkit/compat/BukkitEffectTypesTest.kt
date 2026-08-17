@@ -19,11 +19,13 @@ package priv.seventeen.artist.symphony.bukkit.compat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class BukkitEffectTypesTest {
     @Test
     fun `legacy particle vocabulary resolves on the compile floor`() {
         assertEquals("EXPLOSION_NORMAL", BukkitEffectTypes.particle("explosion_normal").name)
+        assertTrue(BukkitEffectTypes.particle("totem").name in setOf("TOTEM", "TOTEM_OF_UNDYING"))
     }
 
     @Test

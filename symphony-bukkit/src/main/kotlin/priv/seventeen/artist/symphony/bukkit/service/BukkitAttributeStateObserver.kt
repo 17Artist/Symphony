@@ -76,7 +76,7 @@ class BukkitAttributeStateObserver(
         val instance = entity.getAttribute(vanilla) ?: return
         runCatching {
             val modifierId = modifierId(vanilla)
-            val existing = instance.modifiers.firstOrNull { it.uniqueId == modifierId }
+            val existing = instance.modifiers.firstOrNull(::isSymphonyModifier)
             val directive = VanillaAttributeSyncPolicy.directive(state, key, VanillaSyncMode.ABSOLUTE)
             if (directive is VanillaSyncDirective.Clear) {
                 existing?.let(instance::removeModifier)
@@ -107,7 +107,7 @@ class BukkitAttributeStateObserver(
         val instance = entity.getAttribute(vanilla) ?: return
         runCatching {
             val modifierId = modifierId(vanilla)
-            val existing = instance.modifiers.firstOrNull { it.uniqueId == modifierId }
+            val existing = instance.modifiers.firstOrNull(::isSymphonyModifier)
             when (val directive = VanillaAttributeSyncPolicy.directive(state, key, VanillaSyncMode.MULTIPLY_TOTAL)) {
                 is VanillaSyncDirective.Clear -> existing?.let(instance::removeModifier)
                 is VanillaSyncDirective.MultiplyTotal -> {
@@ -148,10 +148,16 @@ class BukkitAttributeStateObserver(
     private fun clearVanilla(entity: LivingEntity) {
         SYNCED_ATTRIBUTES.forEach { attribute ->
             entity.getAttribute(attribute)?.let { instance ->
-                instance.modifiers.firstOrNull { it.uniqueId == modifierId(attribute) }?.let(instance::removeModifier)
+                instance.modifiers.filter(::isSymphonyModifier).forEach(instance::removeModifier)
             }
         }
     }
+
+    /**
+     * Paper 1.21 使用命名空间键保存原版修饰器。读取旧版 UUID 会把键误当作 UUID 解析并抛出异常。
+     * 该名称由 Symphony 独占，因此按名称识别既可跨版本，也不会碰触原版或其他插件的修饰器。
+     */
+    private fun isSymphonyModifier(modifier: AttributeModifier): Boolean = modifier.name == MODIFIER_NAME
 
     private fun modifierId(attribute: Attribute): UUID = UUID.nameUUIDFromBytes("symphony:vanilla-sync:${attribute.name}".toByteArray())
 
