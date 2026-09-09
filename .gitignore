@@ -3,6 +3,8 @@ build/
 **/build/
 .idea/
 *.iml
+*.pyc
+__pycache__/
 .runtime/
 .testserver/
 
