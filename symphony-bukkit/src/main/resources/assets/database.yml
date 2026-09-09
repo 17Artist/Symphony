@@ -1,0 +1,12 @@
+# MySQL 仅在 config.yml 的 health-persistence.storage 设为 mysql 时连接。
+schema: 1
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  database: arcartx
+  username: arcartx
+  password: change-me
+  use-ssl: false
+  allow-public-key-retrieval: true
+  pool-size: 4

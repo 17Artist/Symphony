@@ -24,6 +24,7 @@ import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.attribute.AttributeKey
 import priv.seventeen.artist.symphony.api.event.AttributeSnapshotCommittedEvent
 import priv.seventeen.artist.symphony.api.event.AttributeSnapshotPrepareEvent
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitAttributeTypes
 import priv.seventeen.artist.symphony.engine.attribute.AttributeStateObserver
 import priv.seventeen.artist.symphony.engine.attribute.AttributeCommitBarrier
 import priv.seventeen.artist.symphony.engine.attribute.EntityAttributeState
@@ -56,12 +57,12 @@ class BukkitAttributeStateObserver(
 
     private fun syncVanilla(entity: LivingEntity, state: EntityAttributeState) {
         synchronizedEntities += entity.uniqueId
-        syncAbsolute(entity, state, MAX_HEALTH, Attribute.GENERIC_MAX_HEALTH, 1.0) { value ->
+        syncAbsolute(entity, state, MAX_HEALTH, BukkitAttributeTypes.maxHealth, 1.0) { value ->
             if (entity.health > value) entity.health = value
         }
-        syncAbsolute(entity, state, MOVEMENT_SPEED, Attribute.GENERIC_MOVEMENT_SPEED, 0.0)
-        syncMultiplier(entity, state, ATTACK_SPEED, Attribute.GENERIC_ATTACK_SPEED)
-        syncAbsolute(entity, state, KNOCKBACK_RESISTANCE, Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0.0, 1.0)
+        syncAbsolute(entity, state, MOVEMENT_SPEED, BukkitAttributeTypes.movementSpeed, 0.0)
+        syncMultiplier(entity, state, ATTACK_SPEED, BukkitAttributeTypes.attackSpeed)
+        syncAbsolute(entity, state, KNOCKBACK_RESISTANCE, BukkitAttributeTypes.knockbackResistance, 0.0, 1.0)
     }
 
     private fun syncAbsolute(
@@ -75,7 +76,7 @@ class BukkitAttributeStateObserver(
     ) {
         val instance = entity.getAttribute(vanilla) ?: return
         runCatching {
-            val modifierId = modifierId(vanilla)
+            val modifierId = modifierId(key)
             val existing = instance.modifiers.firstOrNull(::isSymphonyModifier)
             val directive = VanillaAttributeSyncPolicy.directive(state, key, VanillaSyncMode.ABSOLUTE)
             if (directive is VanillaSyncDirective.Clear) {
@@ -106,7 +107,7 @@ class BukkitAttributeStateObserver(
     ) {
         val instance = entity.getAttribute(vanilla) ?: return
         runCatching {
-            val modifierId = modifierId(vanilla)
+            val modifierId = modifierId(key)
             val existing = instance.modifiers.firstOrNull(::isSymphonyModifier)
             when (val directive = VanillaAttributeSyncPolicy.directive(state, key, VanillaSyncMode.MULTIPLY_TOTAL)) {
                 is VanillaSyncDirective.Clear -> existing?.let(instance::removeModifier)
@@ -159,7 +160,8 @@ class BukkitAttributeStateObserver(
      */
     private fun isSymphonyModifier(modifier: AttributeModifier): Boolean = modifier.name == MODIFIER_NAME
 
-    private fun modifierId(attribute: Attribute): UUID = UUID.nameUUIDFromBytes("symphony:vanilla-sync:${attribute.name}".toByteArray())
+    private fun modifierId(attribute: AttributeKey): UUID =
+        UUID.nameUUIDFromBytes("symphony:vanilla-sync:${attribute.value}".toByteArray())
 
     companion object {
         private val MAX_HEALTH = AttributeKey.symphony("max_health")
@@ -168,10 +170,10 @@ class BukkitAttributeStateObserver(
         private val KNOCKBACK_RESISTANCE = AttributeKey.symphony("knockback_resistance")
         private const val MODIFIER_NAME = "symphony.vanilla_sync"
         private val SYNCED_ATTRIBUTES = listOf(
-            Attribute.GENERIC_MAX_HEALTH,
-            Attribute.GENERIC_MOVEMENT_SPEED,
-            Attribute.GENERIC_ATTACK_SPEED,
-            Attribute.GENERIC_KNOCKBACK_RESISTANCE
+            BukkitAttributeTypes.maxHealth,
+            BukkitAttributeTypes.movementSpeed,
+            BukkitAttributeTypes.attackSpeed,
+            BukkitAttributeTypes.knockbackResistance
         )
         private const val EPSILON = 1.0e-9
     }

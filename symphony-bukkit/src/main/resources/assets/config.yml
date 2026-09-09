@@ -17,6 +17,13 @@ performance:
   timer-bucket-ticks: 20
   cache-idle-seconds: 300
 
+health-persistence:
+  # pdc 适合单服；多个子服之间同步时改为 mysql，并让它们使用相同的 cluster-id。
+  storage: pdc
+  cluster-id: default
+  # 仅在生命值发生变化时保存；设为 0 可关闭在线检查点。
+  checkpoint-seconds: 30
+
 equipment:
   offhand:
     # full / scaled / item-controlled / disabled

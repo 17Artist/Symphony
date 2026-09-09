@@ -25,6 +25,7 @@ import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.server.PluginDisableEvent
 import org.bukkit.entity.Player
 import priv.seventeen.artist.blink.event.AutoListener
+import priv.seventeen.artist.symphony.api.event.LevelChangeEvent
 import priv.seventeen.artist.symphony.bukkit.runtime.SymphonyRuntime
 import priv.seventeen.artist.symphony.engine.trigger.*
 import java.util.UUID
@@ -35,9 +36,10 @@ object LifecycleTriggerListener {
     fun onJoin(event: PlayerJoinEvent) {
         SymphonyRuntime.epicFightOrNull()?.onJoin(event.player)
         SymphonyRuntime.equipmentOrNull()?.mark(event.player)
-        SymphonyRuntime.environmentOrNull()?.mark(event.player)
+        SymphonyRuntime.environmentOrNull()?.reconcileNow(event.player)
         SymphonyRuntime.levelsOrNull()?.refresh(event.player, "player.join")
         SymphonyRuntime.attributesOrNull()?.recalculate(event.player)
+        SymphonyRuntime.healthPersistenceOrNull()?.onJoin(event.player)
         dispatch(PlayerJoinTrigger, event.player)
     }
 
@@ -45,12 +47,14 @@ object LifecycleTriggerListener {
     @AutoListener(priority = EventPriority.MONITOR)
     fun onQuit(event: PlayerQuitEvent) {
         dispatch(PlayerQuitTrigger, event.player)
+        SymphonyRuntime.healthPersistenceOrNull()?.onQuit(event.player)
         cleanup(event.player)
     }
 
     @JvmStatic
     @AutoListener(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onKick(event: PlayerKickEvent) {
+        SymphonyRuntime.healthPersistenceOrNull()?.onQuit(event.player)
         cleanup(event.player)
     }
 
@@ -59,14 +63,24 @@ object LifecycleTriggerListener {
     fun onRespawnLifecycle(event: PlayerRespawnEvent) {
         SymphonyRuntime.epicFightOrNull()?.onJoin(event.player)
         SymphonyRuntime.equipmentOrNull()?.mark(event.player)
-        SymphonyRuntime.environmentOrNull()?.mark(event.player)
+        SymphonyRuntime.environmentOrNull()?.reconcileNow(event.player)
+        SymphonyRuntime.healthPersistenceOrNull()?.onRespawn(event.player)
         dispatch(PlayerRespawnTrigger, event.player)
     }
 
     @JvmStatic
     @AutoListener(priority = EventPriority.MONITOR)
     fun onEntityDeath(event: EntityDeathEvent) {
-        if (event.entity !is Player) SymphonyRuntime.scheduleForgetEntity(event.entity.uniqueId)
+        val player = event.entity as? Player
+        if (player == null) SymphonyRuntime.scheduleForgetEntity(event.entity.uniqueId)
+        else SymphonyRuntime.healthPersistenceOrNull()?.onDeath(player)
+    }
+
+    @JvmStatic
+    @AutoListener(priority = EventPriority.MONITOR)
+    fun onLevelChange(event: LevelChangeEvent) {
+        val player = event.entity as? Player ?: return
+        SymphonyRuntime.healthPersistenceOrNull()?.onCharacterChanged(player, event.current)
     }
 
     @JvmStatic

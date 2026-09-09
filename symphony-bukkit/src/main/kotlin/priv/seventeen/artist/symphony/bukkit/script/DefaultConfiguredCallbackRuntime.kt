@@ -17,7 +17,6 @@
 package priv.seventeen.artist.symphony.bukkit.script
 
 import org.bukkit.Bukkit
-import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
@@ -34,9 +33,11 @@ import priv.seventeen.artist.symphony.api.damage.DamageRequest
 import priv.seventeen.artist.symphony.api.damage.DamageService
 import priv.seventeen.artist.symphony.api.source.AttributeSourceService
 import priv.seventeen.artist.symphony.api.source.SourceUpdateResult
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitAttributeTypes
 import priv.seventeen.artist.symphony.bukkit.compat.BukkitEffectTypes
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitPotionEffectTypes
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitRegistryTypes
 import priv.seventeen.artist.symphony.engine.trigger.EntityTriggerContext
-import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
@@ -123,7 +124,7 @@ class DefaultConfiguredCallbackRuntime(
         "health" -> {
             val target = resolveTarget(condition["target"]?.toString(), context) ?: return false
             val actual = if (condition["percent"] == true) {
-                val maximum = target.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: target.health
+                val maximum = target.getAttribute(BukkitAttributeTypes.maxHealth)?.value ?: target.health
                 if (maximum <= 0.0) 0.0 else target.health / maximum
             } else target.health
             compare(actual, condition["operator"]?.toString() ?: ">=", resolveDouble(condition["value"], context))
@@ -136,7 +137,8 @@ class DefaultConfiguredCallbackRuntime(
         "world" -> context.self.world.name in stringSet(condition["names"])
         "biome" -> {
             val target = resolveTarget(condition["target"]?.toString(), context) ?: return false
-            target.location.block.biome.name in stringSet(condition["names"]).map(String::uppercase)
+            BukkitRegistryTypes.registryName(target.location.block.biome) in
+                stringSet(condition["names"]).map(String::uppercase)
         }
         "permission" -> (resolveTarget(condition["target"]?.toString(), context) as? Player)
             ?.hasPermission(condition.getValue("permission").toString()) == true
@@ -178,7 +180,7 @@ class DefaultConfiguredCallbackRuntime(
                 )
             }
             "heal" -> {
-                val maximum = target.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: target.health
+                val maximum = target.getAttribute(BukkitAttributeTypes.maxHealth)?.value ?: target.health
                 val healingPower = attributes.value(context.self, HEALING_POWER).coerceAtLeast(-1.0)
                 target.health = min(maximum, target.health + resolveAmount(action, context) * (1.0 + healingPower))
             }
@@ -341,10 +343,8 @@ class DefaultConfiguredCallbackRuntime(
     private fun attributeKey(raw: String) = AttributeKey(namespaced(raw))
     private fun namespaced(raw: String): String = if (':' in raw) raw else "symphony:$raw"
 
-    @Suppress("DEPRECATION")
     private fun potionType(raw: String): PotionEffectType =
-        PotionEffectType.getByName(raw.uppercase(Locale.ROOT))
-            ?: throw IllegalArgumentException("未知药水效果 $raw")
+        BukkitPotionEffectTypes.effect(raw)
 
     companion object {
         private const val MAX_COOLDOWNS = 100_000

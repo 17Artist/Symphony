@@ -28,6 +28,7 @@ internal object DefaultResources {
 
     private val resources = listOf(
         "config.yml",
+        "database.yml",
         "combat-power.yml",
         "language.yml",
         "display.yml",

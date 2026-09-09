@@ -68,6 +68,7 @@ import priv.seventeen.artist.symphony.bukkit.gameplay.EnvironmentRuntime
 import priv.seventeen.artist.symphony.bukkit.gameplay.TriggerTimerRuntime
 import priv.seventeen.artist.symphony.bukkit.gameplay.PassiveRuleRuntime
 import priv.seventeen.artist.symphony.bukkit.gameplay.ElementReactionRuntime
+import priv.seventeen.artist.symphony.bukkit.persistence.HealthPersistenceRuntime
 import priv.seventeen.artist.symphony.engine.validation.Severity
 import java.util.concurrent.atomic.AtomicReference
 import java.util.UUID
@@ -94,6 +95,7 @@ object SymphonyRuntime {
     private lateinit var ariaCallbacks: AriaCallbackRuntime
     private lateinit var configuredCallbacks: DefaultConfiguredCallbackRuntime
     private lateinit var healthRegenerationRuntime: HealthRegenerationRuntime
+    private lateinit var healthPersistenceRuntime: HealthPersistenceRuntime
     private lateinit var skillService: RuntimeSkillService
     private lateinit var statusRuntime: StatusRuntime
     private lateinit var environmentRuntime: EnvironmentRuntime
@@ -154,6 +156,12 @@ object SymphonyRuntime {
             settings.scripts.disableAfterFailures
         ) { callback, error -> BlinkLog.error(text("console.callback-failed", "callback" to callback), error) }
         levelService = BukkitLevelService(attributeService, triggerService)
+        healthPersistenceRuntime = HealthPersistenceRuntime.create(
+            plugin,
+            settings.healthPersistence,
+            { player -> levelService.snapshot(player) },
+            settings.equipment.coalesceTicks + 4L
+        )
         combatPowerService = BukkitCombatPowerService(
             definitions,
             store,
@@ -321,6 +329,7 @@ object SymphonyRuntime {
         epicFightCompatibility.start()
         damageService.start()
         cacheEvictionRuntime.start()
+        healthPersistenceRuntime.start()
         healthRegenerationRuntime.start()
         statusRuntime.start()
         environmentRuntime.start()
@@ -340,8 +349,9 @@ object SymphonyRuntime {
         check(state == State.ENABLED) { "Symphony 运行时尚未启用" }
         Bukkit.getWorlds().flatMap { it.livingEntities }.forEach {
             equipmentReconciler.reconcile(it)
-            environmentRuntime.mark(it)
+            environmentRuntime.reconcileNow(it)
             passiveRuleRuntime.mark(it)
+            if (it is org.bukkit.entity.Player) healthPersistenceRuntime.onJoin(it)
         }
     }
 
@@ -355,6 +365,7 @@ object SymphonyRuntime {
         if (::damageService.isInitialized) damageService.clear()
         if (::configuredCallbacks.isInitialized) configuredCallbacks.clear()
         if (::skillService.isInitialized) skillService.clear()
+        if (::healthPersistenceRuntime.isInitialized) healthPersistenceRuntime.close()
         if (::healthRegenerationRuntime.isInitialized) healthRegenerationRuntime.close()
         if (::levelService.isInitialized) levelService.clear()
         if (::statusRuntime.isInitialized) statusRuntime.close()
@@ -481,6 +492,8 @@ object SymphonyRuntime {
     fun environmentOrNull(): EnvironmentRuntime? =
         if (state == State.ENABLED && ::environmentRuntime.isInitialized) environmentRuntime else null
     fun levelsOrNull(): BukkitLevelService? = if (state == State.ENABLED && ::levelService.isInitialized) levelService else null
+    fun healthPersistenceOrNull(): HealthPersistenceRuntime? =
+        if (state == State.ENABLED && ::healthPersistenceRuntime.isInitialized) healthPersistenceRuntime else null
     fun combatPowerOrNull(): BukkitCombatPowerService? =
         if (state == State.ENABLED && ::combatPowerService.isInitialized) combatPowerService else null
     fun passiveRulesOrNull(): PassiveRuleRuntime? =

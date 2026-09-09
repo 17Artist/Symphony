@@ -24,6 +24,7 @@ import org.bukkit.scheduler.BukkitTask
 import priv.seventeen.artist.blink.BlinkLog
 import priv.seventeen.artist.symphony.api.attribute.AttributeSourceKey
 import priv.seventeen.artist.symphony.api.source.SourceUpdateResult
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitRegistryTypes
 import priv.seventeen.artist.symphony.bukkit.runtime.SymphonyRuntime
 import priv.seventeen.artist.symphony.bukkit.script.CallbackOwner
 import priv.seventeen.artist.symphony.bukkit.service.BukkitAttributeSourceService
@@ -56,6 +57,13 @@ class EnvironmentRuntime(
     fun mark(entity: LivingEntity) {
         if (!enabled) return
         pending += entity.uniqueId
+    }
+
+    fun reconcileNow(entity: LivingEntity) {
+        if (!enabled) return
+        check(Bukkit.isPrimaryThread()) { "环境属性同步必须在 Bukkit 主线程执行" }
+        pending.remove(entity.uniqueId)
+        reconcile(entity)
     }
 
     fun callbackVariables(owner: CallbackOwner, context: EntityTriggerContext): Map<String, Any?>? =
@@ -108,7 +116,7 @@ class EnvironmentRuntime(
         val worlds = stringSet(whenMap["worlds"])
         if (worlds.isNotEmpty() && location.world?.name !in worlds) return false
         val biomes = stringSet(whenMap["biomes"]).map(String::uppercase)
-        if (biomes.isNotEmpty() && location.block.biome.name !in biomes) return false
+        if (biomes.isNotEmpty() && BukkitRegistryTypes.registryName(location.block.biome) !in biomes) return false
         val outdoor = whenMap["outdoor"] as? Boolean
         if (outdoor != null) {
             val world = location.world ?: return false

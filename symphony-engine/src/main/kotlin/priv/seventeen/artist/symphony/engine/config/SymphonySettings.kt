@@ -39,6 +39,22 @@ data class PerformanceSettings(
     val cacheIdleSeconds: Long
 )
 
+enum class HealthStorageMode(val id: String) {
+    PDC("pdc"),
+    MYSQL("mysql");
+
+    companion object {
+        fun parse(raw: String): HealthStorageMode = values().firstOrNull { it.id == raw.lowercase() }
+            ?: throw IllegalArgumentException("config.health-persistence.storage 仅支持 pdc 或 mysql")
+    }
+}
+
+data class HealthPersistenceSettings(
+    val storage: HealthStorageMode,
+    val clusterId: String,
+    val checkpointSeconds: Long
+)
+
 data class FeatureSettings(
     val affixes: Boolean,
     val skills: Boolean,
@@ -74,6 +90,7 @@ data class SymphonySettings(
     val combat: CombatSettings,
     val scripts: ScriptSettings,
     val performance: PerformanceSettings,
+    val healthPersistence: HealthPersistenceSettings,
     val features: FeatureSettings,
     val equipment: EquipmentSettings,
     val compatibility: CompatibilitySettings

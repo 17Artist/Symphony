@@ -4,7 +4,7 @@
   "title": "Symphony config.yml",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "combat", "scripts", "performance", "features", "equipment", "compatibility"],
+  "required": ["schema", "combat", "scripts", "performance", "health-persistence", "features", "equipment", "compatibility"],
   "properties": {
     "schema": { "const": 2 },
     "combat": {
@@ -32,6 +32,15 @@
         "equipment-coalesce-ticks": { "type": "integer", "minimum": 1, "maximum": 200 },
         "timer-bucket-ticks": { "type": "integer", "minimum": 1, "maximum": 1200 },
         "cache-idle-seconds": { "type": "integer", "minimum": 30, "maximum": 86400 }
+      }
+    },
+    "health-persistence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["storage", "cluster-id", "checkpoint-seconds"],
+      "properties": {
+        "storage": { "enum": ["pdc", "mysql"] },
+        "cluster-id": { "type": "string", "pattern": "^[a-z0-9._-]{1,64}$" },
+        "checkpoint-seconds": { "type": "integer", "minimum": 0, "maximum": 3600 }
       }
     },
     "features": {

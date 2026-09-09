@@ -17,7 +17,6 @@
 package priv.seventeen.artist.symphony.bukkit.combat
 
 import org.bukkit.Bukkit
-import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Projectile
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -44,6 +43,7 @@ import priv.seventeen.artist.symphony.api.event.SymphonyDamageEvent
 import priv.seventeen.artist.symphony.api.event.SymphonyDamageMitigationEvent
 import priv.seventeen.artist.symphony.api.event.SymphonyDamagePrepareEvent
 import priv.seventeen.artist.symphony.api.event.SymphonyHitCheckEvent
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitAttributeTypes
 import priv.seventeen.artist.symphony.bukkit.service.BukkitAttributeService
 import priv.seventeen.artist.symphony.bukkit.service.BukkitTriggerService
 import priv.seventeen.artist.symphony.engine.attribute.AttributeStateStore
@@ -592,14 +592,14 @@ class BukkitDamageService(
             Bukkit.getPluginManager().callEvent(SymphonyDamageConfirmedEvent(result))
             return
         }
-        if (pending.victim.health / (pending.victim.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value
+        if (pending.victim.health / (pending.victim.getAttribute(BukkitAttributeTypes.maxHealth)?.value
                 ?: pending.victim.health.coerceAtLeast(1.0)) <= LOW_HEALTH_THRESHOLD) {
             triggers.dispatch(CombatLowHealthTrigger, victimContext)
         }
         if (attacker != null && attacker.isValid && !attacker.isDead) {
             val lifesteal = attributes.value(attacker, LIFESTEAL).coerceIn(0.0, 1.0)
             if (lifesteal > 0.0) {
-                attacker.health = min(attacker.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: attacker.health,
+                attacker.health = min(attacker.getAttribute(BukkitAttributeTypes.maxHealth)?.value ?: attacker.health,
                 attacker.health + result.finalDamage * lifesteal)
             }
             val thorns = attributes.value(pending.victim, THORNS).coerceAtLeast(0.0)

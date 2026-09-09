@@ -520,6 +520,12 @@ component:
     attribute-scale: '副手属性比例必须是 0% 至 100% 的有限数值。'
 
 console:
+  health-persistence-mysql-ready: 'MySQL 生命值存储已就绪。'
+  health-persistence-load-failed: '玩家 {player} 的生命值读取失败。'
+  health-persistence-restore-failed: '玩家 {player} 的生命值恢复失败。'
+  health-persistence-checkpoint-failed: '玩家 {player} 的生命值检查点保存失败。'
+  health-persistence-save-failed: '玩家 {player} 的离线生命值保存失败。'
+  health-persistence-shutdown-incomplete: '服务器关闭时，部分生命值记录未能在限定时间内完成保存。'
   source-update-rejected: '属性来源更新被拒绝 [来源={source}]：{reason}'
   command-failed: '/{label} {command} 执行失败'
   completion-failed: '/{alias} 命令补全失败'

@@ -16,7 +16,6 @@
 
 package priv.seventeen.artist.symphony.bukkit.script
 
-import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import priv.seventeen.artist.aria.interop.JavaObjectMirror
@@ -29,6 +28,7 @@ import priv.seventeen.artist.symphony.api.damage.DamageChannelAmount
 import priv.seventeen.artist.symphony.api.damage.DamageRequest
 import priv.seventeen.artist.symphony.api.damage.DamageResult
 import priv.seventeen.artist.symphony.api.damage.DamageService
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitAttributeTypes
 import priv.seventeen.artist.symphony.engine.trigger.EntityTriggerContext
 import java.util.UUID
 import kotlin.math.min
@@ -58,7 +58,7 @@ class ScriptSelfFacade(
 
     fun heal(amount: Double): Double {
         require(amount.isFinite() && amount >= 0.0) { "治疗量必须是有限非负数" }
-        val maximum = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: entity.health
+        val maximum = entity.getAttribute(BukkitAttributeTypes.maxHealth)?.value ?: entity.health
         val before = entity.health
         entity.health = min(maximum, before + amount)
         return entity.health - before

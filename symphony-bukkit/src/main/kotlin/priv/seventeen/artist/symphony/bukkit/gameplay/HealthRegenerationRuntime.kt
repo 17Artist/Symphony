@@ -17,11 +17,12 @@
 package priv.seventeen.artist.symphony.bukkit.gameplay
 
 import org.bukkit.Bukkit
-import org.bukkit.attribute.Attribute
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitTask
 import priv.seventeen.artist.symphony.api.attribute.AttributeKey
 import priv.seventeen.artist.symphony.api.attribute.AttributeService
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitAttributeTypes
+import priv.seventeen.artist.symphony.bukkit.runtime.SymphonyRuntime
 import kotlin.math.min
 
 class HealthRegenerationRuntime(
@@ -37,9 +38,10 @@ class HealthRegenerationRuntime(
 
     private fun tick() {
         Bukkit.getOnlinePlayers().forEach { player ->
+            if (SymphonyRuntime.healthPersistenceOrNull()?.isRestorePending(player) == true) return@forEach
             val regeneration = attributes.value(player, HEALTH_REGEN).coerceAtLeast(0.0)
             if (regeneration <= 0.0 || player.health <= 0.0) return@forEach
-            val maximumHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: player.health
+            val maximumHealth = player.getAttribute(BukkitAttributeTypes.maxHealth)?.value ?: player.health
             player.health = min(maximumHealth, player.health + regeneration)
         }
     }

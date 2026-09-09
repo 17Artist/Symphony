@@ -42,7 +42,9 @@ blink {
     enableScript.set(false)
     libraries.set(
         listOf(
-            "org.snakeyaml:snakeyaml-engine:2.7"
+            "org.snakeyaml:snakeyaml-engine:2.7",
+            "com.zaxxer:HikariCP:5.1.0",
+            "com.mysql:mysql-connector-j:8.4.0"
         )
     )
 }
@@ -56,12 +58,16 @@ dependencies {
     compileOnly("priv.seventeen.artist.aria:aria:${property("ariaVersion")}")
     compileOnly("org.spigotmc:spigot-api:${property("spigotVersion")}")
     compileOnly(overtureDependency)
+    compileOnly("com.zaxxer:HikariCP:5.1.0")
+    compileOnly("com.mysql:mysql-connector-j:8.4.0")
 
     testImplementation(kotlin("test-junit5"))
     testImplementation(overtureDependency)
     testImplementation("priv.seventeen.artist.aria:aria:${property("ariaVersion")}")
     testImplementation("org.spigotmc:spigot-api:${property("spigotVersion")}")
     testImplementation("org.snakeyaml:snakeyaml-engine:2.7")
+    testImplementation("com.zaxxer:HikariCP:5.1.0")
+    testImplementation("com.h2database:h2:2.3.232")
 }
 
 tasks.shadowJar {

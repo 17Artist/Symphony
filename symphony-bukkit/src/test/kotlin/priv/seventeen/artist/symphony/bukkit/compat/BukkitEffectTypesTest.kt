@@ -29,12 +29,30 @@ class BukkitEffectTypesTest {
     }
 
     @Test
-    fun `namespaced style sound name normalizes to Bukkit enum`() {
+    fun `modern particle vocabulary falls back to the compile floor alias`() {
+        assertEquals("EXPLOSION_NORMAL", BukkitEffectTypes.particle("minecraft:poof").name)
+        assertEquals("SPELL_MOB", BukkitEffectTypes.particle("entity_effect").name)
+        assertEquals("FIREWORKS_SPARK", BukkitEffectTypes.particle("firework").name)
+        assertEquals("WATER_WAKE", BukkitEffectTypes.particle("fishing").name)
+        assertEquals("DRIP_WATER", BukkitEffectTypes.particle("dripping_water").name)
+        assertEquals("VILLAGER_HAPPY", BukkitEffectTypes.particle("happy_villager").name)
+        assertEquals("ENCHANTMENT_TABLE", BukkitEffectTypes.particle("enchant").name)
+        assertEquals("ITEM_CRACK", BukkitEffectTypes.particle("item").name)
+        assertEquals("BLOCK_CRACK", BukkitEffectTypes.particle("block").name)
+        assertEquals("MOB_APPEARANCE", BukkitEffectTypes.particle("elder_guardian").name)
+    }
+
+    @Test
+    fun `sound accepts resource key and legacy enum vocabulary`() {
         assertEquals("ENTITY_GENERIC_EXPLODE", BukkitEffectTypes.sound("entity.generic.explode").name)
+        assertEquals("ENTITY_LIGHTNING_BOLT_IMPACT", BukkitEffectTypes.sound("entity.lightning_bolt.impact").name)
+        assertEquals("ENTITY_LIGHTNING_BOLT_IMPACT", BukkitEffectTypes.sound("minecraft:entity.lightning_bolt.impact").name)
+        assertEquals("ENTITY_LIGHTNING_BOLT_IMPACT", BukkitEffectTypes.sound("ENTITY_LIGHTNING_BOLT_IMPACT").name)
     }
 
     @Test
     fun `unknown effects fail with a useful validation message`() {
         assertFailsWith<IllegalArgumentException> { BukkitEffectTypes.particle("not_a_real_particle") }
+        assertFailsWith<IllegalArgumentException> { BukkitEffectTypes.sound("not.a.real.sound") }
     }
 }

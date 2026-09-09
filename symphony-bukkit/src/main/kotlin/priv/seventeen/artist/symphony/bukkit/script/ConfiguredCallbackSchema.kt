@@ -16,10 +16,9 @@
 
 package priv.seventeen.artist.symphony.bukkit.script
 
-import org.bukkit.potion.PotionEffectType
 import priv.seventeen.artist.symphony.api.attribute.AttributeOperation
 import priv.seventeen.artist.symphony.bukkit.compat.BukkitEffectTypes
-import java.util.Locale
+import priv.seventeen.artist.symphony.bukkit.compat.BukkitPotionEffectTypes
 
 /** 供运行时重载与公开配置包校验器共同使用的结构校验。 */
 internal object ConfiguredCallbackSchema {
@@ -151,8 +150,8 @@ internal object ConfiguredCallbackSchema {
             }
             "potion" -> {
                 val effect = requiredString(action, "effect", path)
-                @Suppress("DEPRECATION")
-                require(PotionEffectType.getByName(effect.uppercase(Locale.ROOT)) != null) { "$path.effect 未知: $effect" }
+                runCatching { BukkitPotionEffectTypes.effect(effect) }
+                    .getOrElse { throw IllegalArgumentException("$path.effect 未知: $effect", it) }
                 action["duration-ticks"]?.let { requirePositiveNumeric(it, "$path.duration-ticks") }
                 action["amplifier"]?.let { requireNonNegativeInteger(it, "$path.amplifier") }
                 listOf("ambient", "particles", "icon").forEach { key ->

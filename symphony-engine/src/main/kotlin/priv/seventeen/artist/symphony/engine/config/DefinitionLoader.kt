@@ -232,6 +232,21 @@ class DefinitionLoader(
             )
             performanceNode.finish()
 
+            val healthPersistenceNode = StrictObject(
+                root.map("health-persistence"),
+                "config.health-persistence"
+            )
+            val clusterId = healthPersistenceNode.string("cluster-id", "default")!!
+            require(CLUSTER_ID.matches(clusterId)) {
+                "config.health-persistence.cluster-id 只能包含小写字母、数字、点、下划线和连字符，长度为 1 至 64"
+            }
+            val healthPersistence = HealthPersistenceSettings(
+                storage = HealthStorageMode.parse(healthPersistenceNode.string("storage", "pdc")!!),
+                clusterId = clusterId,
+                checkpointSeconds = healthPersistenceNode.long("checkpoint-seconds", 30, 0L..3600L)
+            )
+            healthPersistenceNode.finish()
+
             val featureNode = StrictObject(root.map("features"), "config.features")
             val features = FeatureSettings(
                 affixes = featureNode.boolean("affixes", true),
@@ -302,6 +317,7 @@ class DefinitionLoader(
                 combat,
                 scripts,
                 performance,
+                healthPersistence,
                 features,
                 equipment,
                 compatibility
@@ -1101,6 +1117,7 @@ class DefinitionLoader(
     }
 
     companion object {
+        private val CLUSTER_ID = Regex("[a-z0-9._-]{1,64}")
         private val ID = Regex("^[a-z0-9._/-]+$")
         private val NAMESPACED_ID = Regex("^[a-z0-9._-]+:[a-z0-9._/-]+$")
         private val AFFIX_FIELDS = setOf("name", "rarity", "category", "max-level", "levels", "passive", "callbacks", "tags", "exclusive-group", "display")

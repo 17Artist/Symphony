@@ -32,6 +32,7 @@ import priv.seventeen.artist.symphony.engine.definition.SkillActivationInput
 import priv.seventeen.artist.symphony.engine.definition.affixDescription
 import priv.seventeen.artist.symphony.engine.definition.skillActivation
 import priv.seventeen.artist.symphony.engine.equipment.OffhandMode
+import priv.seventeen.artist.symphony.engine.config.HealthStorageMode
 
 class DefaultResourceContractTest {
     @TempDir
@@ -79,6 +80,9 @@ class DefaultResourceContractTest {
         assertTrue(settings.features.sockets)
         assertEquals(OffhandMode.FULL, settings.equipment.offhand.mode)
         assertEquals(0.5, settings.equipment.offhand.attributeScale)
+        assertEquals(HealthStorageMode.PDC, settings.healthPersistence.storage)
+        assertEquals("default", settings.healthPersistence.clusterId)
+        assertEquals(30L, settings.healthPersistence.checkpointSeconds)
         val epicFight = settings.compatibility.epicFight
         assertEquals(false, epicFight.enabled)
         assertEquals(4_000L, epicFight.postWorldGraceMillis)

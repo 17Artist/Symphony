@@ -47,11 +47,11 @@ class ConfiguredCallbackSchemaTest {
     }
 
     @Test
-    fun `rejects effects unavailable on the target Paper floor`() {
+    fun `rejects unknown effects after cross-version alias resolution`() {
         val error = assertFailsWith<IllegalArgumentException> {
             ConfiguredCallbackSchema.validateActions(
                 "test",
-                listOf(mapOf("type" to "particle", "particle" to "SPLASH"))
+                listOf(mapOf("type" to "particle", "particle" to "NOT_A_REAL_PARTICLE"))
             )
         }
         assertTrue(error.message.orEmpty().contains("不存在粒子效果"))
