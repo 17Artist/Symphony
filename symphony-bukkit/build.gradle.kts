@@ -25,6 +25,7 @@ plugins {
 }
 
 val overtureDependency = "priv.seventeen.artist.overture:overture:${property("overtureVersion")}"
+val mysqlConnectorVersion = "8.2.0"
 
 blink {
     name.set("Symphony")
@@ -44,7 +45,7 @@ blink {
         listOf(
             "org.snakeyaml:snakeyaml-engine:2.7",
             "com.zaxxer:HikariCP:5.1.0",
-            "com.mysql:mysql-connector-j:8.4.0"
+            "com.mysql:mysql-connector-j:$mysqlConnectorVersion"
         )
     )
 }
@@ -59,7 +60,9 @@ dependencies {
     compileOnly("org.spigotmc:spigot-api:${property("spigotVersion")}")
     compileOnly(overtureDependency)
     compileOnly("com.zaxxer:HikariCP:5.1.0")
-    compileOnly("com.mysql:mysql-connector-j:8.4.0")
+    compileOnly("com.mysql:mysql-connector-j:$mysqlConnectorVersion") {
+        isTransitive = false
+    }
 
     testImplementation(kotlin("test-junit5"))
     testImplementation(overtureDependency)
@@ -68,6 +71,9 @@ dependencies {
     testImplementation("org.snakeyaml:snakeyaml-engine:2.7")
     testImplementation("com.zaxxer:HikariCP:5.1.0")
     testImplementation("com.h2database:h2:2.3.232")
+    testImplementation("com.mysql:mysql-connector-j:$mysqlConnectorVersion") {
+        isTransitive = false
+    }
 }
 
 tasks.shadowJar {

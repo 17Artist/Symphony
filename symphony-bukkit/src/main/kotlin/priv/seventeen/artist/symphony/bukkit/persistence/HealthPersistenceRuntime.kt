@@ -371,10 +371,7 @@ class HealthPersistenceRuntime private constructor(
             val database = if (settings.storage == HealthStorageMode.MYSQL) {
                 val mysql = HealthDatabaseSettingsLoader.load(plugin.dataFolder.toPath().resolve("database.yml"))
                 val hikari = HikariDataSource(HikariConfig().apply {
-                    jdbcUrl = "jdbc:mysql://${mysql.host}:${mysql.port}/${mysql.database}" +
-                        "?useSSL=${mysql.useSsl}" +
-                        "&allowPublicKeyRetrieval=${mysql.allowPublicKeyRetrieval}" +
-                        "&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
+                    jdbcUrl = mysql.jdbcUrl
                     username = mysql.username
                     password = mysql.password
                     maximumPoolSize = mysql.poolSize

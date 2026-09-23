@@ -200,14 +200,21 @@ object PlaceholderApiIntegration {
     fun install(api: SymphonyApi, version: String): Boolean {
         if (expansion != null) return true
         val candidate = SymphonyPlaceholderExpansion(api, version)
-        if (!candidate.register()) return false
+        val registration = OptionalIntegrationMethodInvoker.invokeNoArg(candidate, "register") ?: return false
+        if (registration.returnValue == false) return false
         expansion = candidate
         return true
     }
 
     @JvmStatic
     fun uninstall() {
-        expansion?.unregister()
-        expansion = null
+        val current = expansion ?: return
+        try {
+            check(OptionalIntegrationMethodInvoker.invokeNoArg(current, "unregister") != null) {
+                "当前 PlaceholderAPI 不支持注销扩展"
+            }
+        } finally {
+            expansion = null
+        }
     }
 }

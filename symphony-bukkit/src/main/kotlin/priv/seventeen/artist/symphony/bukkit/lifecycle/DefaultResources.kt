@@ -68,15 +68,7 @@ internal object DefaultResources {
 
     fun install(plugin: Plugin): InstallResult {
         val root = plugin.dataFolder.toPath()
-        val firstInstall = !Files.isRegularFile(root.resolve("config.yml"))
-        val legacyEntry = if (Files.isDirectory(root)) Files.list(root).use { entries ->
-            entries.filter { !isBootstrapEntry(it) }.findFirst().orElse(null)
-        } else null
-        if (legacyEntry != null && !Files.isRegularFile(root.resolve("config.yml"))) {
-            throw IllegalStateException(
-                "检测到旧版 Symphony 数据 ${legacyEntry.fileName}，但缺少当前 config.yml；请先备份并迁移 ${plugin.dataFolder}"
-            )
-        }
+        val firstInstall = isFirstInstall(root)
         Files.createDirectories(root)
         val overture = requireNotNull(plugin.server.pluginManager.getPlugin("Overture")) {
             "缺少必须依赖 Overture，无法安装内置配置样例"
@@ -101,17 +93,13 @@ internal object DefaultResources {
         return InstallResult(firstInstall, showcase)
     }
 
-    private val BLINK_BOOTSTRAP_ENTRIES = setOf(
-        "libs",
-        "blink.yml",
-        BundledShowcaseInstaller.INSTALLING_MARKER,
-        BundledShowcaseInstaller.INSTALLED_MARKER
-    )
-    private val MANAGED_EMPTY_ROOTS = directories.mapTo(linkedSetOf()) { it.substringBefore('/') }
-
-    private fun isBootstrapEntry(path: Path): Boolean {
-        if (path.fileName.toString() in BLINK_BOOTSTRAP_ENTRIES) return true
-        if (path.fileName.toString() !in MANAGED_EMPTY_ROOTS || !Files.isDirectory(path)) return false
-        return Files.walk(path).use { stream -> stream.noneMatch(Files::isRegularFile) }
+    internal fun isFirstInstall(root: Path): Boolean {
+        if (!Files.isDirectory(root)) return true
+        return Files.list(root).use { entries ->
+            entries.allMatch { it.fileName.toString() in BLINK_BOOTSTRAP_ENTRIES }
+        }
     }
+
+
+    private val BLINK_BOOTSTRAP_ENTRIES = setOf("libs", "blink.yml")
 }

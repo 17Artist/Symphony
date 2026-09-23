@@ -76,24 +76,34 @@ class BukkitAttributeStateObserver(
     ) {
         val instance = entity.getAttribute(vanilla) ?: return
         runCatching {
-            val modifierId = modifierId(key)
-            val existing = instance.modifiers.firstOrNull(::isSymphonyModifier)
+            val existing = VanillaAttributeModifierIdentity.owned(instance.modifiers, key)
             val directive = VanillaAttributeSyncPolicy.directive(state, key, VanillaSyncMode.ABSOLUTE)
             if (directive is VanillaSyncDirective.Clear) {
-                existing?.let(instance::removeModifier)
+                existing.forEach(instance::removeModifier)
                 after(instance.value.coerceIn(minValue, maxValue))
                 return@runCatching
             }
             val value = (directive as VanillaSyncDirective.Absolute).value.coerceIn(minValue, maxValue)
-            if (kotlin.math.abs(instance.value - value) <= EPSILON) {
+            if (
+                existing.size <= 1 &&
+                existing.all { it.operation == AttributeModifier.Operation.ADD_NUMBER } &&
+                abs(instance.value - value) <= EPSILON
+            ) {
                 after(value)
                 return@runCatching
             }
-            existing?.let(instance::removeModifier)
+            existing.forEach(instance::removeModifier)
             val withoutSymphony = instance.value
             val delta = value - withoutSymphony
-            if (kotlin.math.abs(delta) > EPSILON) {
-                instance.addModifier(AttributeModifier(modifierId, MODIFIER_NAME, delta, AttributeModifier.Operation.ADD_NUMBER))
+            if (abs(delta) > EPSILON) {
+                instance.addModifier(
+                    AttributeModifier(
+                        VanillaAttributeModifierIdentity.id(key),
+                        VanillaAttributeModifierIdentity.LEGACY_NAME,
+                        delta,
+                        AttributeModifier.Operation.ADD_NUMBER
+                    )
+                )
             }
             after(value)
         }.onFailure { BlinkLog.error(SymphonyRuntime.language().text("console.vanilla-sync-failed", "attribute" to vanilla, "entity" to entity.uniqueId), it) }
@@ -107,20 +117,20 @@ class BukkitAttributeStateObserver(
     ) {
         val instance = entity.getAttribute(vanilla) ?: return
         runCatching {
-            val modifierId = modifierId(key)
-            val existing = instance.modifiers.firstOrNull(::isSymphonyModifier)
+            val existing = VanillaAttributeModifierIdentity.owned(instance.modifiers, key)
             when (val directive = VanillaAttributeSyncPolicy.directive(state, key, VanillaSyncMode.MULTIPLY_TOTAL)) {
-                is VanillaSyncDirective.Clear -> existing?.let(instance::removeModifier)
+                is VanillaSyncDirective.Clear -> existing.forEach(instance::removeModifier)
                 is VanillaSyncDirective.MultiplyTotal -> {
                     if (
-                        existing?.operation == AttributeModifier.Operation.MULTIPLY_SCALAR_1 &&
-                        kotlin.math.abs(existing.amount - directive.amount) <= EPSILON
+                        existing.size == 1 &&
+                        existing.single().operation == AttributeModifier.Operation.MULTIPLY_SCALAR_1 &&
+                        kotlin.math.abs(existing.single().amount - directive.amount) <= EPSILON
                     ) return@runCatching
-                    existing?.let(instance::removeModifier)
+                    existing.forEach(instance::removeModifier)
                     if (kotlin.math.abs(directive.amount) > EPSILON) {
                         instance.addModifier(AttributeModifier(
-                            modifierId,
-                            MODIFIER_NAME,
+                            VanillaAttributeModifierIdentity.id(key),
+                            VanillaAttributeModifierIdentity.LEGACY_NAME,
                             directive.amount,
                             AttributeModifier.Operation.MULTIPLY_SCALAR_1
                         ))
@@ -147,35 +157,42 @@ class BukkitAttributeStateObserver(
     internal fun trackedEntityCount(): Int = synchronizedEntities.size
 
     private fun clearVanilla(entity: LivingEntity) {
-        SYNCED_ATTRIBUTES.forEach { attribute ->
+        SYNCED_ATTRIBUTES.forEach { (key, attribute) ->
             entity.getAttribute(attribute)?.let { instance ->
-                instance.modifiers.filter(::isSymphonyModifier).forEach(instance::removeModifier)
+                VanillaAttributeModifierIdentity.owned(instance.modifiers, key).forEach(instance::removeModifier)
             }
         }
     }
-
-    /**
-     * Paper 1.21 使用命名空间键保存原版修饰器。读取旧版 UUID 会把键误当作 UUID 解析并抛出异常。
-     * 该名称由 Symphony 独占，因此按名称识别既可跨版本，也不会碰触原版或其他插件的修饰器。
-     */
-    private fun isSymphonyModifier(modifier: AttributeModifier): Boolean = modifier.name == MODIFIER_NAME
-
-    private fun modifierId(attribute: AttributeKey): UUID =
-        UUID.nameUUIDFromBytes("symphony:vanilla-sync:${attribute.value}".toByteArray())
 
     companion object {
         private val MAX_HEALTH = AttributeKey.symphony("max_health")
         private val MOVEMENT_SPEED = AttributeKey.symphony("movement_speed")
         private val ATTACK_SPEED = AttributeKey.symphony("attack_speed")
         private val KNOCKBACK_RESISTANCE = AttributeKey.symphony("knockback_resistance")
-        private const val MODIFIER_NAME = "symphony.vanilla_sync"
         private val SYNCED_ATTRIBUTES = listOf(
-            BukkitAttributeTypes.maxHealth,
-            BukkitAttributeTypes.movementSpeed,
-            BukkitAttributeTypes.attackSpeed,
-            BukkitAttributeTypes.knockbackResistance
+            MAX_HEALTH to BukkitAttributeTypes.maxHealth,
+            MOVEMENT_SPEED to BukkitAttributeTypes.movementSpeed,
+            ATTACK_SPEED to BukkitAttributeTypes.attackSpeed,
+            KNOCKBACK_RESISTANCE to BukkitAttributeTypes.knockbackResistance
         )
         private const val EPSILON = 1.0e-9
+    }
+}
+
+internal object VanillaAttributeModifierIdentity {
+    const val LEGACY_NAME = "symphony.vanilla_sync"
+
+    fun id(attribute: AttributeKey): UUID =
+        UUID.nameUUIDFromBytes("symphony:vanilla-sync:${attribute.value}".toByteArray())
+
+    fun owned(modifiers: Collection<AttributeModifier>, attribute: AttributeKey): List<AttributeModifier> {
+        val expectedId = id(attribute)
+        val expectedModernName = expectedId.toString()
+        return modifiers.filter { modifier ->
+            modifier.name == LEGACY_NAME ||
+                modifier.name == expectedModernName ||
+                runCatching { modifier.uniqueId == expectedId }.getOrDefault(false)
+        }
     }
 }
 

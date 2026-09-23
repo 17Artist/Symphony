@@ -18,12 +18,13 @@ package priv.seventeen.artist.symphony.bukkit.lifecycle
 
 import java.io.InputStream
 import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 
-/** Symphony 初次安装时仅写出一次内置配置展示包。 */
+/** 仅在 Symphony 数据目录尚未建立时写出一次内置配置展示包。 */
 internal object BundledShowcaseInstaller {
     const val ID = "prismatic-arsenal"
     const val MANIFEST_RESOURCE = "showcase/$ID/manifest.txt"
@@ -35,7 +36,7 @@ internal object BundledShowcaseInstaller {
         val installed: Boolean,
         val copiedSymphonyFiles: Int,
         val copiedOvertureFiles: Int,
-        val verifiedExistingFiles: Int
+        val preservedExistingFiles: Int
     )
 
     fun install(
@@ -49,8 +50,20 @@ internal object BundledShowcaseInstaller {
         val installing = normalizedSymphony.resolve(INSTALLING_MARKER)
         val installed = normalizedSymphony.resolve(INSTALLED_MARKER)
 
-        if (Files.isRegularFile(installed)) return InstallResult(false, false, 0, 0, 0)
-        if (!firstInstall && !Files.isRegularFile(installing)) return InstallResult(false, false, 0, 0, 0)
+        if (!firstInstall) return InstallResult(
+            attempted = false,
+            installed = false,
+            copiedSymphonyFiles = 0,
+            copiedOvertureFiles = 0,
+            preservedExistingFiles = 0
+        )
+        if (Files.isRegularFile(installed)) return InstallResult(
+            attempted = false,
+            installed = false,
+            copiedSymphonyFiles = 0,
+            copiedOvertureFiles = 0,
+            preservedExistingFiles = 0
+        )
 
         Files.createDirectories(normalizedSymphony)
         Files.createDirectories(normalizedOverture)
@@ -66,7 +79,7 @@ internal object BundledShowcaseInstaller {
         val entries = loadManifest(openResource)
         var copiedSymphony = 0
         var copiedOverture = 0
-        var verified = 0
+        var preserved = 0
         entries.forEach { entry ->
             val targetRoot = when (entry.owner) {
                 Owner.SYMPHONY -> normalizedSymphony
@@ -76,17 +89,17 @@ internal object BundledShowcaseInstaller {
             check(target.startsWith(targetRoot)) { "内置样例路径越界: ${entry.manifestValue}" }
             val bytes = openResource(entry.resourcePath)?.use(InputStream::readBytes)
                 ?: error("发布 JAR 缺少内置样例资源 ${entry.resourcePath}")
-            when (copyOrVerify(target, bytes)) {
+            when (copyIfAbsent(target, bytes)) {
                 CopyResult.COPIED -> when (entry.owner) {
                     Owner.SYMPHONY -> copiedSymphony++
                     Owner.OVERTURE -> copiedOverture++
                 }
-                CopyResult.IDENTICAL -> verified++
+                CopyResult.PRESERVED -> preserved++
             }
         }
 
         moveMarker(installing, installed)
-        return InstallResult(true, true, copiedSymphony, copiedOverture, verified)
+        return InstallResult(true, true, copiedSymphony, copiedOverture, preserved)
     }
 
     private fun loadManifest(openResource: (String) -> InputStream?): List<Entry> {
@@ -121,27 +134,28 @@ internal object BundledShowcaseInstaller {
         return entries
     }
 
-    private fun copyOrVerify(target: Path, bytes: ByteArray): CopyResult {
-        if (Files.exists(target)) {
-            require(Files.isRegularFile(target)) { "内置样例目标不是文件: $target" }
-            require(Files.readAllBytes(target).contentEquals(bytes)) {
-                "内置样例与已有文件冲突，未覆盖: $target"
-            }
-            return CopyResult.IDENTICAL
-        }
+    private fun copyIfAbsent(target: Path, bytes: ByteArray): CopyResult {
+        if (Files.exists(target)) return CopyResult.PRESERVED
         Files.createDirectories(requireNotNull(target.parent))
         val temporary = Files.createTempFile(target.parent, ".${target.fileName}.", ".tmp")
-        try {
+        return try {
             Files.write(temporary, bytes, StandardOpenOption.TRUNCATE_EXISTING)
             try {
                 Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE)
+                CopyResult.COPIED
             } catch (_: AtomicMoveNotSupportedException) {
-                Files.move(temporary, target)
+                try {
+                    Files.move(temporary, target)
+                    CopyResult.COPIED
+                } catch (_: FileAlreadyExistsException) {
+                    CopyResult.PRESERVED
+                }
             }
+        } catch (_: FileAlreadyExistsException) {
+            CopyResult.PRESERVED
         } finally {
             Files.deleteIfExists(temporary)
         }
-        return CopyResult.COPIED
     }
 
     private fun moveMarker(source: Path, target: Path) {
@@ -157,7 +171,7 @@ internal object BundledShowcaseInstaller {
         OVERTURE("overture")
     }
 
-    private enum class CopyResult { COPIED, IDENTICAL }
+    private enum class CopyResult { COPIED, PRESERVED }
 
     private data class Entry(
         val owner: Owner,
